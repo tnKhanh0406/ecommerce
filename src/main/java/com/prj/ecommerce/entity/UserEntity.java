@@ -27,7 +27,7 @@ public class UserEntity {
     @Column(nullable = false)
     private String fullName;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String email;
 
     @Enumerated(EnumType.STRING)
