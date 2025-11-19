@@ -52,5 +52,11 @@ public class UserEntity {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
+        if (status == null) {
+            status = Status.ACTIVE;
+        }
+        if (role == null) {
+            role = UserRole.CUSTOMER;
+        }
     }
 }
