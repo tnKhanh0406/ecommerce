@@ -39,5 +39,8 @@ public class UserAddressEntity {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
+        if (isDefault == null) {
+            isDefault = 0;
+        }
     }
 }
