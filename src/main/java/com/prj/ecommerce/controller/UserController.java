@@ -1,7 +1,7 @@
 package com.prj.ecommerce.controller;
 
-import com.prj.ecommerce.dto.LoginDTO;
-import com.prj.ecommerce.dto.RegisterDTO;
+import com.prj.ecommerce.dto.request.LoginRequest;
+import com.prj.ecommerce.dto.request.RegisterRequest;
 import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -25,14 +25,14 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody LoginDTO loginDTO) {
-        return ResponseEntity.ok(userService.verifyUser(loginDTO));
+    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+        return ResponseEntity.ok(userService.verifyUser(loginRequest));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegisterDTO registerDTO) {
-        UserEntity user = userService.registerUser(registerDTO);
-        RegisterDTO res = new RegisterDTO();
+    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest registerRequest) {
+        UserEntity user = userService.registerUser(registerRequest);
+        RegisterRequest res = new RegisterRequest();
         res.setUsername(user.getUsername());
         res.setFullName(user.getFullName());
         res.setPassword(user.getPassword());

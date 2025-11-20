@@ -1,7 +1,7 @@
 package com.prj.ecommerce.service.impl;
 
-import com.prj.ecommerce.dto.LoginDTO;
-import com.prj.ecommerce.dto.RegisterDTO;
+import com.prj.ecommerce.dto.request.LoginRequest;
+import com.prj.ecommerce.dto.request.RegisterRequest;
 import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.repository.UserRepository;
 import com.prj.ecommerce.service.JWTService;
@@ -28,21 +28,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String verifyUser(LoginDTO loginDTO) {
+    public String verifyUser(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
+                .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
         if (authentication.isAuthenticated()) {
-            return jwtService.generateToken(loginDTO.getUsername());
+            return jwtService.generateToken(loginRequest.getUsername());
         }
         return "fail";
     }
 
     @Override
-    public UserEntity registerUser(RegisterDTO registerDTO) {
+    public UserEntity registerUser(RegisterRequest registerRequest) {
         UserEntity userEntity = new UserEntity();
-        userEntity.setUsername(registerDTO.getUsername());
-        userEntity.setPassword(passwordEncoder.encode(registerDTO.getPassword()));
-        userEntity.setFullName(registerDTO.getFullName());
+        userEntity.setUsername(registerRequest.getUsername());
+        userEntity.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        userEntity.setFullName(registerRequest.getFullName());
         return userRepository.save(userEntity);
     }
 }
