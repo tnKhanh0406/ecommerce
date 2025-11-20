@@ -33,15 +33,7 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<UserResponse> registerUser(@RequestBody RegisterRequest registerRequest) {
         UserEntity user = userService.registerUser(registerRequest);
-        UserResponse res = new UserResponse();
-        res.setId(user.getId());
-        res.setUsername(user.getUsername());
-        res.setFullName(user.getFullName());
-        res.setPhoneNumber(user.getPhoneNumber());
-        res.setRole(user.getRole().toString());
-        res.setCreatedAt(user.getCreatedAt());
-        res.setStatus(user.getStatus().toString());
-        res.setEmail(user.getEmail());
+        UserResponse res = new UserResponse().toUserResponse(user);
         return ResponseEntity.ok(res);
     }
 }
