@@ -2,6 +2,7 @@ package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.dto.request.LoginRequest;
 import com.prj.ecommerce.dto.request.RegisterRequest;
+import com.prj.ecommerce.dto.response.UserResponse;
 import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -30,12 +31,17 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<UserResponse> registerUser(@RequestBody RegisterRequest registerRequest) {
         UserEntity user = userService.registerUser(registerRequest);
-        RegisterRequest res = new RegisterRequest();
+        UserResponse res = new UserResponse();
+        res.setId(user.getId());
         res.setUsername(user.getUsername());
         res.setFullName(user.getFullName());
-        res.setPassword(user.getPassword());
+        res.setPhoneNumber(user.getPhoneNumber());
+        res.setRole(user.getRole().toString());
+        res.setCreatedAt(user.getCreatedAt());
+        res.setStatus(user.getStatus().toString());
+        res.setEmail(user.getEmail());
         return ResponseEntity.ok(res);
     }
 }
