@@ -1,8 +1,10 @@
 package com.prj.ecommerce.service;
 
 import com.prj.ecommerce.dto.request.CreateShopRequest;
-import com.prj.ecommerce.entity.ShopEntity;
+import com.prj.ecommerce.dto.response.CreateShopResponse;
 
 public interface ShopService {
-    ShopEntity createShop(Long userId, CreateShopRequest createShopRequest);
+    CreateShopResponse createShop(CreateShopRequest createShopRequest);
+    CreateShopResponse updateShop(Long shopId, CreateShopRequest createShopRequest);
+    void deleteShop(Long shopId);
 }

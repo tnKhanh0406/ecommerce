@@ -2,31 +2,39 @@ package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.dto.request.CreateShopRequest;
 import com.prj.ecommerce.dto.response.CreateShopResponse;
-import com.prj.ecommerce.entity.ShopEntity;
-import com.prj.ecommerce.entity.UserEntity;
-import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.service.ShopService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/shop")
+@RequestMapping("/api/shops")
 @RequiredArgsConstructor
 public class ShopController {
     private final ShopService shopService;
 
-    @PostMapping("/create")
-    public ResponseEntity<CreateShopResponse> createShop(@RequestBody CreateShopRequest shop) {
-        UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        UserEntity user = userPrincipal.getUserEntity();
-        ShopEntity shopEntity = shopService.createShop(user.getId(), shop);
-        CreateShopResponse createShopResponse = new CreateShopResponse().toCreateResponse(shopEntity);
-        return new ResponseEntity<>(createShopResponse, HttpStatus.CREATED);
+    @PostMapping
+    public ResponseEntity<CreateShopResponse> createShop(@Valid @RequestBody CreateShopRequest shop) {
+        CreateShopResponse createShopResponse = shopService.createShop(shop);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(createShopResponse);
+    }
+
+    @PreAuthorize("hasRole('SELLER')")
+    @PutMapping("/{shopId}")
+    public ResponseEntity<CreateShopResponse> updateShop(@PathVariable Long shopId, @Valid @RequestBody CreateShopRequest shop) {
+        CreateShopResponse createShopResponse = shopService.updateShop(shopId, shop);
+        return ResponseEntity.ok(createShopResponse);
+    }
+
+    @PreAuthorize("hasRole('SELLER')")
+    @DeleteMapping("/{shopId}")
+    public ResponseEntity<Void> deleteShop(@PathVariable Long shopId) {
+        shopService.deleteShop(shopId);
+        return ResponseEntity.noContent().build();
     }
 }
