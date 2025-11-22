@@ -24,9 +24,6 @@ public class ProductEntity {
     private String description;
 
     @Column(nullable = false)
-    private Double price;
-
-    @Column(nullable = false)
     private Integer soldCount;
 
     @Enumerated(EnumType.STRING)

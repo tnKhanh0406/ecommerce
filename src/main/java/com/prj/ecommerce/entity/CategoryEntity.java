@@ -19,7 +19,7 @@ public class CategoryEntity {
     @Column(nullable = false, length = 150)
     private String name;
 
-    @Column(nullable = false, unique = true, length = 180)
+    @Column(nullable = false, length = 180)
     private String slug;
 
     @ManyToOne(fetch = FetchType.LAZY)
