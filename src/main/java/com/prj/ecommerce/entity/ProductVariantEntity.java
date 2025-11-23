@@ -29,4 +29,7 @@ public class ProductVariantEntity {
 
     @OneToMany(mappedBy = "variant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImageEntity> images;
+
+    @OneToMany(mappedBy = "variant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductVariantAttributeValueEntity> attributes;
 }
