@@ -14,14 +14,17 @@ public class ProductVariantEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String name;
+//    @Column(nullable = false)
+//    private String name;
 
     @Column(nullable = false)
     private Double price;
 
     @Column(nullable = false)
     private Integer stock;
+
+    @Column(nullable = false)
+    private String sku;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)

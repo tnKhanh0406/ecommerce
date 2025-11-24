@@ -24,7 +24,7 @@ public class ProductEntity {
     private String description;
 
     @Column(nullable = false)
-    private Integer soldCount;
+    private Integer soldCount = 0;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -47,6 +47,9 @@ public class ProductEntity {
     public void prePersist() {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
+        }
+        if (status == null) {
+            status = Status.ACTIVE;
         }
     }
 }

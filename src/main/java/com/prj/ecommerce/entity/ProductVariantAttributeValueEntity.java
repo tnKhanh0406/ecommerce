@@ -9,6 +9,9 @@ public class ProductVariantAttributeValueEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private String displayName;
+
     @ManyToOne
     @JoinColumn(name = "variant_id")
     private ProductVariantEntity variant;
