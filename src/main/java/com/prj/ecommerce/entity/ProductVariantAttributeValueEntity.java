@@ -1,9 +1,12 @@
 package com.prj.ecommerce.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "variant_attribute_values")
+@Getter @Setter
 public class ProductVariantAttributeValueEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,4 +22,11 @@ public class ProductVariantAttributeValueEntity {
     @ManyToOne
     @JoinColumn(name = "attribute_value_id")
     private ProductAttributeValueEntity attributeValue;
+
+    @PrePersist
+    public void prePersist() {
+        if (displayName == null) {
+            displayName = attributeValue.getValue();
+        }
+    }
 }

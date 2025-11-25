@@ -10,6 +10,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProductImageRequest {
-    private String imageType;
+//    private String imageType;
     private String imageUrl;
 }

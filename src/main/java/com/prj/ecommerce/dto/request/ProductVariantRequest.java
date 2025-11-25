@@ -13,11 +13,13 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProductVariantRequest {
+    private String sku;
+
     @NotNull
     private Double price;
     @NotNull
     private Integer stock;
 
-    private String sku;
     private List<ProductVariantAttributeValueRequest> attributeValues;
+    private List<ProductImageRequest> images;
 }
