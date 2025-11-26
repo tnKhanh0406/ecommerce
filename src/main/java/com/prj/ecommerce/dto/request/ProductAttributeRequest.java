@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 public class ProductAttributeRequest {
     @NotBlank
-    private String attribute;
+    private String name;
 
     private List<ProductAttributeValueRequest> values;
 }

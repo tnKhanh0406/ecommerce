@@ -26,7 +26,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductVariantAttributeValueRepository variantAttrRepo;
     private final ProductImageRepository imageRepo;
     private final ProductCategoryRepository productCategoryRepo;
-    private final UserRepository userRepository; // to validate seller/shop owner maybe
+    private final UserRepository userRepository;
     private final ShopRepository shopRepository;
     private final CategoryRepository categoryRepo;
 
@@ -72,10 +72,10 @@ public class ProductServiceImpl implements ProductService {
         if (request.getAttributes() != null) {
             for (ProductAttributeRequest aReq : request.getAttributes()) {
                 // find attribute: first seller-specific, then global
-                ProductAttributeEntity attribute = attributeRepo.findByNameForSeller(aReq.getAttribute(), user.getId())
+                ProductAttributeEntity attribute = attributeRepo.findByNameForSeller(aReq.getName(), user.getId())
                         .orElseGet(() -> {
                             ProductAttributeEntity attr = new ProductAttributeEntity();
-                            attr.setName(aReq.getAttribute());
+                            attr.setName(aReq.getName());
                             // set seller
                             attr.setSeller(user);
                             return attributeRepo.save(attr);
@@ -123,8 +123,8 @@ public class ProductServiceImpl implements ProductService {
                 variant = variantRepo.save(variant);
 
                 // save variant attribute values
-                if (vr.getAttributeValues() != null) {
-                    for (ProductVariantAttributeValueRequest pair : vr.getAttributeValues()) {
+                if (vr.getAttributes() != null) {
+                    for (ProductVariantAttributeValueRequest pair : vr.getAttributes()) {
                         // find attribute by name in attrMap (if seller passed)
                         ProductAttributeEntity attr = attrMap.get(pair.getAttribute());
                         if (attr == null) {
@@ -159,6 +159,7 @@ public class ProductServiceImpl implements ProductService {
                         pi.setImageUrl(im.getImageUrl());
                         pi.setImageType(ImageType.VARIANT);
                         pi.setProduct(product);
+                        pi.setVariant(variant);
                         imageRepo.save(pi);
                     }
                 }

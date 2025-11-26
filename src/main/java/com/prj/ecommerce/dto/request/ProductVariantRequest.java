@@ -20,6 +20,6 @@ public class ProductVariantRequest {
     @NotNull
     private Integer stock;
 
-    private List<ProductVariantAttributeValueRequest> attributeValues;
+    private List<ProductVariantAttributeValueRequest> attributes;
     private List<ProductImageRequest> images;
 }
