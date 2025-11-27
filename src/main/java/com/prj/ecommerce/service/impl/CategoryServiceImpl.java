@@ -1,9 +1,12 @@
 package com.prj.ecommerce.service.impl;
 
+import com.prj.ecommerce.dto.request.CreateCategoryRequest;
 import com.prj.ecommerce.dto.response.CategoryResponse;
 import com.prj.ecommerce.dto.response.CategoryTreeResponse;
+import com.prj.ecommerce.entity.CategoryEntity;
 import com.prj.ecommerce.repository.CategoryRepository;
 import com.prj.ecommerce.service.CategoryService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -29,5 +32,29 @@ public class CategoryServiceImpl implements CategoryService {
                 .stream()
                 .map(CategoryTreeResponse::fromEntity)
                 .toList();
+    }
+
+    @Override
+    public CategoryResponse createCategory(CreateCategoryRequest request) {
+        CategoryEntity categoryEntity = new CategoryEntity();
+        categoryEntity.setName(request.getName());
+        categoryEntity.setSlug(request.getSlug());
+        categoryEntity.setParent(categoryRepository.findById(request.getParentId()).orElse(null));
+        return CategoryResponse.fromEntity(categoryRepository.save(categoryEntity));
+    }
+
+    @Override
+    public CategoryResponse updateCategory(Long categoryId, CreateCategoryRequest request) {
+        CategoryEntity categoryEntity = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+        categoryEntity.setName(request.getName());
+        categoryEntity.setSlug(request.getSlug());
+        categoryEntity.setParent(categoryRepository.findById(request.getParentId()).orElse(null));
+        return CategoryResponse.fromEntity(categoryRepository.save(categoryEntity));
+    }
+
+    @Override
+    public void deleteCategory(Long categoryId) {
+        categoryRepository.deleteById(categoryId);
     }
 }
