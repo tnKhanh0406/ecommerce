@@ -1,5 +1,6 @@
 package com.prj.ecommerce.config;
 
+import com.prj.ecommerce.component.CustomAccessDeniedHandler;
 import com.prj.ecommerce.component.JWTFilter;
 import com.prj.ecommerce.service.MyUserDetailsService;
 import org.springframework.context.annotation.Bean;
@@ -26,10 +27,12 @@ public class SecurityConfig {
 
     private final JWTFilter jwtFilter;
     private final MyUserDetailsService myUserDetailsService;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
-    public SecurityConfig(JWTFilter jwtFilter, MyUserDetailsService myUserDetailsService) {
+    public SecurityConfig(JWTFilter jwtFilter, MyUserDetailsService myUserDetailsService, CustomAccessDeniedHandler customAccessDeniedHandler) {
         this.jwtFilter = jwtFilter;
         this.myUserDetailsService = myUserDetailsService;
+        this.customAccessDeniedHandler = customAccessDeniedHandler;
     }
 
     @Bean
@@ -40,6 +43,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/products/**").permitAll()
                         .anyRequest().authenticated())
 //                .httpBasic(Customizer.withDefaults())
+                .exceptionHandling(ex -> ex.accessDeniedHandler(customAccessDeniedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

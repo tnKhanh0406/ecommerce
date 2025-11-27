@@ -5,10 +5,13 @@ import com.prj.ecommerce.dto.request.CreateShopRequest;
 import com.prj.ecommerce.dto.response.CreateShopResponse;
 import com.prj.ecommerce.entity.ShopEntity;
 import com.prj.ecommerce.entity.UserEntity;
+import com.prj.ecommerce.exception.UserAlreadyHasShopException;
 import com.prj.ecommerce.repository.ShopRepository;
 import com.prj.ecommerce.repository.UserRepository;
 import com.prj.ecommerce.service.ShopService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -22,14 +25,14 @@ public class ShopServiceImpl implements ShopService {
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
     @Override
     public CreateShopResponse createShop(CreateShopRequest createShopRequest) {
         UserEntity user = getCurrentUser();
         if (shopRepository.findByUser_Id(user.getId()).isPresent()) {
-            throw new RuntimeException("User already owns a shop");
+            throw new UserAlreadyHasShopException("User already owns a shop");
         }
 
         user.setRole(UserRole.SELLER);
@@ -48,9 +51,9 @@ public class ShopServiceImpl implements ShopService {
     public CreateShopResponse updateShop(Long shopId, CreateShopRequest createShopRequest) {
         UserEntity user = getCurrentUser();
         ShopEntity shop = shopRepository.findById(shopId)
-                .orElseThrow(() -> new RuntimeException("Shop not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
         if (!shop.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("You are not allowed to update this shop");
+            throw new AccessDeniedException("You are not allowed to update this shop");
         }
 
         shop.setShopName(createShopRequest.getShopName());

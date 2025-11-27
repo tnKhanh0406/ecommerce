@@ -7,7 +7,9 @@ import com.prj.ecommerce.entity.*;
 import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.ProductService;
 import com.prj.ecommerce.utils.SkuUtil;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +35,7 @@ public class ProductServiceImpl implements ProductService {
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
     @Override
@@ -41,10 +43,10 @@ public class ProductServiceImpl implements ProductService {
     public CreateProductResponse createProduct(CreateProductRequest request) {
         //1. validate shop belong to seller
         ShopEntity shop = shopRepository.findById(request.getShopId())
-                .orElseThrow(() -> new RuntimeException("Shop not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
         UserEntity user = getCurrentUser();
         if (!shop.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Shop does not belong to seller");
+            throw new AccessDeniedException("Shop does not belong to seller");
         }
 
         //2. create product
@@ -60,7 +62,7 @@ public class ProductServiceImpl implements ProductService {
                ProductCategoryEntity productCategory = new ProductCategoryEntity();
                productCategory.setProduct(product);
                CategoryEntity category = categoryRepo.findById(categoryId)
-                       .orElseThrow(() -> new RuntimeException("Category not found")) ;
+                       .orElseThrow(() -> new EntityNotFoundException("Category not found")) ;
                productCategory.setCategory(category);
                productCategoryRepo.save(productCategory);
            }
