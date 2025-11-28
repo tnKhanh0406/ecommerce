@@ -1,15 +1,16 @@
 package com.prj.ecommerce.controller;
 
+import com.prj.ecommerce.dto.request.ChangePasswordRequest;
 import com.prj.ecommerce.dto.request.LoginRequest;
 import com.prj.ecommerce.dto.request.RegisterRequest;
+import com.prj.ecommerce.dto.request.UpdateProfileRequest;
 import com.prj.ecommerce.dto.response.UserResponse;
 import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.service.UserService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class UserController {
@@ -26,14 +27,25 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> loginUser(@Valid @RequestBody LoginRequest loginRequest) {
         return ResponseEntity.ok(userService.verifyUser(loginRequest));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> registerUser(@RequestBody RegisterRequest registerRequest) {
-        UserEntity user = userService.registerUser(registerRequest);
-        UserResponse res = new UserResponse().toUserResponse(user);
-        return ResponseEntity.ok(res);
+    public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(userService.registerUser(registerRequest));
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest changePasswordRequest) {
+        userService.changePassword(changePasswordRequest);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/update-profile")
+    public ResponseEntity<UserResponse> updateProfile(@Valid @RequestBody UpdateProfileRequest updateProfileRequest) {
+        return ResponseEntity.ok(userService.updateUser(updateProfileRequest));
     }
 }
