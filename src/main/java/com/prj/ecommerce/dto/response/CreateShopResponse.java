@@ -27,7 +27,7 @@ public class CreateShopResponse {
 
     private Integer totalProducts;
 
-    public CreateShopResponse toCreateResponse(ShopEntity shop) {
+    public static CreateShopResponse fromEntity(ShopEntity shop) {
         return new CreateShopResponse(
                 shop.getId(),
                 shop.getShopName(),

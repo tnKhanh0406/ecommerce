@@ -14,7 +14,7 @@ public class CreateProductResponse {
     private String name;
     private String description;
 
-    public static CreateProductResponse from(ProductEntity p) {
+    public static CreateProductResponse fromEntity(ProductEntity p) {
         CreateProductResponse r = new CreateProductResponse();
         r.setId(p.getId());
         r.setName(p.getName());

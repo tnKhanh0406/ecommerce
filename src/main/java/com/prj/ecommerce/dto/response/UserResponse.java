@@ -21,7 +21,7 @@ public class UserResponse {
     private String role;
     private LocalDateTime createdAt;
 
-    public UserResponse toUserResponse(UserEntity user) {
+    public static UserResponse fromEntity(UserEntity user) {
         return new UserResponse(
                 user.getId(),
                 user.getUsername(),
