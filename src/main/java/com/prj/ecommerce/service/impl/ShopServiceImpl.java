@@ -65,6 +65,12 @@ public class ShopServiceImpl implements ShopService {
 
     @Override
     public void deleteShop(Long shopId) {
+        UserEntity user = getCurrentUser();
+        ShopEntity shop = shopRepository.findById(shopId)
+                .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
+        if (!shop.getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("You are not allowed to update this shop");
+        }
         shopRepository.deleteById(shopId);
     }
 }
