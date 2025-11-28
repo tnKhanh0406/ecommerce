@@ -167,6 +167,6 @@ public class ProductServiceImpl implements ProductService {
                 }
             }
         }
-        return CreateProductResponse.from(product);
+        return CreateProductResponse.fromEntity(product);
     }
 }

@@ -44,7 +44,7 @@ public class ShopServiceImpl implements ShopService {
         shopEntity.setDescription(createShopRequest.getDescription());
         shopEntity.setLogoUrl(createShopRequest.getLogoUrl());
         shopRepository.save(shopEntity);
-        return new CreateShopResponse().toCreateResponse(shopEntity);
+        return CreateShopResponse.fromEntity(shopEntity);
     }
 
     @Override
@@ -60,7 +60,7 @@ public class ShopServiceImpl implements ShopService {
         shop.setDescription(createShopRequest.getDescription());
         shop.setLogoUrl(createShopRequest.getLogoUrl());
         shopRepository.save(shop);
-        return new CreateShopResponse().toCreateResponse(shop);
+        return CreateShopResponse.fromEntity(shop);
     }
 
     @Override
