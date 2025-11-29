@@ -29,6 +29,14 @@ public class UserAddressServiceImpl implements UserAddressService {
     @Override
     public CreateAddressResponse createAddress(CreateAddressRequest request) {
         UserAddressEntity userAddress = new UserAddressEntity();
+        UserAddressEntity address = userAddressRepository.findByUser_IdAndIsDefault(getCurrentUser().getId(), 1).orElse(null);
+        if (address == null) {
+            userAddress.setIsDefault(1);
+        } else {
+            if (request.getIsDefault() != null && request.getIsDefault().equals(1)) {
+                address.setIsDefault(0);
+            }
+        }
         userAddress.setAddress(request.getAddress());
         userAddress.setUser(getCurrentUser());
         userAddress.setIsDefault(request.getIsDefault());
@@ -43,6 +51,10 @@ public class UserAddressServiceImpl implements UserAddressService {
                 .orElseThrow(() -> new EntityNotFoundException("UserAddress not found"));
         if (!getCurrentUser().getId().equals(userAddress.getUser().getId())) {
             throw new AccessDeniedException("You do not have permission to update this address");
+        }
+        UserAddressEntity address = userAddressRepository.findByUser_IdAndIsDefault(getCurrentUser().getId(), 1).orElse(null);
+        if (address != null && request.getIsDefault().equals(1)) {
+            address.setIsDefault(0);
         }
         userAddress.setAddress(request.getAddress());
         userAddress.setReceiverPhone(request.getReceiverPhone());
