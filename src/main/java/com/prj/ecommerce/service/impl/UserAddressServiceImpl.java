@@ -13,6 +13,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserAddressServiceImpl implements UserAddressService {
@@ -71,5 +73,13 @@ public class UserAddressServiceImpl implements UserAddressService {
             throw new AccessDeniedException("You do not have permission to update this address");
         }
         userAddressRepository.delete(userAddress);
+    }
+
+    @Override
+    public List<CreateAddressResponse> getAllAddresses() {
+        return userAddressRepository.findAllByUser_Id(getCurrentUser().getId())
+                .stream()
+                .map(CreateAddressResponse::fromEntity)
+                .toList();
     }
 }

@@ -9,11 +9,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/addresses")
 @RequiredArgsConstructor
 public class UserAddressController {
     private final UserAddressService userAddressService;
+
+    @GetMapping
+    public List<CreateAddressResponse> getAllAddresses() {
+        return userAddressService.getAllAddresses();
+    }
 
     @PostMapping
     public ResponseEntity<CreateAddressResponse> createAddress(@Valid @RequestBody CreateAddressRequest request) {
