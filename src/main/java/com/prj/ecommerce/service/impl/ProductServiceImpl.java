@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -58,115 +59,147 @@ public class ProductServiceImpl implements ProductService {
 
         //3. set category
         if (request.getCategoryIds() != null) {
-           for(Long categoryId : request.getCategoryIds()) {
-               ProductCategoryEntity productCategory = new ProductCategoryEntity();
-               productCategory.setProduct(product);
-               CategoryEntity category = categoryRepo.findById(categoryId)
-                       .orElseThrow(() -> new EntityNotFoundException("Category not found")) ;
-               productCategory.setCategory(category);
-               productCategoryRepo.save(productCategory);
-           }
+           createProductCategories(product, request.getCategoryIds());
         }
 
-        // 4. Process attributes: create attribute if missing + values
+        // 4. process attributes: create attribute if missing + values
         // Map attributeName -> attributeEntity
-        Map<String, ProductAttributeEntity> attrMap = new HashMap<>();
-        if (request.getAttributes() != null) {
-            for (ProductAttributeRequest aReq : request.getAttributes()) {
-                // find attribute: first seller-specific, then global
-                ProductAttributeEntity attribute = attributeRepo.findByNameForSeller(aReq.getName(), user.getId())
-                        .orElseGet(() -> {
-                            ProductAttributeEntity attr = new ProductAttributeEntity();
-                            attr.setName(aReq.getName());
-                            // set seller
-                            attr.setSeller(user);
-                            return attributeRepo.save(attr);
-                        });
-                attrMap.put(attribute.getName(), attribute);
+        Map<String, ProductAttributeEntity> attrMap = processProductAttributes(request.getAttributes(), user);
 
-                // create values (if any)
-                if (aReq.getValues() != null) {
-                    for (ProductAttributeValueRequest v : aReq.getValues()) {
-                        String val = v.getValue();
-                        valueRepo.findByProductAttribute_IdAndValue(attribute.getId(), val)
-                                .orElseGet(() -> {
-                                    ProductAttributeValueEntity pav = new ProductAttributeValueEntity();
-                                    pav.setValue(val);
-                                    pav.setProductAttribute(attribute);
-                                    return valueRepo.save(pav);
-                                });
-                    }
-                }
-            }
-        }
-
-        // 5. Process images at product level
+        // 5. create images at product level
         if (request.getImages() != null) {
-            for (ProductImageRequest im : request.getImages()) {
-                ProductImageEntity pi = new ProductImageEntity();
-                pi.setImageUrl(im.getImageUrl());
-                pi.setImageType(ImageType.THUMBNAIL);
-                pi.setProduct(product);
-                imageRepo.save(pi);
-            }
+            createProductImages(product, null, request.getImages());
         }
 
-        // 6. Create variants
+        // 6. create variants
         if (request.getVariants() != null) {
-            for (int i = 0; i < request.getVariants().size(); ++i) {
-                ProductVariantRequest vr = request.getVariants().get(i);
-                ProductVariantEntity variant = new ProductVariantEntity();
-                variant.setProduct(product);
-                variant.setPrice(vr.getPrice());
-                variant.setStock(vr.getStock());
-                variant.setSku(vr.getSku() == null || vr.getSku().isBlank()
-                        ? SkuUtil.generateSku(product, i)
-                        : vr.getSku());
-                variant = variantRepo.save(variant);
-
-                // save variant attribute values
-                if (vr.getAttributes() != null) {
-                    for (ProductVariantAttributeValueRequest pair : vr.getAttributes()) {
-                        // find attribute by name in attrMap (if seller passed)
-                        ProductAttributeEntity attr = attrMap.get(pair.getAttribute());
-                        if (attr == null) {
-                            // create attribute on the fly (seller-scope)
-                            ProductAttributeEntity newAttr = new ProductAttributeEntity();
-                            newAttr.setName(pair.getAttribute());
-                            newAttr.setSeller(user);
-                            attr = attributeRepo.save(newAttr);
-                            attrMap.put(attr.getName(), attr);
-                        }
-                        // find or create attribute value
-                        ProductAttributeEntity finalAttr = attr;
-                        ProductAttributeValueEntity pav = valueRepo.findByProductAttribute_IdAndValue(attr.getId(), pair.getValue())
-                                .orElseGet(() -> {
-                                    ProductAttributeValueEntity newVal = new ProductAttributeValueEntity();
-                                    newVal.setValue(pair.getValue());
-                                    newVal.setProductAttribute(finalAttr);
-                                    return valueRepo.save(newVal);
-                                });
-                        // create variant_attribute_value
-                        ProductVariantAttributeValueEntity vv = new ProductVariantAttributeValueEntity();
-                        vv.setVariant(variant);
-                        vv.setAttributeValue(pav);
-                        vv.setDisplayName(pair.getDisplayName());
-                        variantAttrRepo.save(vv);
-                    }
-                }
-
-                if (vr.getImages() != null) {
-                    for (ProductImageRequest im : vr.getImages()) {
-                        ProductImageEntity pi = new ProductImageEntity();
-                        pi.setImageUrl(im.getImageUrl());
-                        pi.setImageType(ImageType.VARIANT);
-                        pi.setProduct(product);
-                        pi.setVariant(variant);
-                        imageRepo.save(pi);
-                    }
-                }
-            }
+            createProductVariants(product, request.getVariants(), attrMap);
         }
         return CreateProductResponse.fromEntity(product);
+    }
+
+    private void createProductCategories(ProductEntity product, List<Long> categoryIds) {
+        for (Long categoryId : categoryIds) {
+            ProductCategoryEntity productCategory = new ProductCategoryEntity();
+            productCategory.setProduct(product);
+            CategoryEntity category = categoryRepo.findById(categoryId)
+                    .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+            productCategory.setCategory(category);
+            productCategoryRepo.save(productCategory);
+        }
+    }
+
+    private Map<String, ProductAttributeEntity> processProductAttributes(List<ProductAttributeRequest> attributeRequests,
+                                                                         UserEntity user) {
+        Map<String, ProductAttributeEntity> attrMap = new HashMap<>();
+
+        if (attributeRequests == null || attributeRequests.isEmpty()) {
+            return attrMap;
+        }
+
+        for (ProductAttributeRequest aReq : attributeRequests) {
+            ProductAttributeEntity attribute = findOrCreateAttribute(aReq. getName(), user);
+            attrMap.put(attribute.getName(), attribute);
+
+            if (aReq.getValues() != null) {
+                createAttributeValues(attribute, aReq.getValues());
+            }
+        }
+
+        return attrMap;
+    }
+
+    private void createAttributeValues(ProductAttributeEntity attr, List<ProductAttributeValueRequest> attrValues) {
+        for (ProductAttributeValueRequest attrValue : attrValues) {
+            String val = attrValue.getValue();
+            valueRepo.findByProductAttribute_IdAndValue(attr.getId(), val)
+                    .orElseGet(() -> {
+                        ProductAttributeValueEntity pav = new ProductAttributeValueEntity();
+                        pav.setValue(val);
+                        pav.setProductAttribute(attr);
+                        return valueRepo.save(pav);
+                    });
+        }
+    }
+
+    private ProductAttributeEntity findOrCreateAttribute(String attributeName, UserEntity user) {
+        return attributeRepo.findByNameForSeller(attributeName, user.getId())
+                .orElseGet(() -> {
+                    ProductAttributeEntity attr = new ProductAttributeEntity();
+                    attr.setName(attributeName);
+                    attr.setSeller(user);
+                    return attributeRepo.save(attr);
+                });
+    }
+
+    private void createProductImages(ProductEntity product, ProductVariantEntity variant, List<ProductImageRequest> images) {
+        for (ProductImageRequest im : images) {
+            ProductImageEntity image = new ProductImageEntity();
+            image.setImageUrl(im.getImageUrl());
+            image.setProduct(product);
+            if (variant != null) {
+                image.setVariant(variant);
+                image.setImageType(ImageType.VARIANT);
+            } else {
+                image.setImageType(ImageType.THUMBNAIL);
+            }
+            imageRepo.save(image);
+        }
+    }
+
+    private void createProductVariants(ProductEntity product,
+                                       List<ProductVariantRequest> variantRequests,
+                                       Map<String, ProductAttributeEntity> attrMap) {
+        if (variantRequests == null || variantRequests.isEmpty()) {
+            return;
+        }
+
+        for (int i = 0; i < variantRequests.size(); i++) {
+            ProductVariantRequest vr = variantRequests.get(i);
+            ProductVariantEntity variant = createVariant(product, vr, i);
+
+            if (vr.getAttributes() != null) {
+                createVariantAttributeValues(vr.getAttributes(), variant, attrMap);
+            }
+
+            if (vr.getImages() != null) {
+                createProductImages(product, variant, vr. getImages());
+            }
+        }
+    }
+
+    private ProductVariantEntity createVariant(ProductEntity product, ProductVariantRequest request, int index) {
+        ProductVariantEntity variant = new ProductVariantEntity();
+        variant.setProduct(product);
+        variant.setPrice(request.getPrice());
+        variant.setStock(request.getStock());
+        variant.setSku(request.getSku() == null || request.getSku().isBlank()
+                ? SkuUtil.generateSku(product, index)
+                : request.getSku());
+        return variantRepo.save(variant);
+    }
+
+    private void createVariantAttributeValues(List<ProductVariantAttributeValueRequest> requests,
+                                              ProductVariantEntity variant,
+                                              Map<String, ProductAttributeEntity> attrMap) {
+        for (ProductVariantAttributeValueRequest pair : requests) {
+            ProductAttributeEntity attr = attrMap.get(pair.getAttribute());
+            if (attr == null) {
+                throw new EntityNotFoundException("Attribute not found: " + pair.getAttribute());
+            }
+
+            // Find attribute value
+            ProductAttributeValueEntity pav = valueRepo
+                    .findByProductAttribute_IdAndValue(attr.getId(), pair.getValue())
+                    . orElseThrow(() -> new EntityNotFoundException(
+                            "Value attribute not found: " + pair.getValue() + " for attribute: " + pair.getAttribute()));
+
+            // Create variant_attribute_value
+            ProductVariantAttributeValueEntity vv = new ProductVariantAttributeValueEntity();
+            vv.setVariant(variant);
+            vv.setAttributeValue(pav);
+            vv.setDisplayName(pair.getDisplayName());
+            variantAttrRepo.save(vv);
+        }
     }
 }
