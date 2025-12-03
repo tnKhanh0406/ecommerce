@@ -14,10 +14,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import java.util.*;
+import java.util.stream.Collectors;
+//product khong co attribute -> product image type dang la variant, dung ra phai la thumbnail
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
@@ -32,6 +31,7 @@ public class ProductServiceImpl implements ProductService {
     private final UserRepository userRepository;
     private final ShopRepository shopRepository;
     private final CategoryRepository categoryRepo;
+    private final ProductImageRepository productImageRepository;
 
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -76,6 +76,77 @@ public class ProductServiceImpl implements ProductService {
             createProductVariants(product, request.getVariants(), attrMap);
         }
         return CreateProductResponse.fromEntity(product);
+    }
+
+    @Override
+    public CreateProductResponse updateBasicProduct(Long productId, UpdateBasicProductRequest request) {
+        ProductEntity product = productRepo.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+        if (!product.getShop().getUser().getId().equals(getCurrentUser().getId())) {
+            throw new AccessDeniedException("This product not belong to you");
+        }
+        product.setName(request.getName());
+        product.setDescription(request.getDescription());
+        productRepo.save(product);
+        if (request.getCategoryIds() != null) {
+            updateProductCategories(product, request.getCategoryIds());
+        }
+        if (request.getImages() != null) {
+            updateProductImages(product, request.getImages());
+        }
+        return CreateProductResponse.fromEntity(product);
+    }
+
+    private void updateProductImages(ProductEntity product, List<ProductImageRequest> images) {
+        Set<String> newImageUrls = images.stream()
+                .map(ProductImageRequest::getImageUrl)
+                .collect(Collectors.toSet());
+        List<ProductImageEntity> currentImages = productImageRepository.findAllByProduct_IdAndImageType(product.getId(), ImageType.THUMBNAIL);
+        Set<String> currentImageUrls = currentImages
+                .stream()
+                .map(ProductImageEntity::getImageUrl)
+                .collect(Collectors.toSet());
+
+        for(ProductImageEntity image : currentImages) {
+            if(!newImageUrls.contains(image.getImageUrl())) {
+                productImageRepository.delete(image);
+            }
+        }
+
+        for(ProductImageRequest imgReq : images){
+            if(!currentImageUrls.contains(imgReq.getImageUrl())){
+                ProductImageEntity img = new ProductImageEntity();
+                img.setImageUrl(imgReq.getImageUrl());
+                img.setImageType(ImageType.THUMBNAIL);
+                img.setProduct(product);
+                productImageRepository.save(img);
+            }
+        }
+    }
+
+    private void updateProductCategories(ProductEntity product, List<Long> categoryIds) {
+        Set<Long> newCategoryIds = new HashSet<>(categoryIds);
+        List<ProductCategoryEntity> current = productCategoryRepo.findAllByProduct_Id(product.getId());
+        Set<Long> currentCategoryIds = current.stream()
+                .map(pc -> pc.getCategory().getId())
+                .collect(Collectors.toSet());
+
+        for (ProductCategoryEntity pc : current) {
+            if (!newCategoryIds.contains(pc.getCategory().getId())) {
+                productCategoryRepo.delete(pc);
+            }
+        }
+
+        for (Long categoryId : newCategoryIds) {
+            if (!currentCategoryIds.contains(categoryId)) {
+                CategoryEntity category = categoryRepo.findById(categoryId)
+                        .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+                ProductCategoryEntity pc = new ProductCategoryEntity();
+                pc.setCategory(category);
+                pc.setProduct(product);
+                productCategoryRepo.save(pc);
+            }
+        }
     }
 
     private void createProductCategories(ProductEntity product, List<Long> categoryIds) {
