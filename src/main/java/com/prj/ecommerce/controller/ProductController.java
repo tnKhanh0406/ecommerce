@@ -1,8 +1,11 @@
 package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.dto.request.CreateProductRequest;
+import com.prj.ecommerce.dto.request.ProductVariantListRequest;
 import com.prj.ecommerce.dto.request.UpdateBasicProductRequest;
 import com.prj.ecommerce.dto.response.CreateProductResponse;
+import com.prj.ecommerce.dto.response.ProductVariantListResponse;
+import com.prj.ecommerce.dto.response.ProductVariantResponse;
 import com.prj.ecommerce.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +27,16 @@ public class ProductController {
     }
 
     @PutMapping("/{productId}/basic")
-    public ResponseEntity<CreateProductResponse> updateProduct(@PathVariable Long productId,
+    public ResponseEntity<CreateProductResponse> updateBasicProduct(@PathVariable Long productId,
                                                                @Valid @RequestBody UpdateBasicProductRequest request) {
         CreateProductResponse createProductResponse = productService.updateBasicProduct(productId, request);
         return ResponseEntity.ok(createProductResponse);
+    }
+
+    @PutMapping("/{productId}/variants")
+    public ResponseEntity<ProductVariantListResponse> updateBasicProductVariant(@PathVariable Long productId,
+                                                                                @Valid @RequestBody ProductVariantListRequest request) {
+        ProductVariantListResponse productVariantResponse = productService.updateBasicProductVariant(productId, request);
+        return ResponseEntity.ok(productVariantResponse);
     }
 }

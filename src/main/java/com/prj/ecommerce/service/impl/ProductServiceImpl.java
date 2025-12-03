@@ -3,6 +3,8 @@ package com.prj.ecommerce.service.impl;
 import com.prj.ecommerce.common.ImageType;
 import com.prj.ecommerce.dto.request.*;
 import com.prj.ecommerce.dto.response.CreateProductResponse;
+import com.prj.ecommerce.dto.response.ProductVariantListResponse;
+import com.prj.ecommerce.dto.response.ProductVariantResponse;
 import com.prj.ecommerce.entity.*;
 import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.ProductService;
@@ -32,6 +34,7 @@ public class ProductServiceImpl implements ProductService {
     private final ShopRepository shopRepository;
     private final CategoryRepository categoryRepo;
     private final ProductImageRepository productImageRepository;
+    private final ProductVariantRepository productVariantRepository;
 
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -79,6 +82,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public CreateProductResponse updateBasicProduct(Long productId, UpdateBasicProductRequest request) {
         ProductEntity product = productRepo.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
@@ -92,16 +96,50 @@ public class ProductServiceImpl implements ProductService {
             updateProductCategories(product, request.getCategoryIds());
         }
         if (request.getImages() != null) {
-            updateProductImages(product, request.getImages());
+            updateProductImages(product, null, request.getImages());
         }
         return CreateProductResponse.fromEntity(product);
     }
 
-    private void updateProductImages(ProductEntity product, List<ProductImageRequest> images) {
+    @Override
+    @Transactional
+    public ProductVariantListResponse updateBasicProductVariant(Long productId, ProductVariantListRequest request) {
+        ProductEntity product = productRepo.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+        if (!product.getShop().getUser().getId().equals(getCurrentUser().getId())) {
+            throw new AccessDeniedException("This product not belong to you");
+        }
+        List<ProductVariantEntity> entities = productVariantRepository.findByProductId(productId);
+        Map<Long, ProductVariantEntity> variantMap = entities.stream()
+                        .collect(Collectors.toMap(ProductVariantEntity::getId, v -> v));
+        for (UpdateProductVariantRequest dto : request.getProductVariants()) {
+            ProductVariantEntity variant = variantMap.get(dto.getId());
+            if (variant == null) {
+                throw new AccessDeniedException("Variant id " + dto.getId() + " is not belong to this product");
+            }
+
+            variant.setSku(dto.getSku());
+            variant.setPrice(dto.getPrice());
+            variant.setStock(dto.getStock());
+
+            // update images
+            updateProductImages(product, variant, dto.getImages());
+
+            productVariantRepository.save(variant);
+        }
+        return ProductVariantListResponse.fromEntity(entities);
+    }
+
+    private void updateProductImages(ProductEntity product, ProductVariantEntity variant, List<ProductImageRequest> images) {
         Set<String> newImageUrls = images.stream()
                 .map(ProductImageRequest::getImageUrl)
                 .collect(Collectors.toSet());
-        List<ProductImageEntity> currentImages = productImageRepository.findAllByProduct_IdAndImageType(product.getId(), ImageType.THUMBNAIL);
+        List<ProductImageEntity> currentImages = new ArrayList<>();
+        if (variant == null) {
+            currentImages = productImageRepository.findAllByProduct_IdAndImageType(product.getId(), ImageType.THUMBNAIL);
+        } else {
+            currentImages = productImageRepository.findAllByVariant_IdAndImageType(variant.getId(), ImageType.VARIANT);
+        }
         Set<String> currentImageUrls = currentImages
                 .stream()
                 .map(ProductImageEntity::getImageUrl)
@@ -117,8 +155,13 @@ public class ProductServiceImpl implements ProductService {
             if(!currentImageUrls.contains(imgReq.getImageUrl())){
                 ProductImageEntity img = new ProductImageEntity();
                 img.setImageUrl(imgReq.getImageUrl());
-                img.setImageType(ImageType.THUMBNAIL);
                 img.setProduct(product);
+                if (variant == null) {
+                    img.setImageType(ImageType.THUMBNAIL);
+                } else {
+                    img.setImageType(ImageType.VARIANT);
+                    img.setVariant(variant);
+                }
                 productImageRepository.save(img);
             }
         }
