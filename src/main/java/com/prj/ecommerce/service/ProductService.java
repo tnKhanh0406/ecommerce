@@ -12,4 +12,5 @@ public interface ProductService {
     CreateProductResponse updateBasicProduct(Long productId, UpdateBasicProductRequest request);
     ProductVariantListResponse updateBasicProductVariant(Long productId, ProductVariantListRequest request);
     CreateProductResponse updateAttribute(Long productId, UpdateAttributeRequest updateAttributeRequest);
+    void deleteProduct(Long productId);
 }

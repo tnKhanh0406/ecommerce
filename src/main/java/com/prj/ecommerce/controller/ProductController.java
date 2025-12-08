@@ -45,10 +45,18 @@ public class ProductController {
         return ResponseEntity.ok(productVariantResponse);
     }
 
+    @PreAuthorize("hasRole('SELLER')")
     @PutMapping("/{productId}/attributes")
     public  ResponseEntity<CreateProductResponse> updateAttributes(@PathVariable Long productId,
                                                                    @Valid @RequestBody UpdateAttributeRequest request) {
         CreateProductResponse createProductResponse = productService.updateAttribute(productId, request);
         return ResponseEntity.ok(createProductResponse);
+    }
+
+    @PreAuthorize("hasRole('SELLER')")
+    @DeleteMapping("/{productId}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long productId) {
+        productService.deleteProduct(productId);
+        return ResponseEntity.noContent().build();
     }
 }

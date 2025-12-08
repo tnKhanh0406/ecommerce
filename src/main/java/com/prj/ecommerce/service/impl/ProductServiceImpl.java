@@ -131,6 +131,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public CreateProductResponse updateAttribute(Long productId, UpdateAttributeRequest updateAttributeRequest) {
         ProductEntity product = productRepo.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
@@ -190,6 +191,18 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return CreateProductResponse.fromEntity(product);
+    }
+
+    @Override
+    @Transactional
+    public void deleteProduct(Long productId) {
+        ProductEntity product = productRepo.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+        if (!product.getShop().getUser().getId().equals(getCurrentUser().getId())) {
+            throw new AccessDeniedException("This product not belong to you");
+        }
+        productCategoryRepo.deleteAllByProduct_Id(productId);
+        productRepo.deleteById(productId);
     }
 
     private Map<String, ProductVariantRequest> buildNewVariantMap(List<ProductVariantRequest> requests) {
