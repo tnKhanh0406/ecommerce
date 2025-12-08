@@ -2,6 +2,7 @@ package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.dto.request.CreateProductRequest;
 import com.prj.ecommerce.dto.request.ProductVariantListRequest;
+import com.prj.ecommerce.dto.request.UpdateAttributeRequest;
 import com.prj.ecommerce.dto.request.UpdateBasicProductRequest;
 import com.prj.ecommerce.dto.response.CreateProductResponse;
 import com.prj.ecommerce.dto.response.ProductVariantListResponse;
@@ -11,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class ProductController {
     private final ProductService productService;
 
+    @PreAuthorize("hasRole('SELLER')")
     @PostMapping
     public ResponseEntity<CreateProductResponse> createProduct(@Valid @RequestBody CreateProductRequest request) {
         return ResponseEntity
@@ -26,6 +29,7 @@ public class ProductController {
                 .body(productService.createProduct(request));
     }
 
+    @PreAuthorize("hasRole('SELLER')")
     @PutMapping("/{productId}/basic")
     public ResponseEntity<CreateProductResponse> updateBasicProduct(@PathVariable Long productId,
                                                                @Valid @RequestBody UpdateBasicProductRequest request) {
@@ -33,10 +37,18 @@ public class ProductController {
         return ResponseEntity.ok(createProductResponse);
     }
 
+    @PreAuthorize("hasRole('SELLER')")
     @PutMapping("/{productId}/variants")
     public ResponseEntity<ProductVariantListResponse> updateBasicProductVariant(@PathVariable Long productId,
                                                                                 @Valid @RequestBody ProductVariantListRequest request) {
         ProductVariantListResponse productVariantResponse = productService.updateBasicProductVariant(productId, request);
         return ResponseEntity.ok(productVariantResponse);
+    }
+
+    @PutMapping("/{productId}/attributes")
+    public  ResponseEntity<CreateProductResponse> updateAttributes(@PathVariable Long productId,
+                                                                   @Valid @RequestBody UpdateAttributeRequest request) {
+        CreateProductResponse createProductResponse = productService.updateAttribute(productId, request);
+        return ResponseEntity.ok(createProductResponse);
     }
 }

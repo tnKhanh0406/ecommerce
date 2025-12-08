@@ -130,11 +130,106 @@ public class ProductServiceImpl implements ProductService {
         return ProductVariantListResponse.fromEntity(entities);
     }
 
+    @Override
+    public CreateProductResponse updateAttribute(Long productId, UpdateAttributeRequest updateAttributeRequest) {
+        ProductEntity product = productRepo.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+        if (!product.getShop().getUser().getId().equals(getCurrentUser().getId())) {
+            throw new AccessDeniedException("This product not belong to you");
+        }
+        List<ProductVariantEntity> variants = productVariantRepository.findByProductId(productId);
+        Map<String, ProductVariantEntity> oldVariantMap = buildVariantMap(variants);
+        Map<String, ProductVariantRequest> newVariantMap = buildNewVariantMap(updateAttributeRequest.getVariants());
+
+        //Update remain variants
+        for (String key : newVariantMap.keySet()) {
+            if (oldVariantMap.containsKey(key)) {
+
+                ProductVariantEntity oldVariant = oldVariantMap.get(key);
+                ProductVariantRequest newVariant = newVariantMap.get(key);
+
+                oldVariant.setSku(newVariant.getSku());
+                oldVariant.setPrice(newVariant.getPrice());
+                oldVariant.setStock(newVariant.getStock());
+
+                updateProductImages(product, oldVariant, newVariant.getImages());
+
+                productVariantRepository.save(oldVariant);
+            }
+        }
+
+        //Delete variants
+        for (String key : oldVariantMap.keySet()) {
+            if (!newVariantMap.containsKey(key)) {
+                productVariantRepository.delete(oldVariantMap.get(key));
+            }
+        }
+
+        //Insert new variants
+        int i = 0;
+        for (String key : newVariantMap.keySet()) {
+
+            if (!oldVariantMap.containsKey(key)) {
+
+                ProductVariantRequest newVariant = newVariantMap.get(key);
+
+                ProductVariantEntity entity = new ProductVariantEntity();
+                entity.setProduct(product);
+                entity.setSku(newVariant.getSku() == null ? SkuUtil.generateSku(product, i) : newVariant.getSku());
+                entity.setPrice(newVariant.getPrice());
+                entity.setStock(newVariant.getStock());
+
+                productVariantRepository.save(entity);
+
+                Map<String, ProductAttributeEntity> attrMap = processProductAttributes(updateAttributeRequest.getAttributes(), getCurrentUser());
+                createVariantAttributeValues(newVariant.getAttributes(), entity, attrMap);
+                createProductImages(product, entity, newVariant.getImages());
+
+                i++;
+            }
+        }
+
+        return CreateProductResponse.fromEntity(product);
+    }
+
+    private Map<String, ProductVariantRequest> buildNewVariantMap(List<ProductVariantRequest> requests) {
+        Map<String, ProductVariantRequest> newVariantMap = new HashMap<>();
+        for (ProductVariantRequest request : requests) {
+            newVariantMap.put(buildVariantKey(request.getAttributes()), request);
+        }
+        return newVariantMap;
+    }
+
+    private Map<String, ProductVariantEntity> buildVariantMap(List<ProductVariantEntity> variants) {
+        Map<String, ProductVariantEntity> variantMap = new HashMap<>();
+        for (ProductVariantEntity variant : variants) {
+            List<ProductVariantAttributeValueRequest> attrs = variant.getAttributes()
+                    .stream()
+                    .map(v -> new ProductVariantAttributeValueRequest(
+                            v.getAttributeValue().getProductAttribute().getName(),
+                            v.getAttributeValue().getValue(),
+                            v.getDisplayName()
+                    ))
+                    .toList();
+
+            String key = buildVariantKey(attrs);
+            variantMap.put(key, variant);
+        }
+        return variantMap;
+    }
+
+    private String buildVariantKey(List<ProductVariantAttributeValueRequest> requests) {
+        return requests.stream()
+                .sorted(Comparator.comparing(ProductVariantAttributeValueRequest::getAttribute))
+                .map(a -> a.getAttribute() + "=" + a.getValue())
+                .collect(Collectors.joining("|"));
+    }
+
     private void updateProductImages(ProductEntity product, ProductVariantEntity variant, List<ProductImageRequest> images) {
         Set<String> newImageUrls = images.stream()
                 .map(ProductImageRequest::getImageUrl)
                 .collect(Collectors.toSet());
-        List<ProductImageEntity> currentImages = new ArrayList<>();
+        List<ProductImageEntity> currentImages;
         if (variant == null) {
             currentImages = productImageRepository.findAllByProduct_IdAndImageType(product.getId(), ImageType.THUMBNAIL);
         } else {
