@@ -7,6 +7,7 @@ import com.prj.ecommerce.entity.CartEntity;
 import com.prj.ecommerce.entity.CartItemEntity;
 import com.prj.ecommerce.entity.ProductVariantEntity;
 import com.prj.ecommerce.entity.UserEntity;
+import com.prj.ecommerce.exception.BadRequestException;
 import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.CartService;
@@ -43,7 +44,6 @@ public class CartServiceImpl implements CartService {
                 .getUserEntity().getId();
     }
 
-
     @Override
     public List<AddCartItemResponse> getCartItems() {
         Long userId = getCurrentUserId();
@@ -79,6 +79,9 @@ public class CartServiceImpl implements CartService {
         ProductVariantEntity variant = productVariantRepository.findById(addCartItemRequest.getItem().getId())
                         .orElseThrow(() -> new EntityNotFoundException("Product variant not found"));
 
+        if (variant.getProduct().getShop().getUser().getId().equals(currentUser.getId())) {
+            throw new BadRequestException("Seller can not buy their own product");
+        }
         if (cartItemEntity == null) {
             // Tạo mới
             cartItemEntity = new CartItemEntity();
