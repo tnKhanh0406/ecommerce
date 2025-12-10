@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/cart")
@@ -17,6 +19,9 @@ public class CartController {
     private final CartService cartService;
 
     @GetMapping
+    public List<AddCartItemResponse> findAll() {
+        return cartService.getCartItems();
+    }
 
 
     @PostMapping
