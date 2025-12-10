@@ -3,6 +3,7 @@ package com.prj.ecommerce.dto.request;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -13,7 +14,7 @@ public class UpdateProductVariantRequest {
     private String sku;
 
     @NotNull
-    private Double price;
+    private BigDecimal price;
 
     @NotNull
     private Integer stock;

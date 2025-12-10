@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,7 +16,7 @@ import java.util.stream.Collectors;
 public class ProductVariantResponse {
     private Long id;
     private String sku;
-    private Double price;
+    private BigDecimal price;
     private Integer stock;
     private List<ProductImageResponse> images = new ArrayList<>();
     private List<ProductVariantAttributeValueResponse> attributes = new ArrayList<>();

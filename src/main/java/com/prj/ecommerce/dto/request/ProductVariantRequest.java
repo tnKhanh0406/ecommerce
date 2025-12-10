@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
@@ -16,7 +17,7 @@ public class ProductVariantRequest {
     private String sku;
 
     @NotNull
-    private Double price;
+    private BigDecimal price;
     @NotNull
     private Integer stock;
 
