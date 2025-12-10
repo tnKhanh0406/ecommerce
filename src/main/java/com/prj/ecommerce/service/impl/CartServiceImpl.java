@@ -1,21 +1,25 @@
 package com.prj.ecommerce.service.impl;
 
 import com.prj.ecommerce.dto.request.AddCartItemRequest;
+import com.prj.ecommerce.dto.request.UpdateCartItemRequest;
 import com.prj.ecommerce.dto.response.AddCartItemResponse;
 import com.prj.ecommerce.entity.CartEntity;
 import com.prj.ecommerce.entity.CartItemEntity;
 import com.prj.ecommerce.entity.ProductVariantEntity;
 import com.prj.ecommerce.entity.UserEntity;
-import com.prj.ecommerce.repository.CartItemRepository;
-import com.prj.ecommerce.repository.CartRepository;
-import com.prj.ecommerce.repository.ProductVariantRepository;
-import com.prj.ecommerce.repository.UserRepository;
+import com.prj.ecommerce.model.UserPrincipal;
+import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.CartService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +29,7 @@ public class CartServiceImpl implements CartService {
     private final UserRepository userRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductVariantRepository productVariantRepository;
+    private final ProductVariantAttributeValueRepository productVariantAttributeValueRepository;
 
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -32,24 +37,104 @@ public class CartServiceImpl implements CartService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
+    private Long getCurrentUserId() {
+        return ((UserPrincipal) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal())
+                .getUserEntity().getId();
+    }
+
+
+    @Override
+    public List<AddCartItemResponse> getCartItems() {
+        Long userId = getCurrentUserId();
+        List<CartItemEntity> items = cartItemRepository.findAllByCart_User_Id(userId);
+
+        return items.stream()
+                .map(AddCartItemResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+
     @Override
     @Transactional
     public AddCartItemResponse addCartItem(AddCartItemRequest addCartItemRequest) {
-        CartEntity cartEntity = cartRepository.findByUser_Id(getCurrentUser().getId());
+        UserEntity currentUser = getCurrentUser();
+        if (addCartItemRequest.getQuantity() < 1) {
+            throw new IllegalArgumentException("Quantity must be >= 1");
+        }
+
+        // 1. Lấy cart hoặc tạo mới
+        CartEntity cartEntity = cartRepository.findByUser_Id(currentUser.getId());
         if (cartEntity == null) {
             cartEntity = new CartEntity();
-            cartEntity.setUser(getCurrentUser());
+            cartEntity.setUser(currentUser);
             cartRepository.save(cartEntity);
         }
-        CartItemEntity cartItemEntity = new CartItemEntity();
-        cartItemEntity.setCart(cartEntity);
-        cartItemEntity.setQuantity(addCartItemRequest.getQuantity());
 
-        ProductVariantEntity entity = productVariantRepository.findById(addCartItemRequest.getItem().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Product variant not found"));
+        // 2. Kiểm tra item trong cart
+        CartItemEntity cartItemEntity = cartItemRepository.findByCart_IdAndProductVariant_Id(
+                        cartEntity.getId(),
+                        addCartItemRequest.getItem().getId());
 
-        cartItemEntity.setProductVariant(entity);
+        ProductVariantEntity variant = productVariantRepository.findById(addCartItemRequest.getItem().getId())
+                        .orElseThrow(() -> new EntityNotFoundException("Product variant not found"));
+
+        if (cartItemEntity == null) {
+            // Tạo mới
+            cartItemEntity = new CartItemEntity();
+            cartItemEntity.setCart(cartEntity);
+            cartItemEntity.setProductVariant(variant);
+            cartItemEntity.setQuantity(addCartItemRequest.getQuantity());
+
+            cartEntity.getCartItems().add(cartItemEntity);
+        } else {
+            int newQty = cartItemEntity.getQuantity() + addCartItemRequest.getQuantity();
+            cartItemEntity.setQuantity(newQty);
+        }
+
+        // 3. Kiểm tra tồn kho
+        if (cartItemEntity.getQuantity() > variant.getStock()) {
+            throw new IllegalArgumentException("Out of stock");
+        }
+
         cartItemRepository.save(cartItemEntity);
         return AddCartItemResponse.fromEntity(cartItemEntity);
+    }
+
+    @Override
+    public AddCartItemResponse updateCartItem(UpdateCartItemRequest updateCartItemRequest) {
+        CartItemEntity cartItemEntity = cartItemRepository.findById(updateCartItemRequest.getCartItemId())
+                .orElseThrow(() -> new EntityNotFoundException("Cart Item not found"));
+        if (!cartItemEntity.getCart().getUser().getId().equals(getCurrentUserId())) {
+            throw new AccessDeniedException("This cart item does not belong to user");
+        }
+        cartItemEntity.setQuantity(updateCartItemRequest.getQuantity());
+
+        Long newVariantId = productVariantAttributeValueRepository.findProductVariantIdByProductAndVariantAttributeValues(
+                cartItemEntity.getProductVariant().getProduct().getId(),
+                updateCartItemRequest.getAttributeValueIds(),
+                updateCartItemRequest.getAttributeValueIds().size()
+        );
+
+        if (newVariantId == null) {
+            throw new EntityNotFoundException("Variant not found");
+        }
+        ProductVariantEntity newVariant = productVariantRepository.findById(newVariantId)
+                .orElseThrow();
+
+        cartItemEntity.setProductVariant(newVariant);
+
+        cartItemRepository.save(cartItemEntity);
+        return AddCartItemResponse.fromEntity(cartItemEntity);
+    }
+
+    @Override
+    public void deleteCartItem(Long cartItemId) {
+        CartItemEntity cartItemEntity = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new EntityNotFoundException("Cart Item not found"));
+        if (!cartItemEntity.getCart().getUser().getId().equals(getCurrentUserId())) {
+            throw new AccessDeniedException("This cart item does not belong to user");
+        }
+        cartItemRepository.delete(cartItemEntity);
     }
 }
