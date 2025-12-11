@@ -13,6 +13,9 @@ public class CartItemEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private Long shopId;
+
     @ManyToOne
     @JoinColumn(name = "cart_id")
     private CartEntity cart;

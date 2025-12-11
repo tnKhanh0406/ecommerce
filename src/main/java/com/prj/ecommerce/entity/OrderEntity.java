@@ -46,6 +46,9 @@ public class OrderEntity {
     @Column(nullable = false)
     private BigDecimal total;
 
+    @Column(nullable = false)
+    private Long shopId;
+
     @Column(columnDefinition = "TEXT")
     private String note;
 

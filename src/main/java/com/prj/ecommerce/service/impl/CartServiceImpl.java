@@ -88,6 +88,7 @@ public class CartServiceImpl implements CartService {
             cartItemEntity.setCart(cartEntity);
             cartItemEntity.setProductVariant(variant);
             cartItemEntity.setQuantity(addCartItemRequest.getQuantity());
+            cartItemEntity.setShopId(variant.getProduct().getShop().getId());
 
             cartEntity.getCartItems().add(cartItemEntity);
         } else {
