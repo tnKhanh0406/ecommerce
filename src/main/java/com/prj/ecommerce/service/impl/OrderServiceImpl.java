@@ -1,6 +1,7 @@
 package com.prj.ecommerce.service.impl;
 
 import com.prj.ecommerce.common.OrderStatus;
+import com.prj.ecommerce.common.UserRole;
 import com.prj.ecommerce.dto.request.CreateOrderRequest;
 import com.prj.ecommerce.dto.response.CreateOrderItemResponse;
 import com.prj.ecommerce.dto.response.CreateOrderListResponse;
@@ -34,6 +35,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserAddressRepository userAddressRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final OrderStatusHistoryRepository orderStatusHistoryRepository;
 
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -121,6 +123,16 @@ public class OrderServiceImpl implements OrderService {
             order.setShippingFee(shippingFee);
             order.setTotal(subTotal.add(shippingFee));
 
+            //Tạo order history
+            OrderStatusHistoryEntity orderStatusHistory = new OrderStatusHistoryEntity();
+            orderStatusHistory.setFromStatus(null);
+            orderStatusHistory.setToStatus(OrderStatus.PENDING);
+            orderStatusHistory.setChangedBy(UserRole.CUSTOMER);
+            orderStatusHistory.setChangedById(getCurrentUserId());
+            orderStatusHistory.setOrder(order);
+
+            order.getStatusHistories().add(orderStatusHistory);
+
             orderRepository.save(order);
 
             // Chuẩn bị batch save
@@ -197,6 +209,16 @@ public class OrderServiceImpl implements OrderService {
             throw new BadRequestException("Order cannot be canceled");
         }
         order.setOrderStatus(OrderStatus.CANCELLED);
+
+        OrderStatusHistoryEntity orderStatusHistory = new OrderStatusHistoryEntity();
+        orderStatusHistory.setFromStatus(order.getOrderStatus());
+        orderStatusHistory.setToStatus(OrderStatus.CANCELLED);
+        orderStatusHistory.setChangedBy(UserRole.CUSTOMER);
+        orderStatusHistory.setChangedById(getCurrentUserId());
+        orderStatusHistory.setOrder(order);
+
+        order.getStatusHistories().add(orderStatusHistory);
+
         orderRepository.save(order);
         List<ProductVariantEntity> updatedVariants = new ArrayList<>();
         for (OrderItemEntity item : order.getOrderItems()) {
