@@ -23,6 +23,11 @@ public class OrderController {
         return orderService.getOrders(keyword, status);
     }
 
+    @GetMapping("/{orderId}")
+    public CreateOrderResponse getOrder(@PathVariable Long orderId) {
+        return orderService.getOrderItems(orderId);
+    }
+
     @PostMapping
     public ResponseEntity<CreateOrderListResponse> createOrderList(@Valid @RequestBody CreateOrderRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(orderService.createOrder(request));

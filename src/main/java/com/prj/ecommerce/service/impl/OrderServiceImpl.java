@@ -63,6 +63,16 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public CreateOrderResponse getOrderItems(Long orderId) {
+        OrderEntity order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
+        if (!order.getUser().getId().equals(getCurrentUserId())) {
+            throw new AccessDeniedException("This order is not belong to the current user");
+        }
+        return CreateOrderResponse.fromEntity(order);
+    }
+
+    @Override
     @Transactional
     public CreateOrderListResponse createOrder(CreateOrderRequest request) {
 
