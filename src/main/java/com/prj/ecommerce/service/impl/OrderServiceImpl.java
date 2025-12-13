@@ -1,5 +1,6 @@
 package com.prj.ecommerce.service.impl;
 
+import com.prj.ecommerce.common.OrderStatus;
 import com.prj.ecommerce.dto.request.CreateOrderRequest;
 import com.prj.ecommerce.dto.response.CreateOrderItemResponse;
 import com.prj.ecommerce.dto.response.CreateOrderListResponse;
@@ -11,6 +12,7 @@ import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.OrderService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +21,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -148,7 +149,7 @@ public class OrderServiceImpl implements OrderService {
 
             // Build OrderResponse
             CreateOrderResponse orderResponse = CreateOrderResponse.fromEntity(order);
-            orderResponse.setItems(itemResponses);   // GẮN ITEMS VÀO RESPONSE
+            orderResponse.setItems(itemResponses);
             orderResponses.add(orderResponse);
         }
 
@@ -157,6 +158,28 @@ public class OrderServiceImpl implements OrderService {
 
         // 6. Trả response tổng
         return new CreateOrderListResponse(orderResponses);
+    }
+
+    @Override
+    public CreateOrderResponse cancelOrder(Long orderId) {
+        OrderEntity order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
+        if (!order.getUser().getId().equals(getCurrentUserId())) {
+            throw new AccessDeniedException("This order is not belong to the current user");
+        }
+        if (!order.getOrderStatus().equals(OrderStatus.PENDING)) {
+            throw new BadRequestException("Order cannot be canceled");
+        }
+        order.setOrderStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+        List<ProductVariantEntity> updatedVariants = new ArrayList<>();
+        for (OrderItemEntity item : order.getOrderItems()) {
+            ProductVariantEntity variant = item.getProductVariant();
+            variant.setStock(variant.getStock() + item.getQuantity());
+            updatedVariants.add(variant);
+        }
+        productVariantRepository.saveAll(updatedVariants);
+        return CreateOrderResponse.fromEntity(order);
     }
 
 
