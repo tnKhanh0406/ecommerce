@@ -22,6 +22,7 @@ public class CreateOrderResponse {
     private String receiverAddress;
     private String receiverPhone;
     private String receiverName;
+    private Long shopId;
     private BigDecimal subtotal;
     private BigDecimal shippingFee;
     private BigDecimal totalPrice;
@@ -37,6 +38,7 @@ public class CreateOrderResponse {
         response.setReceiverAddress(entity.getReceiverAddress());
         response.setReceiverPhone(entity.getReceiverPhone());
         response.setReceiverName(entity.getReceiverName());
+        response.setShopId(entity.getShopId());
         response.setSubtotal(entity.getSubTotal());
         response.setShippingFee(entity.getShippingFee());
         response.setTotalPrice(entity.getTotal());

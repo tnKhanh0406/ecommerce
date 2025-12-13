@@ -48,6 +48,21 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public CreateOrderListResponse getOrders(String keyword, OrderStatus status) {
+        List<OrderEntity> orderEntities;
+        boolean hasKeyword = keyword != null && !keyword.isBlank();
+        boolean hasStatus = status != null;
+        if (hasKeyword && !hasStatus) {
+            orderEntities = orderRepository.searchOrders(keyword, getCurrentUserId());
+        } else if (!hasKeyword && hasStatus) {
+            orderEntities = orderRepository.findAllByUser_IdAndOrderStatusOrderByCreatedAtDesc(getCurrentUserId(), status);
+        } else {
+            orderEntities = orderRepository.findAllByUser_IdOrderByCreatedAtDesc(getCurrentUserId());
+        }
+        return CreateOrderListResponse.fromEntity(orderEntities);
+    }
+
+    @Override
     @Transactional
     public CreateOrderListResponse createOrder(CreateOrderRequest request) {
 

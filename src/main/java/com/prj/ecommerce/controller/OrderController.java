@@ -1,5 +1,6 @@
 package com.prj.ecommerce.controller;
 
+import com.prj.ecommerce.common.OrderStatus;
 import com.prj.ecommerce.dto.request.CreateOrderRequest;
 import com.prj.ecommerce.dto.response.CreateOrderListResponse;
 import com.prj.ecommerce.dto.response.CreateOrderResponse;
@@ -16,12 +17,18 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
     private final OrderService orderService;
 
+    @GetMapping
+    public CreateOrderListResponse getOrders(@RequestParam(required = false) String keyword,
+                                             @RequestParam(required = false) OrderStatus status) {
+        return orderService.getOrders(keyword, status);
+    }
+
     @PostMapping
     public ResponseEntity<CreateOrderListResponse> createOrderList(@Valid @RequestBody CreateOrderRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(orderService.createOrder(request));
     }
 
-    @PutMapping("{/orderId}")
+    @PutMapping("/{orderId}")
     public ResponseEntity<CreateOrderResponse> updateOrder(@PathVariable Long orderId) {
         return ResponseEntity.ok(orderService.cancelOrder(orderId));
     }
