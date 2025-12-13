@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
-    private final CartRepository cartRepository;
+//    private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductVariantRepository productVariantRepository;
@@ -155,6 +155,7 @@ public class OrderServiceImpl implements OrderService {
 
                 // Update stock
                 variant.setStock(variant.getStock() - cartItem.getQuantity());
+                product.setSoldCount(product.getSoldCount() + cartItem.getQuantity());
                 updatedVariants.add(variant);
             }
 
@@ -192,6 +193,9 @@ public class OrderServiceImpl implements OrderService {
             ProductVariantEntity variant = item.getProductVariant();
             variant.setStock(variant.getStock() + item.getQuantity());
             updatedVariants.add(variant);
+
+            ProductEntity product = variant.getProduct();
+            product.setSoldCount(product.getSoldCount() - item.getQuantity());
         }
         productVariantRepository.saveAll(updatedVariants);
         return CreateOrderResponse.fromEntity(order);
