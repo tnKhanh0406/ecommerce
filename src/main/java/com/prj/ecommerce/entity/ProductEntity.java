@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,6 +26,12 @@ public class ProductEntity {
 
     @Column(nullable = false)
     private Integer soldCount = 0;
+
+    @Column(nullable = false)
+    private BigDecimal rating = BigDecimal.ZERO;
+
+    @Column(nullable = false)
+    private Integer reviewCount = 0;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

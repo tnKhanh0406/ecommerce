@@ -11,6 +11,7 @@ import com.prj.ecommerce.exception.BadRequestException;
 import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.OrderService;
+import com.prj.ecommerce.utils.VariantUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -156,7 +157,7 @@ public class OrderServiceImpl implements OrderService {
                 orderItem.setOrder(order);
                 orderItem.setProductId(product.getId());
                 orderItem.setProductName(product.getName());
-                orderItem.setProductVariantName(getProductVariantName(variant));
+                orderItem.setProductVariantName(VariantUtil.generateVariantName(variant));
                 orderItem.setQuantity(cartItem.getQuantity());
                 orderItem.setPrice(variant.getPrice());
                 orderItem.setProductVariant(variant);
@@ -237,13 +238,4 @@ public class OrderServiceImpl implements OrderService {
     private BigDecimal calculateShippingFee(Long shopId, UserAddressEntity address) {
         return BigDecimal.valueOf(25000);
     }
-
-    private String getProductVariantName(ProductVariantEntity productVariantEntity) {
-        StringBuilder sb = new StringBuilder();
-        for (ProductVariantAttributeValueEntity avv : productVariantEntity.getAttributes()) {
-            sb.append(avv.getAttributeValue().getProductAttribute().getName()).append(": ").append(avv.getDisplayName()).append(" ");
-        }
-        return sb.toString().trim();
-    }
-
 }

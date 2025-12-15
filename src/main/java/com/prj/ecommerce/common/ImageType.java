@@ -4,5 +4,6 @@ public enum ImageType {
     THUMBNAIL,
     DETAIL,
     CERTIFICATE,
-    VARIANT
+    VARIANT,
+    REVIEW
 }
