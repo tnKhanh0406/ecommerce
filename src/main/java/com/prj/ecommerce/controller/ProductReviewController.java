@@ -1,8 +1,11 @@
 package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.dto.request.ProductReviewRequest;
+import com.prj.ecommerce.dto.request.ReviewReplyRequest;
+import com.prj.ecommerce.dto.request.UpdateReplyRequest;
 import com.prj.ecommerce.dto.request.UpdateReviewRequest;
 import com.prj.ecommerce.dto.response.ProductReviewResponse;
+import com.prj.ecommerce.dto.response.ReviewReplyResponse;
 import com.prj.ecommerce.service.ProductReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,5 +27,16 @@ public class ProductReviewController {
     @PutMapping("/{reviewId}")
     public ResponseEntity<ProductReviewResponse> updateReview(@Valid @RequestBody UpdateReviewRequest request) {
         return ResponseEntity.ok(productReviewService.updateReview(request));
+    }
+
+    @PostMapping("/reply")
+    public ResponseEntity<ReviewReplyResponse> reply(@Valid @RequestBody ReviewReplyRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(productReviewService.createReply(request));
+    }
+
+    @PutMapping("/reply/{replyId}")
+    public ResponseEntity<ReviewReplyResponse> updateReply(@Valid @RequestBody UpdateReplyRequest request,
+                                                           @PathVariable Long replyId) {
+        return ResponseEntity.ok(productReviewService.updateReply(replyId, request));
     }
 }

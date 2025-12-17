@@ -2,10 +2,9 @@ package com.prj.ecommerce.service.impl;
 
 import com.prj.ecommerce.common.ImageType;
 import com.prj.ecommerce.common.OrderStatus;
-import com.prj.ecommerce.dto.request.ProductImageRequest;
-import com.prj.ecommerce.dto.request.ProductReviewRequest;
-import com.prj.ecommerce.dto.request.UpdateReviewRequest;
+import com.prj.ecommerce.dto.request.*;
 import com.prj.ecommerce.dto.response.ProductReviewResponse;
+import com.prj.ecommerce.dto.response.ReviewReplyResponse;
 import com.prj.ecommerce.entity.*;
 import com.prj.ecommerce.exception.BadRequestException;
 import com.prj.ecommerce.model.UserPrincipal;
@@ -37,6 +36,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     private final OrderItemRepository orderItemRepository;
     private final ProductImageRepository productImageRepository;
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
+    private final ReviewReplyRepository reviewReplyRepository;
 
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -86,6 +86,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         review.setRating(request.getRating());
         review.setVariantSnapshot(VariantUtil.generateVariantName(variant));
 
+        //xu ly race condition
         int newCount = product.getReviewCount() + 1;
         BigDecimal newRating = product.getRating()
                 .multiply(BigDecimal.valueOf(product.getReviewCount()))
@@ -129,6 +130,41 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         }
         productReviewRepository.save(review);
         return ProductReviewResponse.fromEntity(review);
+    }
+
+    @Override
+    public ReviewReplyResponse createReply(ReviewReplyRequest request) {
+        ProductReviewEntity review = productReviewRepository.findById(request.getReviewId())
+                .orElseThrow(() -> new EntityNotFoundException("Review not found"));
+        if (review.getReply() != null) {
+            throw new BadRequestException("Review already replied");
+        }
+
+        if (!review.getProduct().getShop().getUser().getId().equals(getCurrentUserId())) {
+            throw new AccessDeniedException("You cannot reply to this review");
+        }
+
+        ReviewReplyEntity reply = new ReviewReplyEntity();
+        reply.setContent(request.getContent());
+        reply.setSeller(getCurrentUser());
+        reply.setReview(review);
+
+        review.setReply(reply);
+        reviewReplyRepository.save(reply);
+        return ReviewReplyResponse.fromEntity(reply);
+    }
+
+    @Override
+    public ReviewReplyResponse updateReply(Long replyId, UpdateReplyRequest request) {
+        ReviewReplyEntity reply = reviewReplyRepository.findById(replyId)
+                .orElseThrow(() -> new EntityNotFoundException("Reply not found"));
+
+        if (!reply.getReview().getProduct().getShop().getUser().getId().equals(getCurrentUserId())) {
+            throw new AccessDeniedException("You cannot reply to this review");
+        }
+        reply.setContent(request.getContent());
+        reviewReplyRepository.save(reply);
+        return ReviewReplyResponse.fromEntity(reply);
     }
 
     private boolean canReview(OrderEntity order, Integer day) {

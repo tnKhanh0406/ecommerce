@@ -47,6 +47,9 @@ public class ProductReviewEntity {
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImageEntity> images = new ArrayList<>();
 
+    @OneToOne(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private ReviewReplyEntity reply;
+
     @PrePersist
     public void prePersist() {
         if (createdAt == null) {
