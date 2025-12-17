@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter @Setter
@@ -29,8 +30,8 @@ public class ProductVariantEntity {
     private ProductEntity product;
 
     @OneToMany(mappedBy = "variant", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductImageEntity> images;
+    private List<ProductImageEntity> images = new ArrayList<>();
 
     @OneToMany(mappedBy = "variant", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductVariantAttributeValueEntity> attributes;
+    private List<ProductVariantAttributeValueEntity> attributes = new ArrayList<>();
 }

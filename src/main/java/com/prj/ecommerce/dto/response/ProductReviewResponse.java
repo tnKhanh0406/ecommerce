@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -21,6 +22,7 @@ public class ProductReviewResponse {
     private String variantSnapshot;
     private String productName;
     private String productImageUrl;
+    private List<ProductImageResponse> reviewImageUrls;
 
     public static ProductReviewResponse fromEntity(ProductReviewEntity entity) {
         return new ProductReviewResponse(
@@ -31,7 +33,8 @@ public class ProductReviewResponse {
                 entity.getUpdatedAt(),
                 entity.getVariantSnapshot(),
                 entity.getProduct().getName(),
-                entity.getProduct().getImages().get(0).getImageUrl()
+                entity.getProduct().getImages().get(0).getImageUrl(),
+                entity.getImages().stream().map(ProductImageResponse::fromEntity).toList()
         );
     }
 }

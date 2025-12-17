@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -41,6 +43,9 @@ public class ProductReviewEntity {
 
     @ManyToOne
     private ShopEntity shop;
+
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductImageEntity> images = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {
