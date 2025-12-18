@@ -13,12 +13,16 @@ public class CreateVoucherRequest {
     @NotBlank
     private String code;
 
+    @NotNull
     private DiscountType discountType;
 
+    @NotNull
     private BigDecimal discountValue;
 
+    @NotNull
     private BigDecimal maxDiscount;
 
+    @NotNull
     private BigDecimal minOrderValue;
 
     @NotNull

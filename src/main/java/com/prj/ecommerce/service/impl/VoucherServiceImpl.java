@@ -12,8 +12,13 @@ import com.prj.ecommerce.repository.VoucherRepository;
 import com.prj.ecommerce.service.VoucherService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +41,18 @@ public class VoucherServiceImpl implements VoucherService {
     }
 
     @Override
+    public List<VoucherResponse> getVoucherByShopId(Long shopId) {
+        List<VoucherEntity> voucherEntities = voucherRepository.findAllByShopId(shopId);
+        List<VoucherResponse> voucherResponses = new ArrayList<>();
+        if (voucherEntities != null) {
+            voucherResponses = voucherEntities.stream()
+                    .map(VoucherResponse::fromEntity)
+                    .toList();
+        }
+        return voucherResponses;
+    }
+
+    @Override
     public VoucherResponse createVoucher(CreateVoucherRequest request) {
         ShopEntity shop = shopRepository.findByUser_Id(getCurrentUserId())
                 .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
@@ -53,5 +70,33 @@ public class VoucherServiceImpl implements VoucherService {
         voucher.setUsageLimit(request.getUsageLimit());
 
         return VoucherResponse.fromEntity(voucherRepository.save(voucher));
+    }
+
+    @Override
+    public VoucherResponse updateVoucher(Long voucherId, CreateVoucherRequest request) {
+        VoucherEntity voucher = voucherRepository.findById(voucherId)
+                .orElseThrow(() -> new EntityNotFoundException("Voucher not found"));
+        if (!voucher.getShop().getUser().getId().equals(getCurrentUserId())) {
+            throw new AccessDeniedException("You do not have permission to update this voucher");
+        }
+        voucher.setCode(request.getCode());
+        voucher.setDiscountType(request.getDiscountType());
+        voucher.setDiscountValue(request.getDiscountValue());
+        voucher.setEndAt(request.getEndAt());
+        voucher.setStartAt(request.getStartAt());
+        voucher.setMaxDiscount(request.getMaxDiscount());
+        voucher.setMinOrderValue(request.getMinOrderValue());
+        voucher.setUsageLimit(request.getUsageLimit());
+        return VoucherResponse.fromEntity(voucherRepository.save(voucher));
+    }
+
+    @Override
+    public void deleteVoucher(Long voucherId) {
+        VoucherEntity voucher = voucherRepository.findById(voucherId)
+                .orElseThrow(() -> new EntityNotFoundException("Voucher not found"));
+        if (!voucher.getShop().getUser().getId().equals(getCurrentUserId())) {
+            throw new AccessDeniedException("You do not have permission to delete this voucher");
+        }
+        voucherRepository.delete(voucher);
     }
 }
