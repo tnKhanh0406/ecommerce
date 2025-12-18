@@ -1,0 +1,32 @@
+package com.prj.ecommerce.dto.request;
+
+import com.prj.ecommerce.common.DiscountType;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Data
+public class CreateVoucherRequest {
+    @NotBlank
+    private String code;
+
+    private DiscountType discountType;
+
+    private BigDecimal discountValue;
+
+    private BigDecimal maxDiscount;
+
+    private BigDecimal minOrderValue;
+
+    @NotNull
+    private LocalDateTime startAt;
+
+    @NotNull
+    private LocalDateTime endAt;
+
+    @NotNull
+    private Integer usageLimit;
+}
