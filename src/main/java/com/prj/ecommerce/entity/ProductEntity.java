@@ -44,6 +44,9 @@ public class ProductEntity {
     @JoinColumn(name = "shop_id", nullable = false)
     private ShopEntity shop;
 
+    @Version
+    private Long version;
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductVariantEntity> variants;
 

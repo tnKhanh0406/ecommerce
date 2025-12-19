@@ -15,6 +15,7 @@ import com.prj.ecommerce.service.OrderService;
 import com.prj.ecommerce.utils.VariantUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
-//    private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductVariantRepository productVariantRepository;
@@ -110,6 +110,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public CreateOrderResponse cancelOrder(Long orderId) {
         OrderEntity order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found"));
@@ -121,13 +122,19 @@ public class OrderServiceImpl implements OrderService {
         }
         order.setOrderStatus(OrderStatus.CANCELLED);
 
-        OrderStatusHistoryEntity orderStatusHistory = addInitialStatusHistory(order, order.getOrderStatus(), OrderStatus.CANCELLED, UserRole.CUSTOMER);
+        OrderStatusHistoryEntity orderStatusHistory = addInitialStatusHistory(
+                order,
+                order.getOrderStatus(),
+                OrderStatus.CANCELLED,
+                UserRole.CUSTOMER
+        );
         order.getStatusHistories().add(orderStatusHistory);
 
         orderRepository.save(order);
         List<ProductVariantEntity> updatedVariants = new ArrayList<>();
         for (OrderItemEntity item : order.getOrderItems()) {
-            ProductVariantEntity variant = item.getProductVariant();
+            ProductVariantEntity variant = productVariantRepository.findByIdForUpdate(item.getProductVariant().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Product variant not found"));
             variant.setStock(variant.getStock() + item.getQuantity());
             updatedVariants.add(variant);
 
@@ -176,6 +183,7 @@ public class OrderServiceImpl implements OrderService {
         //Save VoucherUsage
         if (voucher != null) {
             addVoucherUsageHistory(order, voucher);
+            voucherRepository.save(voucher);
         }
 
         // Tạo và save order items
@@ -228,17 +236,16 @@ public class OrderServiceImpl implements OrderService {
 
     private VoucherEntity applyVoucher(Long voucherId, Long shopId) {
         if (voucherId != null) {
-            VoucherEntity voucher = voucherRepository.findById(voucherId)
+            VoucherEntity voucher = voucherRepository.findByIdForUpdate(voucherId)
                     .orElseThrow(() -> new EntityNotFoundException("Voucher not found"));
 
             if (!voucher.getShop().getId().equals(shopId)) {
-                throw new BadRequestException("This voucher cannot be used in this order");
+                throw new BadRequestException("Voucher not belong to this shop");
             }
             if (voucher.getUsedCount() >= voucher.getUsageLimit()) {
-                throw new BadRequestException("This voucher is end of use");
+                throw new BadRequestException("This voucher is out of usage");
             }
             voucher.setUsedCount(voucher.getUsedCount() + 1);
-            voucherRepository.save(voucher);
             return voucher;
         }
         return null;
@@ -273,7 +280,10 @@ public class OrderServiceImpl implements OrderService {
                 .reduce(BigDecimal.ZERO, BigDecimal:: add);
     }
 
-    private OrderStatusHistoryEntity addInitialStatusHistory(OrderEntity order, OrderStatus from, OrderStatus to, UserRole userRole) {
+    private OrderStatusHistoryEntity addInitialStatusHistory(OrderEntity order,
+                                                             OrderStatus from,
+                                                             OrderStatus to,
+                                                             UserRole userRole) {
         OrderStatusHistoryEntity orderStatusHistory = new OrderStatusHistoryEntity();
         orderStatusHistory.setFromStatus(from);
         orderStatusHistory.setToStatus(to);
@@ -350,10 +360,9 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private void setOrderItemImage(
-            OrderItemEntity orderItem,
-            ProductVariantEntity variant,
-            ProductEntity product) {
+    private void setOrderItemImage(OrderItemEntity orderItem,
+                                   ProductVariantEntity variant,
+                                   ProductEntity product) {
 
         if (variant.getImages() != null && !variant.getImages().isEmpty()) {
             orderItem.setImageUrl(variant. getImages().get(0).getImageUrl());
@@ -363,7 +372,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private ProductVariantEntity updateProductStock(CartItemEntity cartItem) {
-        ProductVariantEntity variant = cartItem.getProductVariant();
+        ProductVariantEntity variant = productVariantRepository.findByIdForUpdate(cartItem.getProductVariant().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Product variant not found"));
         ProductEntity product = variant.getProduct();
         variant.setStock(variant.getStock() - cartItem.getQuantity());
         product.setSoldCount(product.getSoldCount() + cartItem.getQuantity());

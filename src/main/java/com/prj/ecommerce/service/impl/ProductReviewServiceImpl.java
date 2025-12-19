@@ -7,12 +7,14 @@ import com.prj.ecommerce.dto.response.ProductReviewResponse;
 import com.prj.ecommerce.dto.response.ReviewReplyResponse;
 import com.prj.ecommerce.entity.*;
 import com.prj.ecommerce.exception.BadRequestException;
+import com.prj.ecommerce.exception.ConcurrentUpdateException;
 import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.ProductReviewService;
 import com.prj.ecommerce.utils.VariantUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -86,16 +88,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         review.setRating(request.getRating());
         review.setVariantSnapshot(VariantUtil.generateVariantName(variant));
 
-        //xu ly race condition
-        int newCount = product.getReviewCount() + 1;
-        BigDecimal newRating = product.getRating()
-                .multiply(BigDecimal.valueOf(product.getReviewCount()))
-                .add(BigDecimal.valueOf(request.getRating())).
-                divide(BigDecimal.valueOf(newCount), 2, RoundingMode.HALF_UP);
-        product.setReviewCount(newCount);
-        product.setRating(newRating);
-        productRepository.save(product);
-
+        updateProductRatingWithRetry(product.getId(), 0, request.getRating(), true);
         if (request.getImages() != null && !request.getImages().isEmpty()) {
             createImages(request.getImages(), review);
         }
@@ -105,11 +98,13 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     }
 
     @Override
+    @Transactional
     public ProductReviewResponse updateReview(UpdateReviewRequest request) {
         ProductReviewEntity review = productReviewRepository.findById(request.getReviewId())
                 .orElseThrow(() -> new EntityNotFoundException("Review not found"));
 
-        if (request.getRating() != null && (request.getRating() < 1 || request.getRating() > 5)) {
+        Integer newRating = request.getRating();
+        if (newRating != null && (newRating < 1 || newRating > 5)) {
             throw new BadRequestException("Invalid rating");
         }
 
@@ -121,15 +116,57 @@ public class ProductReviewServiceImpl implements ProductReviewService {
             throw new BadRequestException("You cannot update this review");
         }
 
-        review.setComment(request.getComment());
-        if (request.getRating() != null) {
-            review.setRating(request.getRating());
+        int oldRating = review.getRating();
+
+        if (newRating != null && newRating != oldRating) {
+            updateProductRatingWithRetry(review.getProduct().getId(), oldRating, newRating, false);
+            review.setRating(newRating);
         }
+
+        review.setComment(request.getComment());
         if (request.getImages() != null && !request.getImages().isEmpty()) {
             updateImages(request.getImages(), review);
         }
         productReviewRepository.save(review);
         return ProductReviewResponse.fromEntity(review);
+    }
+
+    private void updateProductRatingWithRetry(Long productId, int oldRating, int newRating, boolean isCreate) {
+        int retry = 3;
+
+        while (retry-- > 0) {
+            try {
+                ProductEntity product = productRepository.findById(productId)
+                        .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+
+                int reviewCount = product.getReviewCount();
+                BigDecimal rating = product.getRating();
+
+                BigDecimal totalScore = rating.multiply(BigDecimal.valueOf(reviewCount));
+
+                if (isCreate) {
+                    reviewCount++;
+                    totalScore = totalScore.add(BigDecimal.valueOf(newRating));
+                } else {
+                    // update review
+                    totalScore = totalScore
+                            .subtract(BigDecimal.valueOf(oldRating))
+                            .add(BigDecimal.valueOf(newRating));
+                }
+                BigDecimal newAvg = totalScore
+                        .divide(BigDecimal.valueOf(reviewCount), 2, RoundingMode.HALF_UP);
+
+                product.setReviewCount(reviewCount);
+                product.setRating(newAvg);
+
+                productRepository.saveAndFlush(product);
+                return; // SUCCESS
+            } catch (ObjectOptimisticLockingFailureException e) {
+                if (retry == 0) {
+                    throw new ConcurrentUpdateException("Too many concurrent reviews, please retry");
+                }
+            }
+        }
     }
 
     @Override
