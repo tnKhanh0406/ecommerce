@@ -1,5 +1,6 @@
 package com.prj.ecommerce.dto.response;
 
+import com.prj.ecommerce.common.DiscountType;
 import com.prj.ecommerce.entity.OrderEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,6 +27,11 @@ public class CreateOrderResponse {
     private BigDecimal subtotal;
     private BigDecimal shippingFee;
     private BigDecimal totalPrice;
+    private String voucherCode;
+    private BigDecimal voucherDiscount;
+    private DiscountType discountType;
+    private BigDecimal discountValue;
+    private BigDecimal voucherMaxDiscount;
     private List<CreateOrderItemResponse> items;
 
     public static CreateOrderResponse fromEntity(OrderEntity entity) {
@@ -42,6 +48,11 @@ public class CreateOrderResponse {
         response.setSubtotal(entity.getSubTotal());
         response.setShippingFee(entity.getShippingFee());
         response.setTotalPrice(entity.getTotal());
+        response.setVoucherCode(entity.getVoucherCode());
+        response.setVoucherDiscount(entity.getVoucherDiscount());
+        response.setDiscountType(entity.getDiscountType());
+        response.setDiscountValue(entity.getDiscountValue());
+        response.setVoucherMaxDiscount(entity.getVoucherMaxDiscount());
 
         List<CreateOrderItemResponse> items = entity.getOrderItems().stream()
                 .map(CreateOrderItemResponse::fromEntity)

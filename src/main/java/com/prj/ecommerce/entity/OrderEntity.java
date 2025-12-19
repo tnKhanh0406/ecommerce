@@ -1,5 +1,6 @@
 package com.prj.ecommerce.entity;
 
+import com.prj.ecommerce.common.DiscountType;
 import com.prj.ecommerce.common.OrderStatus;
 import com.prj.ecommerce.common.PaymentStatus;
 import jakarta.persistence.*;
@@ -61,6 +62,25 @@ public class OrderEntity {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "voucher_id")
+    private VoucherEntity voucher;
+
+    @Column(nullable = false)
+    private BigDecimal voucherDiscount = BigDecimal.ZERO;
+
+    @Column(length = 50)
+    private String voucherCode;
+
+    @Enumerated(EnumType.STRING)
+    private DiscountType discountType;
+
+    @Column
+    private BigDecimal discountValue;
+
+    @Column
+    private BigDecimal voucherMaxDiscount;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItemEntity> orderItems = new ArrayList<>();

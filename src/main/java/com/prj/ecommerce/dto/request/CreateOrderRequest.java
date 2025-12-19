@@ -19,4 +19,6 @@ public class CreateOrderRequest {
 
     @NotEmpty
     List<Long> cartItemIds;
+
+    private Long voucherId;
 }

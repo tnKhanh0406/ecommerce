@@ -1,5 +1,6 @@
 package com.prj.ecommerce.service.impl;
 
+import com.prj.ecommerce.common.DiscountType;
 import com.prj.ecommerce.common.OrderStatus;
 import com.prj.ecommerce.common.UserRole;
 import com.prj.ecommerce.dto.request.CreateOrderRequest;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +38,8 @@ public class OrderServiceImpl implements OrderService {
     private final UserAddressRepository userAddressRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
-    private final OrderStatusHistoryRepository orderStatusHistoryRepository;
+    private final VoucherUsageRepository voucherUsageRepository;
+    private final VoucherRepository voucherRepository;
 
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -80,8 +83,6 @@ public class OrderServiceImpl implements OrderService {
     public CreateOrderListResponse createOrder(CreateOrderRequest request) {
 
         Long userId = getCurrentUserId();
-        List<CreateOrderResponse> orderResponses = new ArrayList<>();
-
         // 1. Lấy cart items
         List<CartItemEntity> cartItems =
                 cartItemRepository.findAllByIdInAndCart_User_Id(request.getCartItemIds(), userId);
@@ -99,98 +100,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new EntityNotFoundException("UserAddress not found"));
 
         // 4. Xử lý từng shop để tạo nhiều order
-        for (Map.Entry<Long, List<CartItemEntity>> entry : itemsByShop.entrySet()) {
-
-            Long shopId = entry.getKey();
-            List<CartItemEntity> items = entry.getValue();
-
-            // Tạo Order
-            OrderEntity order = new OrderEntity();
-            order.setUser(getCurrentUser());
-            order.setShopId(shopId);
-            order.setNote(request.getNote());
-            order.setPaymentMethod(request.getPaymentMethod());
-            order.setReceiverAddress(address.getAddress());
-            order.setReceiverName(address.getReceiverName());
-            order.setReceiverPhone(address.getReceiverPhone());
-
-            BigDecimal subTotal = items.stream()
-                    .map(i -> i.getProductVariant().getPrice()
-                            .multiply(BigDecimal.valueOf(i.getQuantity())))
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            order.setSubTotal(subTotal);
-            BigDecimal shippingFee = calculateShippingFee(shopId, address);
-            order.setShippingFee(shippingFee);
-            order.setTotal(subTotal.add(shippingFee));
-
-            //Tạo order history
-            OrderStatusHistoryEntity orderStatusHistory = new OrderStatusHistoryEntity();
-            orderStatusHistory.setFromStatus(null);
-            orderStatusHistory.setToStatus(OrderStatus.PENDING);
-            orderStatusHistory.setChangedBy(UserRole.CUSTOMER);
-            orderStatusHistory.setChangedById(getCurrentUserId());
-            orderStatusHistory.setOrder(order);
-
-            order.getStatusHistories().add(orderStatusHistory);
-
-            orderRepository.save(order);
-
-            // Chuẩn bị batch save
-            List<OrderItemEntity> orderItems = new ArrayList<>();
-            List<ProductVariantEntity> updatedVariants = new ArrayList<>();
-
-            // Response item list
-            List<CreateOrderItemResponse> itemResponses = new ArrayList<>();
-
-            // Tạo OrderItem
-            for (CartItemEntity cartItem : items) {
-
-                ProductVariantEntity variant = cartItem.getProductVariant();
-                ProductEntity product = variant.getProduct();
-
-                if (cartItem.getQuantity() > variant.getStock()) {
-                    throw new BadRequestException("Product not enough stock");
-                }
-
-                OrderItemEntity orderItem = new OrderItemEntity();
-                orderItem.setOrder(order);
-                orderItem.setProductId(product.getId());
-                orderItem.setProductName(product.getName());
-                orderItem.setProductVariantName(VariantUtil.generateVariantName(variant));
-                orderItem.setQuantity(cartItem.getQuantity());
-                orderItem.setPrice(variant.getPrice());
-                orderItem.setProductVariant(variant);
-                orderItem.setTotalPrice(
-                        variant.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()))
-                );
-
-                if (variant.getImages() != null && !variant.getImages().isEmpty()) {
-                    orderItem.setImageUrl(variant.getImages().get(0).getImageUrl());
-                } else if (product.getImages() != null && !product.getImages().isEmpty()) {
-                    orderItem.setImageUrl(product.getImages().get(0).getImageUrl());
-                }
-
-                orderItems.add(orderItem);
-
-                // Build item response
-                itemResponses.add(CreateOrderItemResponse.fromEntity(orderItem));
-
-                // Update stock
-                variant.setStock(variant.getStock() - cartItem.getQuantity());
-                product.setSoldCount(product.getSoldCount() + cartItem.getQuantity());
-                updatedVariants.add(variant);
-            }
-
-            // Save all
-            orderItemRepository.saveAll(orderItems);
-            productVariantRepository.saveAll(updatedVariants);
-
-            // Build OrderResponse
-            CreateOrderResponse orderResponse = CreateOrderResponse.fromEntity(order);
-            orderResponse.setItems(itemResponses);
-            orderResponses.add(orderResponse);
-        }
+        List<CreateOrderResponse> orderResponses = createOrdersForShops(itemsByShop, address, request);
 
         // 5. Xóa cart items sau khi đã xử lý
         cartItemRepository.deleteAll(cartItems);
@@ -211,13 +121,7 @@ public class OrderServiceImpl implements OrderService {
         }
         order.setOrderStatus(OrderStatus.CANCELLED);
 
-        OrderStatusHistoryEntity orderStatusHistory = new OrderStatusHistoryEntity();
-        orderStatusHistory.setFromStatus(order.getOrderStatus());
-        orderStatusHistory.setToStatus(OrderStatus.CANCELLED);
-        orderStatusHistory.setChangedBy(UserRole.CUSTOMER);
-        orderStatusHistory.setChangedById(getCurrentUserId());
-        orderStatusHistory.setOrder(order);
-
+        OrderStatusHistoryEntity orderStatusHistory = addInitialStatusHistory(order, order.getOrderStatus(), OrderStatus.CANCELLED, UserRole.CUSTOMER);
         order.getStatusHistories().add(orderStatusHistory);
 
         orderRepository.save(order);
@@ -234,6 +138,233 @@ public class OrderServiceImpl implements OrderService {
         return CreateOrderResponse.fromEntity(order);
     }
 
+    private List<CreateOrderResponse> createOrdersForShops(
+            Map<Long, List<CartItemEntity>> itemsByShop,
+            UserAddressEntity address,
+            CreateOrderRequest request) {
+        List<CreateOrderResponse> orderResponses = new ArrayList<>();
+        for (Map. Entry<Long, List<CartItemEntity>> entry : itemsByShop.entrySet()) {
+            Long shopId = entry.getKey();
+            List<CartItemEntity> items = entry.getValue();
+            CreateOrderResponse orderResponse = createOrderForShop(shopId, items, address, request);
+            orderResponses.add(orderResponse);
+        }
+
+        return orderResponses;
+    }
+
+    private CreateOrderResponse createOrderForShop(
+            Long shopId,
+            List<CartItemEntity> items,
+            UserAddressEntity address,
+            CreateOrderRequest request) {
+        VoucherEntity voucher = applyVoucher(request.getVoucherId(), shopId);
+        // Tạo Order entity
+        OrderEntity order = buildOrderEntity(shopId, items, address, voucher, request);
+
+        // Tạo order status history
+        addInitialStatusHistory(order, null, OrderStatus.PENDING, UserRole.CUSTOMER);
+
+        // Save order
+        orderRepository.save(order);
+
+        //Save VoucherUsage
+        if (voucher != null) {
+            addVoucherUsageHistory(order, voucher);
+        }
+
+        // Tạo và save order items
+        List<CreateOrderItemResponse> itemResponses = createOrderItems(order, items);
+
+        // Build response
+        CreateOrderResponse orderResponse = CreateOrderResponse.fromEntity(order);
+        orderResponse.setItems(itemResponses);
+
+        return orderResponse;
+    }
+
+    private OrderEntity buildOrderEntity(
+            Long shopId,
+            List<CartItemEntity> items,
+            UserAddressEntity address,
+            VoucherEntity voucher,
+            CreateOrderRequest request) {
+        OrderEntity order = new OrderEntity();
+        order.setUser(getCurrentUser());
+        order.setShopId(shopId);
+        order.setNote(request.getNote());
+        order.setPaymentMethod(request.getPaymentMethod());
+        order.setReceiverAddress(address. getAddress());
+        order.setReceiverName(address.getReceiverName());
+        order.setReceiverPhone(address.getReceiverPhone());
+
+        // Calculate pricing
+        BigDecimal subTotal = calculateSubTotal(items);
+        BigDecimal shippingFee = calculateShippingFee(shopId, address);
+        BigDecimal voucherDiscount = BigDecimal.ZERO;
+
+        if (voucher != null) {
+            order.setVoucher(voucher);
+            order.setDiscountType(voucher.getDiscountType());
+            order.setDiscountValue(voucher.getDiscountValue());
+            order.setVoucherMaxDiscount(voucher.getMaxDiscount());
+            order.setVoucherCode(voucher.getCode());
+            voucherDiscount = calculateDiscount(voucher, subTotal);
+        }
+
+
+        order.setSubTotal(subTotal);
+        order.setVoucherDiscount(voucherDiscount);
+        order.setShippingFee(shippingFee);
+        order.setTotal(subTotal.add(shippingFee).subtract(voucherDiscount).max(BigDecimal.ZERO));
+
+        return order;
+    }
+
+    private VoucherEntity applyVoucher(Long voucherId, Long shopId) {
+        if (voucherId != null) {
+            VoucherEntity voucher = voucherRepository.findById(voucherId)
+                    .orElseThrow(() -> new EntityNotFoundException("Voucher not found"));
+
+            if (!voucher.getShop().getId().equals(shopId)) {
+                throw new BadRequestException("This voucher cannot be used in this order");
+            }
+            if (voucher.getUsedCount() >= voucher.getUsageLimit()) {
+                throw new BadRequestException("This voucher is end of use");
+            }
+            voucher.setUsedCount(voucher.getUsedCount() + 1);
+            voucherRepository.save(voucher);
+            return voucher;
+        }
+        return null;
+    }
+
+    private BigDecimal calculateDiscount(VoucherEntity voucher, BigDecimal subTotal) {
+        if (subTotal.compareTo(voucher.getMinOrderValue()) < 0) {
+            throw new BadRequestException("Your order does not meet voucher conditions");
+        }
+
+        BigDecimal discount;
+        if (voucher.getDiscountType() == DiscountType.FIXED) {
+            discount = voucher.getDiscountValue();
+        } else {
+            discount = subTotal
+                    .multiply(voucher.getDiscountValue())
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        }
+
+        if (voucher.getMaxDiscount() != null) {
+            discount = discount.min(voucher.getMaxDiscount());
+        }
+
+        return discount.min(subTotal);
+    }
+
+
+    private BigDecimal calculateSubTotal(List<CartItemEntity> items) {
+        return items.stream()
+                .map(i -> i.getProductVariant().getPrice()
+                        .multiply(BigDecimal.valueOf(i.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal:: add);
+    }
+
+    private OrderStatusHistoryEntity addInitialStatusHistory(OrderEntity order, OrderStatus from, OrderStatus to, UserRole userRole) {
+        OrderStatusHistoryEntity orderStatusHistory = new OrderStatusHistoryEntity();
+        orderStatusHistory.setFromStatus(from);
+        orderStatusHistory.setToStatus(to);
+        orderStatusHistory.setChangedBy(userRole);
+        orderStatusHistory.setChangedById(getCurrentUserId());
+        orderStatusHistory.setOrder(order);
+
+        order.getStatusHistories().add(orderStatusHistory);
+        return orderStatusHistory;
+    }
+
+    private void addVoucherUsageHistory(OrderEntity order, VoucherEntity voucher) {
+        VoucherUsageEntity voucherUsage = new VoucherUsageEntity();
+        voucherUsage.setVoucher(voucher);
+        voucherUsage.setUser(getCurrentUser());
+        voucherUsage.setOrder(order);
+        voucherUsageRepository.save(voucherUsage);
+    }
+
+    private List<CreateOrderItemResponse> createOrderItems(
+            OrderEntity order,
+            List<CartItemEntity> items) {
+
+        List<OrderItemEntity> orderItems = new ArrayList<>();
+        List<ProductVariantEntity> updatedVariants = new ArrayList<>();
+        List<CreateOrderItemResponse> itemResponses = new ArrayList<>();
+
+        for (CartItemEntity cartItem : items) {
+            OrderItemEntity orderItem = createOrderItem(order, cartItem);
+            orderItems.add(orderItem);
+
+            // Update stock
+            ProductVariantEntity variant = updateProductStock(cartItem);
+            updatedVariants.add(variant);
+
+            // Build response
+            itemResponses.add(CreateOrderItemResponse.fromEntity(orderItem));
+        }
+
+        // Batch save
+        orderItemRepository.saveAll(orderItems);
+        productVariantRepository.saveAll(updatedVariants);
+
+        return itemResponses;
+    }
+
+    private OrderItemEntity createOrderItem(OrderEntity order, CartItemEntity cartItem) {
+        ProductVariantEntity variant = cartItem. getProductVariant();
+        ProductEntity product = variant.getProduct();
+
+        validateStock(cartItem, variant);
+
+        OrderItemEntity orderItem = new OrderItemEntity();
+        orderItem.setOrder(order);
+        orderItem.setProductId(product.getId());
+        orderItem.setProductName(product.getName());
+        orderItem.setProductVariantName(VariantUtil.generateVariantName(variant));
+        orderItem.setQuantity(cartItem. getQuantity());
+        orderItem.setPrice(variant.getPrice());
+        orderItem.setProductVariant(variant);
+        orderItem.setTotalPrice(
+                variant.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()))
+        );
+
+        // Set image
+        setOrderItemImage(orderItem, variant, product);
+
+        return orderItem;
+    }
+
+    private void validateStock(CartItemEntity cartItem, ProductVariantEntity variant) {
+        if (cartItem.getQuantity() > variant.getStock()) {
+            throw new BadRequestException("Product not enough stock");
+        }
+    }
+
+    private void setOrderItemImage(
+            OrderItemEntity orderItem,
+            ProductVariantEntity variant,
+            ProductEntity product) {
+
+        if (variant.getImages() != null && !variant.getImages().isEmpty()) {
+            orderItem.setImageUrl(variant. getImages().get(0).getImageUrl());
+        } else if (product.getImages() != null && !product.getImages().isEmpty()) {
+            orderItem.setImageUrl(product.getImages().get(0).getImageUrl());
+        }
+    }
+
+    private ProductVariantEntity updateProductStock(CartItemEntity cartItem) {
+        ProductVariantEntity variant = cartItem.getProductVariant();
+        ProductEntity product = variant.getProduct();
+        variant.setStock(variant.getStock() - cartItem.getQuantity());
+        product.setSoldCount(product.getSoldCount() + cartItem.getQuantity());
+
+        return variant;
+    }
 
     private BigDecimal calculateShippingFee(Long shopId, UserAddressEntity address) {
         return BigDecimal.valueOf(25000);
