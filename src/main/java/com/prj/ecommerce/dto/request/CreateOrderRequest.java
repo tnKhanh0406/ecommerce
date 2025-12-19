@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 public class CreateOrderRequest {
@@ -20,5 +21,6 @@ public class CreateOrderRequest {
     @NotEmpty
     List<Long> cartItemIds;
 
-    private Long voucherId;
+    //shopId -> voucherId
+    private Map<Long, Long> shopVouchers;
 }

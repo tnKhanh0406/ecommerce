@@ -138,7 +138,8 @@ public class OrderServiceImpl implements OrderService {
         return CreateOrderResponse.fromEntity(order);
     }
 
-    private List<CreateOrderResponse> createOrdersForShops(
+    @Transactional
+    protected List<CreateOrderResponse> createOrdersForShops(
             Map<Long, List<CartItemEntity>> itemsByShop,
             UserAddressEntity address,
             CreateOrderRequest request) {
@@ -153,12 +154,16 @@ public class OrderServiceImpl implements OrderService {
         return orderResponses;
     }
 
-    private CreateOrderResponse createOrderForShop(
+    @Transactional
+    protected CreateOrderResponse createOrderForShop(
             Long shopId,
             List<CartItemEntity> items,
             UserAddressEntity address,
             CreateOrderRequest request) {
-        VoucherEntity voucher = applyVoucher(request.getVoucherId(), shopId);
+        Long voucherId = request.getShopVouchers() != null
+                ? request.getShopVouchers().get(shopId)
+                : null;
+        VoucherEntity voucher = applyVoucher(voucherId, shopId);
         // Tạo Order entity
         OrderEntity order = buildOrderEntity(shopId, items, address, voucher, request);
 
