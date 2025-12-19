@@ -1,9 +1,8 @@
 package com.prj.ecommerce.service.impl;
 
-import com.prj.ecommerce.common.DiscountType;
-import com.prj.ecommerce.common.OrderStatus;
-import com.prj.ecommerce.common.UserRole;
+import com.prj.ecommerce.common.*;
 import com.prj.ecommerce.dto.request.CreateOrderRequest;
+import com.prj.ecommerce.dto.request.NotificationRequest;
 import com.prj.ecommerce.dto.response.CreateOrderItemResponse;
 import com.prj.ecommerce.dto.response.CreateOrderListResponse;
 import com.prj.ecommerce.dto.response.CreateOrderResponse;
@@ -11,6 +10,7 @@ import com.prj.ecommerce.entity.*;
 import com.prj.ecommerce.exception.BadRequestException;
 import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.*;
+import com.prj.ecommerce.service.NotificationService;
 import com.prj.ecommerce.service.OrderService;
 import com.prj.ecommerce.utils.VariantUtil;
 import jakarta.persistence.EntityNotFoundException;
@@ -40,6 +40,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemRepository orderItemRepository;
     private final VoucherUsageRepository voucherUsageRepository;
     private final VoucherRepository voucherRepository;
+    private final NotificationService notificationService;
 
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -142,6 +143,19 @@ public class OrderServiceImpl implements OrderService {
             product.setSoldCount(product.getSoldCount() - item.getQuantity());
         }
         productVariantRepository.saveAll(updatedVariants);
+
+        //Gui thong bao
+        NotificationRequest notificationRequest = new NotificationRequest(
+                "Hủy đơn hàng thành công",
+                "Đơn hàng #" + order.getId() + " đã được hủy",
+                NotificationType.ORDER_CANCELLED,
+                order.getId(),
+                order.getUser().getId(),
+                ReferenceType.ORDER
+        );
+
+        notificationService.sendNotification(notificationRequest);
+
         return CreateOrderResponse.fromEntity(order);
     }
 
@@ -188,6 +202,18 @@ public class OrderServiceImpl implements OrderService {
 
         // Tạo và save order items
         List<CreateOrderItemResponse> itemResponses = createOrderItems(order, items);
+
+        //Gui thong bao
+        NotificationRequest notificationRequest = new NotificationRequest(
+                "Đặt hàng thành công",
+                "Đơn hàng #" + order.getId() + " đã được tạo",
+                NotificationType.ORDER_CREATED,
+                order.getId(),
+                order.getUser().getId(),
+                ReferenceType.ORDER
+        );
+
+        notificationService.sendNotification(notificationRequest);
 
         // Build response
         CreateOrderResponse orderResponse = CreateOrderResponse.fromEntity(order);

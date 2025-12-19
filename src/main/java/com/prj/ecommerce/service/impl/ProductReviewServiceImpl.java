@@ -1,7 +1,9 @@
 package com.prj.ecommerce.service.impl;
 
 import com.prj.ecommerce.common.ImageType;
+import com.prj.ecommerce.common.NotificationType;
 import com.prj.ecommerce.common.OrderStatus;
+import com.prj.ecommerce.common.ReferenceType;
 import com.prj.ecommerce.dto.request.*;
 import com.prj.ecommerce.dto.response.ProductReviewResponse;
 import com.prj.ecommerce.dto.response.ReviewReplyResponse;
@@ -10,6 +12,7 @@ import com.prj.ecommerce.exception.BadRequestException;
 import com.prj.ecommerce.exception.ConcurrentUpdateException;
 import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.*;
+import com.prj.ecommerce.service.NotificationService;
 import com.prj.ecommerce.service.ProductReviewService;
 import com.prj.ecommerce.utils.VariantUtil;
 import jakarta.persistence.EntityNotFoundException;
@@ -39,6 +42,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     private final ProductImageRepository productImageRepository;
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
     private final ReviewReplyRepository reviewReplyRepository;
+    private final NotificationService notificationService;
 
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -93,6 +97,18 @@ public class ProductReviewServiceImpl implements ProductReviewService {
             createImages(request.getImages(), review);
         }
         productReviewRepository.save(review);
+
+        //Gui thong bao
+        NotificationRequest notificationRequest = new NotificationRequest(
+                "Khách hàng đánh giá sản phẩm",
+                "Khách hàng " + review.getUser().getFullName() + " đã đánh giá sản phẩm " + review.getProduct().getName(),
+                NotificationType.NEW_REVIEW,
+                review.getId(),
+                review.getShop().getUser().getId(),
+                ReferenceType.REVIEW
+        );
+
+        notificationService.sendNotification(notificationRequest);
 
         return ProductReviewResponse.fromEntity(review);
     }
@@ -188,6 +204,19 @@ public class ProductReviewServiceImpl implements ProductReviewService {
 
         review.setReply(reply);
         reviewReplyRepository.save(reply);
+
+        //Gui thong bao
+        NotificationRequest notificationRequest = new NotificationRequest(
+                "Phản hồi từ người bán",
+                "Người bán đã phản hồi đánh giá của bạn",
+                NotificationType.REVIEW_REPLY,
+                reply.getId(),
+                reply.getSeller().getId(),
+                ReferenceType.REVIEW
+        );
+
+        notificationService.sendNotification(notificationRequest);
+
         return ReviewReplyResponse.fromEntity(reply);
     }
 
