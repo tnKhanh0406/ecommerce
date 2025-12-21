@@ -1,15 +1,14 @@
 package com.prj.ecommerce.controller;
 
-import com.prj.ecommerce.dto.request.CreateProductRequest;
-import com.prj.ecommerce.dto.request.ProductVariantListRequest;
-import com.prj.ecommerce.dto.request.UpdateAttributeRequest;
-import com.prj.ecommerce.dto.request.UpdateBasicProductRequest;
+import com.prj.ecommerce.dto.request.*;
 import com.prj.ecommerce.dto.response.CreateProductResponse;
 import com.prj.ecommerce.dto.response.ProductVariantListResponse;
 import com.prj.ecommerce.dto.response.ProductVariantResponse;
 import com.prj.ecommerce.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,6 +19,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/products")
 public class ProductController {
     private final ProductService productService;
+
+    @GetMapping
+    public Page<CreateProductResponse> getProducts(@ModelAttribute ProductFilterRequest request) {
+        return productService.getProducts(request);
+    }
 
     @PreAuthorize("hasRole('SELLER')")
     @PostMapping

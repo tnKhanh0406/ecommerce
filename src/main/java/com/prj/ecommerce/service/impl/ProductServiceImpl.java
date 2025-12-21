@@ -8,9 +8,13 @@ import com.prj.ecommerce.dto.response.ProductVariantResponse;
 import com.prj.ecommerce.entity.*;
 import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.ProductService;
+import com.prj.ecommerce.specification.ProductSpecification;
 import com.prj.ecommerce.utils.SkuUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -40,6 +44,21 @@ public class ProductServiceImpl implements ProductService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    }
+
+    @Override
+    public Page<CreateProductResponse> getProducts(ProductFilterRequest request) {
+        Pageable pageable = PageRequest.of(
+                request.getPage(),
+                request.getSize()
+        );
+
+        Page<ProductEntity> productPage = productRepo.findAll(
+                ProductSpecification.search(request),
+                pageable
+        );
+
+        return productPage.map(CreateProductResponse::fromEntity);
     }
 
     @Override

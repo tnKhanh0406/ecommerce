@@ -53,6 +53,9 @@ public class ProductEntity {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImageEntity> images; // ảnh chung của product
 
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    private List<ProductCategoryEntity> productCategories;
+
     @PrePersist
     public void prePersist() {
         if (createdAt == null) {

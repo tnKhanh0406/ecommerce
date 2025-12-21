@@ -1,13 +1,12 @@
 package com.prj.ecommerce.service;
 
-import com.prj.ecommerce.dto.request.CreateProductRequest;
-import com.prj.ecommerce.dto.request.ProductVariantListRequest;
-import com.prj.ecommerce.dto.request.UpdateAttributeRequest;
-import com.prj.ecommerce.dto.request.UpdateBasicProductRequest;
+import com.prj.ecommerce.dto.request.*;
 import com.prj.ecommerce.dto.response.CreateProductResponse;
 import com.prj.ecommerce.dto.response.ProductVariantListResponse;
+import org.springframework.data.domain.Page;
 
 public interface ProductService {
+    Page<CreateProductResponse> getProducts(ProductFilterRequest request);
     CreateProductResponse createProduct(CreateProductRequest request);
     CreateProductResponse updateBasicProduct(Long productId, UpdateBasicProductRequest request);
     ProductVariantListResponse updateBasicProductVariant(Long productId, ProductVariantListRequest request);
