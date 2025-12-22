@@ -17,6 +17,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -35,15 +36,31 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
+//    @Override
+//    public String verifyUser(LoginRequest loginRequest) {
+//        Authentication authentication = authenticationManager
+//                .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+//        if (authentication.isAuthenticated()) {
+//            return jwtService.generateToken(loginRequest.getUsername());
+//        }
+//        return "fail";
+//    }
     @Override
     public String verifyUser(LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
-        if (authentication.isAuthenticated()) {
-            return jwtService.generateToken(loginRequest.getUsername());
-        }
-        return "fail";
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getUsername(),
+                        loginRequest.getPassword()
+                )
+        );
+
+        UserDetails userDetails =
+                (UserDetails) authentication.getPrincipal();
+
+        return jwtService.generateToken(userDetails);
     }
+
 
     @Override
     public UserResponse registerUser(RegisterRequest registerRequest) {

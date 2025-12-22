@@ -3,6 +3,7 @@ package com.prj.ecommerce.service;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import io.jsonwebtoken.io.Decoders;
@@ -29,14 +30,29 @@ public class JWTService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(String username) {
+//    public String generateToken(String username) {
+//        return Jwts.builder()
+//                .setSubject(username)
+//                .setIssuedAt(new Date(System.currentTimeMillis()))
+//                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10h
+//                .signWith(getKey())
+//                .compact();
+//    }
+    public String generateToken(UserDetails userDetails) {
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(userDetails.getUsername())
+                .claim("roles", userDetails.getAuthorities()
+                        .stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .toList())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10h
+                .setExpiration(
+                        new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)
+                )
                 .signWith(getKey())
                 .compact();
     }
+
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
