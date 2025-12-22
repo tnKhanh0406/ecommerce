@@ -1,11 +1,10 @@
-package com.prj.ecommerce.controller;
+package com.prj.ecommerce.api;
 
 import com.prj.ecommerce.dto.request.ChangePasswordRequest;
 import com.prj.ecommerce.dto.request.LoginRequest;
 import com.prj.ecommerce.dto.request.RegisterRequest;
 import com.prj.ecommerce.dto.request.UpdateProfileRequest;
 import com.prj.ecommerce.dto.response.UserResponse;
-import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -13,11 +12,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-public class UserController {
+@RequestMapping("/api/auth")
+public class UserApiController {
 
     private final UserService userService;
 
-    public UserController(UserService userService) {
+    public UserApiController(UserService userService) {
         this.userService = userService;
     }
 

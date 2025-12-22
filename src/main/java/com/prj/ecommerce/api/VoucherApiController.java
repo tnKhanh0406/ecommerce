@@ -1,4 +1,4 @@
-package com.prj.ecommerce.controller;
+package com.prj.ecommerce.api;
 
 import com.prj.ecommerce.dto.request.CreateVoucherRequest;
 import com.prj.ecommerce.dto.response.VoucherResponse;
@@ -15,7 +15,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/voucher")
-public class VoucherController {
+public class VoucherApiController {
     private final VoucherService voucherService;
 
     @GetMapping("/{shopId}")

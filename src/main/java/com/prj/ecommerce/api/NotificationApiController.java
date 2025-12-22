@@ -1,4 +1,4 @@
-package com.prj.ecommerce.controller;
+package com.prj.ecommerce.api;
 
 import com.prj.ecommerce.dto.response.NotificationResponse;
 import com.prj.ecommerce.service.NotificationService;
@@ -11,7 +11,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
-public class NotificationController {
+public class NotificationApiController {
     private final NotificationService notificationService;
 
     @GetMapping

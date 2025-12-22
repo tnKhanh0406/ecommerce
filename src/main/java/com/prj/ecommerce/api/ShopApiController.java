@@ -1,4 +1,4 @@
-package com.prj.ecommerce.controller;
+package com.prj.ecommerce.api;
 
 import com.prj.ecommerce.dto.request.CreateShopRequest;
 import com.prj.ecommerce.dto.response.CreateShopResponse;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/shops")
 @RequiredArgsConstructor
-public class ShopController {
+public class ShopApiController {
     private final ShopService shopService;
 
     @PostMapping

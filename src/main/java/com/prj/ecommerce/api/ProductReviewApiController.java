@@ -1,4 +1,4 @@
-package com.prj.ecommerce.controller;
+package com.prj.ecommerce.api;
 
 import com.prj.ecommerce.dto.request.ProductReviewRequest;
 import com.prj.ecommerce.dto.request.ReviewReplyRequest;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/review")
 @RequiredArgsConstructor
-public class ProductReviewController {
+public class ProductReviewApiController {
     private final ProductReviewService productReviewService;
 
     @PostMapping

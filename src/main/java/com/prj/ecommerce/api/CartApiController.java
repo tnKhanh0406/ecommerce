@@ -1,4 +1,4 @@
-package com.prj.ecommerce.controller;
+package com.prj.ecommerce.api;
 
 import com.prj.ecommerce.dto.request.AddCartItemRequest;
 import com.prj.ecommerce.dto.request.UpdateCartItemRequest;
@@ -15,7 +15,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/cart")
-public class CartController {
+public class CartApiController {
     private final CartService cartService;
 
     @GetMapping

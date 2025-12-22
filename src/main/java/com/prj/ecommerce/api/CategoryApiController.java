@@ -1,4 +1,4 @@
-package com.prj.ecommerce.controller;
+package com.prj.ecommerce.api;
 
 import com.prj.ecommerce.dto.request.CreateCategoryRequest;
 import com.prj.ecommerce.dto.response.CategoryResponse;
@@ -15,7 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/categories")
-public class CategoryController {
+public class CategoryApiController {
     private final CategoryService categoryService;
 
     @GetMapping("/top-level")

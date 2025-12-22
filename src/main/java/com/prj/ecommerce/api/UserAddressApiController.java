@@ -1,4 +1,4 @@
-package com.prj.ecommerce.controller;
+package com.prj.ecommerce.api;
 
 import com.prj.ecommerce.dto.request.CreateAddressRequest;
 import com.prj.ecommerce.dto.response.CreateAddressResponse;
@@ -14,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/addresses")
 @RequiredArgsConstructor
-public class UserAddressController {
+public class UserAddressApiController {
     private final UserAddressService userAddressService;
 
     @GetMapping
