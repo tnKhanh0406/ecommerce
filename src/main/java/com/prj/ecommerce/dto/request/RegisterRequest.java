@@ -9,16 +9,16 @@ import lombok.Setter;
 
 @Getter @Setter
 public class RegisterRequest {
-    @NotBlank
+    @NotBlank(message = "Can not leave full name blank")
     private String fullName;
-    @NotBlank
+    @NotBlank(message = "Can not leave username blank")
     private String username;
-    @NotBlank
-    @Size(min = 6, max = 20)
+    @NotBlank(message = "Can not leave password blank")
+    @Size(min = 6, max = 20, message = "Password must have 6 to 20 characters")
     private String password;
-    @NotBlank
-    @Pattern(regexp = "^(0[0-9]{9})$")
+    @NotBlank(message = "Can not leave phone number blank")
+    @Pattern(regexp = "^(0[0-9]{9})$", message = "Phone number is not valid")
     private String phoneNumber;
-    @Email
+    @Email(message = "Email is not valid")
     private String email;
 }
