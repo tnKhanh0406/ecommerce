@@ -2,6 +2,7 @@ package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.dto.response.CategoryResponse;
 import com.prj.ecommerce.service.CategoryService;
+import com.prj.ecommerce.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,11 +14,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategoryController {
     private final CategoryService categoryService;
+    private final ProductService productService;
 
     @GetMapping("/")
     public String homePage(Model model) {
         List<CategoryResponse> topLevelCategories = categoryService.getTopLevelCategories();
         model.addAttribute("topLevelCategories", topLevelCategories);
+        model.addAttribute("products", productService.getRecommendProducts());
         return "home";
     }
 }

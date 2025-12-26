@@ -12,6 +12,7 @@ import lombok.Setter;
 public class CategoryResponse {
     private Long id;
     private String name;
+    private String imageUrl;
     private String slug;
     private Long parentId;
 
@@ -19,6 +20,7 @@ public class CategoryResponse {
         return new CategoryResponse(
           category.getId(),
           category.getName(),
+          category.getImageUrl(),
           category.getSlug(),
           category.getParent() != null ? category.getParent().getId() : null
         );

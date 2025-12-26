@@ -1,0 +1,19 @@
+package com.prj.ecommerce.controller;
+
+import com.prj.ecommerce.service.ProductService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+@RequiredArgsConstructor
+public class ProductController {
+    private final ProductService productService;
+
+//    @GetMapping("/")
+//    public String recommendProducts(Model model) {
+//        model.addAttribute("products", productService.getRecommendProducts());
+//        return "home";
+//    }
+}

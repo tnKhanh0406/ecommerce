@@ -22,6 +22,9 @@ public class CategoryEntity {
     @Column(nullable = false, length = 180)
     private String slug;
 
+    @Column(columnDefinition = "TEXT")
+    private String imageUrl;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     @JsonIgnore // tránh vòng lặp JSON

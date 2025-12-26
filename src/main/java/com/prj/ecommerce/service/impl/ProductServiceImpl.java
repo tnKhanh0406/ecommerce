@@ -3,6 +3,7 @@ package com.prj.ecommerce.service.impl;
 import com.prj.ecommerce.common.ImageType;
 import com.prj.ecommerce.dto.request.*;
 import com.prj.ecommerce.dto.response.CreateProductResponse;
+import com.prj.ecommerce.dto.response.ProductPriceRangeResponse;
 import com.prj.ecommerce.dto.response.ProductVariantListResponse;
 import com.prj.ecommerce.dto.response.ProductVariantResponse;
 import com.prj.ecommerce.entity.*;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 //product khong co attribute -> product image type dang la variant, dung ra phai la thumbnail
 @Service
@@ -60,6 +62,38 @@ public class ProductServiceImpl implements ProductService {
 
         return productPage.map(CreateProductResponse::fromEntity);
     }
+
+    @Override
+    public List<CreateProductResponse> getRecommendProducts() {
+        List<ProductEntity> products = productRepo.findRandomProducts(PageRequest.of(0, 30));
+
+        if (products.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> productIds = products.stream()
+                .map(ProductEntity::getId)
+                .toList();
+
+        List<ProductPriceRangeResponse> priceRanges = productVariantRepository.findPriceRangeByProductIds(productIds);
+
+        Map<Long, ProductPriceRangeResponse> priceMap = priceRanges.stream()
+                .collect(Collectors.toMap(
+                                ProductPriceRangeResponse::getProductId,
+                                Function.identity()));
+
+        return products.stream().map(p -> {
+                    CreateProductResponse r = CreateProductResponse.fromEntity(p);
+                    ProductPriceRangeResponse price = priceMap.get(p.getId());
+                    if (price != null) {
+                        r.setMinPrice(price.getMinPrice());
+                        r.setMaxPrice(price.getMaxPrice());
+                    }
+                    return r;
+                })
+                .toList();
+    }
+
 
     @Override
     @Transactional
