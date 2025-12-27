@@ -2,10 +2,7 @@ package com.prj.ecommerce.service.impl;
 
 import com.prj.ecommerce.common.ImageType;
 import com.prj.ecommerce.dto.request.*;
-import com.prj.ecommerce.dto.response.CreateProductResponse;
-import com.prj.ecommerce.dto.response.ProductPriceRangeResponse;
-import com.prj.ecommerce.dto.response.ProductVariantListResponse;
-import com.prj.ecommerce.dto.response.ProductVariantResponse;
+import com.prj.ecommerce.dto.response.*;
 import com.prj.ecommerce.entity.*;
 import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.ProductService;
@@ -41,6 +38,8 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepo;
     private final ProductImageRepository productImageRepository;
     private final ProductVariantRepository productVariantRepository;
+    private final ProductVariantAttributeValueRepository productVariantAttributeValueRepository;
+    private final ProductReviewRepository productReviewRepository;
 
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -92,6 +91,56 @@ public class ProductServiceImpl implements ProductService {
                     return r;
                 })
                 .toList();
+    }
+
+    @Override
+    public ProductDetailResponse getProductDetail(Long id) {
+        ProductEntity product = productRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+
+        ProductPriceRangeResponse priceRange = productVariantRepository.findPriceRangeByProductId(product.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Product price range not found"));
+
+        List<ProductVariantResponse> variantResponses = product.getVariants().stream()
+                .map(ProductVariantResponse::fromEntity)
+                .toList();
+
+        List<ProductReviewEntity> reviews = productReviewRepository.findByProduct_Id(product.getId());
+        List<ProductReviewResponse> reviewResponses = new ArrayList<>();
+        if (reviews != null) {
+            reviewResponses = reviews.stream()
+                    .map(ProductReviewResponse::fromEntity)
+                    .toList();
+        }
+
+        CreateShopResponse shop = CreateShopResponse.fromEntity(product.getShop());
+        shop.setTotalProducts(productRepo.countByShop_Id(shop.getId()));
+
+        ProductDetailResponse detail = new ProductDetailResponse();
+        detail.setId(product.getId());
+        detail.setName(product.getName());
+        detail.setDescription(product.getDescription());
+
+        detail.setMinPrice(priceRange.getMinPrice());
+        detail.setMaxPrice(priceRange.getMaxPrice());
+
+        detail.setProductImages(getImages(product, ImageType.THUMBNAIL));
+        detail.setVariantImages(getImages(product, ImageType.VARIANT));
+
+        detail.setBreadcrumb(getBreadCrumbs(product));
+
+        detail.setAttributes(getProductAttributes(product));
+
+        detail.setVariants(variantResponses);
+
+        detail.setSoldCount(product.getSoldCount());
+        detail.setRating(product.getRating());
+        detail.setReviewCount(product.getReviewCount());
+
+        detail.setShop(shop);
+
+        detail.setReviews(reviewResponses);
+        return detail;
     }
 
 
@@ -256,6 +305,48 @@ public class ProductServiceImpl implements ProductService {
         }
         productCategoryRepo.deleteAllByProduct_Id(productId);
         productRepo.deleteById(productId);
+    }
+
+    private List<ProductAttributeResponse> getProductAttributes(ProductEntity product) {
+        List<ProductVariantAttributeValueEntity> vavs = productVariantAttributeValueRepository.findProductVariantAttributeValues(product.getId());
+        Map<Long, ProductAttributeResponse> map = new LinkedHashMap<>();
+
+        for (ProductVariantAttributeValueEntity vav : vavs) {
+            ProductAttributeValueEntity value = vav.getAttributeValue();
+            ProductAttributeEntity attribute = value.getProductAttribute();
+            map.putIfAbsent(attribute.getId(), new ProductAttributeResponse(attribute.getId(), attribute.getName(), new ArrayList<>()));
+
+            ProductAttributeResponse attr = map.get(attribute.getId());
+
+            boolean exists = attr.getValues()
+                    .stream()
+                    .anyMatch(v -> v.getId().equals(value.getId()));
+            if (!exists) {
+                attr.getValues().add(new ProductAttributeValueResponse(value.getId(), value.getValue(), vav.getDisplayName()));
+            }
+        }
+        return new ArrayList<>(map.values());
+    }
+
+    private List<ProductImageResponse> getImages(ProductEntity product, ImageType imageType) {
+        List<ProductImageEntity> entities = productImageRepository.findAllByProduct_IdAndImageType(product.getId(), imageType);
+        return entities.stream()
+                .map(ProductImageResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    private List<CategoryResponse> getBreadCrumbs(ProductEntity product) {
+        Long categoryId = productRepo.getCategoryIdsByProductId(product.getId()).get(0);
+        List<CategoryResponse> breadCrumbs = new ArrayList<>();
+        CategoryEntity category = categoryRepo.findById(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+
+        while (category != null) {
+            breadCrumbs.add(CategoryResponse.fromEntity(category));
+            category = category.getParent();
+        }
+        Collections.reverse(breadCrumbs);
+        return breadCrumbs;
     }
 
     private Map<String, ProductVariantRequest> buildNewVariantMap(List<ProductVariantRequest> requests) {

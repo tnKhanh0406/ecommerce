@@ -5,15 +5,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @Controller
 @RequiredArgsConstructor
 public class ProductController {
     private final ProductService productService;
 
-//    @GetMapping("/")
-//    public String recommendProducts(Model model) {
-//        model.addAttribute("products", productService.getRecommendProducts());
-//        return "home";
-//    }
+    @GetMapping("/products/{productId}")
+    public String recommendProducts(Model model, @PathVariable Long productId) {
+        model.addAttribute("productDetail", productService.getProductDetail(productId));
+        return "productDetails";
+    }
 }

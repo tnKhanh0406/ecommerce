@@ -20,6 +20,9 @@ public class ReviewReplyResponse {
     private LocalDateTime updatedAt;
 
     public static ReviewReplyResponse fromEntity(ReviewReplyEntity e) {
+        if (e == null) {
+            return null;
+        }
         return new ReviewReplyResponse(
                 ProductReviewResponse.fromEntity(e.getReview()),
                 e.getId(),

@@ -25,19 +25,18 @@ public class CreateShopResponse {
 
     private Long ownerId;
 
-    private Integer totalProducts;
+    private long totalProducts = 0;
 
     public static CreateShopResponse fromEntity(ShopEntity shop) {
-        return new CreateShopResponse(
-                shop.getId(),
-                shop.getShopName(),
-                shop.getDescription(),
-                shop.getLogoUrl(),
-                shop.getStatus().toString(),
-                shop.getRating(),
-                shop.getCreatedAt(),
-                shop.getUser().getId(),
-                0
-        );
+        CreateShopResponse response = new CreateShopResponse();
+        response.setId(shop.getId());
+        response.setShopName(shop.getShopName());
+        response.setDescription(shop.getDescription());
+        response.setLogoUrl(shop.getLogoUrl());
+        response.setStatus(shop.getStatus().toString());
+        response.setRating(shop.getRating());
+        response.setCreatedAt(shop.getCreatedAt());
+        response.setOwnerId(shop.getUser().getId());
+        return response;
     }
 }

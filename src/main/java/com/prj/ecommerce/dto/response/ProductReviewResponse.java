@@ -1,6 +1,7 @@
 package com.prj.ecommerce.dto.response;
 
 import com.prj.ecommerce.entity.ProductReviewEntity;
+import com.prj.ecommerce.entity.ReviewReplyEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,6 +24,7 @@ public class ProductReviewResponse {
     private String productName;
     private String productImageUrl;
     private List<ProductImageResponse> reviewImageUrls;
+    private ReviewReplyResponse reply;
 
     public static ProductReviewResponse fromEntity(ProductReviewEntity entity) {
         return new ProductReviewResponse(
@@ -34,7 +36,8 @@ public class ProductReviewResponse {
                 entity.getVariantSnapshot(),
                 entity.getProduct().getName(),
                 entity.getProduct().getImages().get(0).getImageUrl(),
-                entity.getImages().stream().map(ProductImageResponse::fromEntity).toList()
+                entity.getImages().stream().map(ProductImageResponse::fromEntity).toList(),
+                ReviewReplyResponse.fromEntity(entity.getReply())
         );
     }
 }

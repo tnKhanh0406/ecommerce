@@ -30,4 +30,16 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariantEn
     List<ProductPriceRangeResponse> findPriceRangeByProductIds(
             @Param("productIds") List<Long> productIds
     );
+
+    @Query("""
+    SELECT new com.prj.ecommerce.dto.response.ProductPriceRangeResponse(
+            pv.product.id,
+            MIN(pv.price),
+            MAX(pv.price)
+        )
+        FROM ProductVariantEntity pv
+        WHERE pv.product.id = :productId
+        GROUP BY pv.product.id
+    """)
+    Optional<ProductPriceRangeResponse> findPriceRangeByProductId(@Param("productId") Long productId);
 }

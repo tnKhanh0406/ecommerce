@@ -40,7 +40,7 @@ public class SecurityConfig {
         return http.csrf(customizer -> customizer.disable())
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers("/login", "/register", "/", "/css/**", "/js/**", "/images/**",
-                                "/api/auth/login", "/api/auth/register").permitAll()
+                                "/api/auth/login", "/api/auth/register", "/products/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/products/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex.accessDeniedHandler(customAccessDeniedHandler))
