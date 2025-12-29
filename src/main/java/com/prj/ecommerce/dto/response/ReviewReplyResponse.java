@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReviewReplyResponse {
-    private ProductReviewResponse productReviewResponse;
     private Long reviewReplyId;
     private String content;
     private LocalDateTime createdAt;
@@ -24,7 +23,6 @@ public class ReviewReplyResponse {
             return null;
         }
         return new ReviewReplyResponse(
-                ProductReviewResponse.fromEntity(e.getReview()),
                 e.getId(),
                 e.getContent(),
                 e.getCreatedAt(),

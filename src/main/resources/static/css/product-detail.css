@@ -1,0 +1,216 @@
+/* Shopee Color Variables */
+:root {
+    --shopee-primary: #ee4d2d;
+    --shopee-text: rgba(0, 0, 0, 0.87);
+    --shopee-light-text: rgba(0, 0, 0, 0.54);
+}
+
+/* Breadcrumb */
+.breadcrumb-section {
+    font-size: 14px;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: ">";
+    color: #999;
+}
+
+.breadcrumb-item a {
+    text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+    color: var(--shopee-primary) !important;
+}
+
+/* Product Images */
+.product-images . main-image {
+    border:  1px solid #eee;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.product-images .main-image img {
+    width:  100%;
+    height: auto;
+    max-height: 450px;
+    object-fit:  contain;
+}
+
+.thumbnail-images {
+    gap: 8px;
+}
+
+.thumb-item {
+    width: 80px;
+    height: 80px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.thumb-item:hover {
+    border-color: var(--shopee-primary) !important;
+}
+
+.thumb-item img {
+    width:  100%;
+    height: 100%;
+    object-fit:  cover;
+}
+
+/* Product Info */
+.product-title {
+    color: var(--shopee-text);
+    line-height: 1.5;
+}
+
+.product-meta {
+    font-size: 14px;
+    color: var(--shopee-light-text);
+}
+
+.product-meta .divider {
+    color: #ddd;
+    margin: 0 8px;
+}
+
+.product-meta .rating {
+    color: var(--shopee-primary);
+}
+
+/* Price Section */
+.price-section {
+    background-color: #fafafa ! important;
+}
+
+.price-range {
+    font-size: 30px;
+    color: var(--shopee-primary);
+    font-weight: 500;
+}
+
+.price-symbol {
+    text-decoration: underline;
+    font-size: 0.7em;
+}
+
+/* Attributes */
+.attribute-label {
+    color: var(--shopee-light-text);
+    font-size: 14px;
+}
+
+.attribute-values . btn {
+    min-width: 80px;
+    border-color: #ddd;
+    transition: all 0.2s;
+}
+
+.attribute-values . btn:hover,
+.attribute-values .btn. active {
+    border-color: var(--shopee-primary);
+    color: var(--shopee-primary);
+}
+
+/* Quantity Control */
+.quantity-control {
+    border-radius: 4px;
+}
+
+.quantity-control button {
+    border: none;
+    background: transparent;
+    color: #666;
+}
+
+.quantity-control button:hover {
+    color: var(--shopee-primary);
+}
+
+.quantity-control input::-webkit-outer-spin-button,
+.quantity-control input::-webkit-inner-spin-button {
+    -webkit-appearance:  none;
+    margin: 0;
+}
+
+/* Action Buttons */
+.btn-outline-danger {
+    border-color: var(--shopee-primary);
+    color: var(--shopee-primary);
+}
+
+.btn-outline-danger:hover {
+    background-color: #fff5f2;
+    border-color: var(--shopee-primary);
+    color: var(--shopee-primary);
+}
+
+.btn-danger {
+    background-color: var(--shopee-primary);
+    border-color: var(--shopee-primary);
+}
+
+.btn-danger:hover {
+    background-color: #d73211;
+    border-color: #d73211;
+}
+
+/* Shop Section */
+.shop-logo {
+    border:  1px solid #eee;
+}
+
+.shop-stat {
+    font-size: 14px;
+}
+
+/* Section Title */
+.section-title {
+    font-size: 18px;
+    color: var(--shopee-text);
+    text-transform: uppercase;
+    margin:  0;
+}
+
+/* Review Section */
+.review-item {
+    font-size: 14px;
+}
+
+.review-images .review-img {
+    width: 80px;
+    height: 80px;
+    object-fit:  cover;
+    border:  1px solid #eee;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.review-images .review-img:hover {
+    border-color: var(--shopee-primary);
+}
+
+.seller-reply {
+    border-left: 3px solid var(--shopee-primary);
+}
+
+/* Responsive */
+@media (max-width:  768px) {
+    .price-range {
+        font-size: 24px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .action-buttons .btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .thumb-item {
+        width: 60px;
+        height: 60px;
+    }
+}

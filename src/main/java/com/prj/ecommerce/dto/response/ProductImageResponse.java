@@ -16,15 +16,19 @@ public class ProductImageResponse {
 
     public static ProductImageResponse fromEntity(ProductImageEntity productImageEntity) {
         Long reviewId = null;
+        Long variantId = null;
         if (productImageEntity.getReview() != null) {
             reviewId = productImageEntity.getReview().getId();
+        }
+        if (productImageEntity.getVariant() != null) {
+            variantId = productImageEntity.getVariant().getId();
         }
         return new ProductImageResponse(
                 productImageEntity.getId(),
                 productImageEntity.getImageUrl(),
                 productImageEntity.getImageType().toString(),
                 productImageEntity.getProduct().getId(),
-                productImageEntity.getVariant().getId(),
+                variantId,
                 reviewId
         );
     }
