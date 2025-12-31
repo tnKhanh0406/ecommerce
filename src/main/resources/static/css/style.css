@@ -64,3 +64,30 @@ a.text-decoration-none:hover {
 .text-danger {
     color: var(--shopee-primary) !important;
 }
+
+/* Edit Profile hover */
+.edit-profile {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.edit-profile:hover {
+    color: var(--shopee-primary) !important;
+}
+
+/* Menu Header hover */
+.menu-header:hover,
+.menu-header:hover .menu-title {
+    color:  var(--shopee-primary) !important;
+}
+
+/* Menu Item hover */
+.menu-item:hover {
+    color: var(--shopee-primary) !important;
+}
+
+/* Active menu item */
+.menu-item.active {
+    color: var(--shopee-primary) !important;
+    font-weight: 500;
+}

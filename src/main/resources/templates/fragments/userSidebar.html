@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="userSidebar">
+  <div class="user-sidebar bg-white rounded p-3">
+    <div th:if="${currentUser != null}" class="user-information d-flex align-items-center pb-3 mb-3 border-bottom">
+      <p class="font-weight-bold mb-0 mr-2" th:text="${currentUser.name}"></p>
+      <p class="text-muted small mb-0 edit-profile">Edit Profile</p>
+    </div>
+    <div class="sidebar-menu">
+      <!-- Thông báo -->
+      <div class="menu-section mb-3">
+        <a href="#" class="menu-header d-flex align-items-center text-decoration-none text-dark py-2">
+          <span class="menu-icon mr-2">🔔</span>
+          <span class="menu-title flex-fill">Notification</span>
+        </a>
+        <div class="menu-items ml-4">
+          <a href="#" class="menu-item d-block py-2 text-muted text-decoration-none">Order Update</a>
+          <a href="#" class="menu-item d-block py-2 text-muted text-decoration-none">Shopee Update</a>
+        </div>
+      </div>
+
+      <!-- Tài khoản của tôi -->
+      <div class="menu-section mb-3">
+        <a href="#" class="menu-header d-flex align-items-center text-decoration-none text-dark py-2">
+          <span class="menu-icon mr-2">👤</span>
+          <span class="menu-title flex-fill">My Account</span>
+        </a>
+        <div class="menu-items ml-4">
+          <a href="#" class="menu-item d-block py-2 text-muted text-decoration-none">Profile</a>
+          <a href="#" class="menu-item d-block py-2 text-muted text-decoration-none">Address</a>
+          <a href="#" class="menu-item d-block py-2 text-muted text-decoration-none">Change Password</a>
+        </div>
+      </div>
+
+      <!-- Đơn mua -->
+      <div class="menu-section mb-3">
+        <a href="#" class="menu-header d-flex align-items-center text-decoration-none text-dark py-2">
+          <span class="menu-icon mr-2">📋</span>
+          <span class="menu-title flex-fill">Orders</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
