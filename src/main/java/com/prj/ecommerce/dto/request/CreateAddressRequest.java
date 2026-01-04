@@ -20,5 +20,5 @@ public class CreateAddressRequest {
     @NotBlank
     private String address;
 
-    private Integer isDefault;
+    private Boolean isDefault;
 }

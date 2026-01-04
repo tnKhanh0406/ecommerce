@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateAddressResponse {
+    private Long addressId;
     private String receiverName;
     private String receiverPhone;
     private String address;
@@ -22,6 +23,7 @@ public class CreateAddressResponse {
 
     public static CreateAddressResponse fromEntity(UserAddressEntity userAddressEntity) {
         CreateAddressResponse createAddressResponse = new CreateAddressResponse();
+        createAddressResponse.setAddressId(userAddressEntity.getId());
         createAddressResponse.setReceiverName(userAddressEntity.getReceiverName());
         createAddressResponse.setReceiverPhone(userAddressEntity.getReceiverPhone());
         createAddressResponse.setAddress(userAddressEntity.getAddress());
