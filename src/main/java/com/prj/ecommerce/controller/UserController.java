@@ -1,9 +1,11 @@
 package com.prj.ecommerce.controller;
 
+import com.prj.ecommerce.dto.request.ChangePasswordRequest;
 import com.prj.ecommerce.dto.request.RegisterRequest;
 import com.prj.ecommerce.dto.request.UpdateProfileRequest;
 import com.prj.ecommerce.dto.response.UserResponse;
 import com.prj.ecommerce.entity.UserEntity;
+import com.prj.ecommerce.exception.BadRequestException;
 import com.prj.ecommerce.exception.UpdateResourceExistException;
 import com.prj.ecommerce.service.JWTService;
 import com.prj.ecommerce.service.UserService;
@@ -123,4 +125,39 @@ public class UserController {
         redirectAttributes.addFlashAttribute("success", "Cập nhật thành công");
         return "redirect:/user/account/profile";
     }
+
+    @GetMapping("/user/account/password")
+    public String changePasswordPage(Model model) {
+        if (!model.containsAttribute("password")) {
+            model.addAttribute("password", new ChangePasswordRequest());
+        }
+        return "changePassword";
+    }
+
+
+    @PostMapping("/user/account/password/change-password")
+    public String changePassword(@Valid @ModelAttribute("password") ChangePasswordRequest password,
+                                 BindingResult bindingResult,
+                                 RedirectAttributes redirectAttributes,
+                                 Model model) {
+        if (bindingResult.hasErrors()) {
+            return "changePassword";
+        }
+
+        try {
+            userService.changePassword(password);
+        } catch (BadRequestException ex) {
+
+            if (ex.getMessage().contains("Old")) {
+                bindingResult.rejectValue("password", "incorrect", ex.getMessage());
+            } else if (ex.getMessage().contains("New")) {
+                bindingResult.rejectValue("newPassword", "invalid", ex.getMessage());
+            }
+
+            return "changePassword";
+        }
+        redirectAttributes.addFlashAttribute("success", "Đổi mật khẩu thành công");
+        return "redirect:/user/account/password";
+    }
+
 }

@@ -42,7 +42,7 @@
                             <label for="email" class="col-sm-3 col-form-label text-right text-muted">Email</label>
                             <div class="col-sm-9">
                                 <input type="email" class="form-control" id="email" th:field="*{email}"/>
-                                <small class="form-text text-danger" th:if="${#fields. hasErrors('email')}" th:errors="*{email}"></small>
+                                <small class="form-text text-danger" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></small>
                             </div>
                         </div>
 
