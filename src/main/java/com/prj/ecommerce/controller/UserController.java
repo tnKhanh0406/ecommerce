@@ -1,8 +1,13 @@
 package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.dto.request.RegisterRequest;
+import com.prj.ecommerce.dto.request.UpdateProfileRequest;
+import com.prj.ecommerce.dto.response.UserResponse;
+import com.prj.ecommerce.entity.UserEntity;
+import com.prj.ecommerce.exception.UpdateResourceExistException;
 import com.prj.ecommerce.service.JWTService;
 import com.prj.ecommerce.service.UserService;
+import com.prj.ecommerce.utils.SecurityUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -86,4 +91,36 @@ public class UserController {
         return "redirect:/login";
     }
 
+    @GetMapping("/user/account/profile")
+    public String userProfile(Model model) {
+        UserEntity user = SecurityUtil.getCurrentUser();
+        if (user == null) {
+            return "redirect:/login";
+        }
+        model.addAttribute("profile", UserResponse.fromEntity(user));
+        return "userProfile";
+    }
+
+    @PostMapping("/user/account/profile/update")
+    public String updateProfile(@Valid @ModelAttribute("profile") UpdateProfileRequest profile,
+                                BindingResult bindingResult,
+                                RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            return "userProfile";
+        }
+        try {
+            userService.updateUser(profile);
+        } catch (UpdateResourceExistException ex) {
+
+            if (ex.getMessage().contains("Email")) {
+                bindingResult.rejectValue("email", "duplicate", ex.getMessage());
+            } else if (ex.getMessage().contains("Phone")) {
+                bindingResult.rejectValue("phoneNumber", "duplicate", ex.getMessage());
+            }
+
+            return "userProfile";
+        }
+        redirectAttributes.addFlashAttribute("success", "Cập nhật thành công");
+        return "redirect:/user/account/profile";
+    }
 }

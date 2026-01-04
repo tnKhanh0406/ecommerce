@@ -8,6 +8,7 @@ import com.prj.ecommerce.dto.response.UserResponse;
 import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.exception.BadRequestException;
 import com.prj.ecommerce.exception.ResourceAlreadyExistsException;
+import com.prj.ecommerce.exception.UpdateResourceExistException;
 import com.prj.ecommerce.repository.UserRepository;
 import com.prj.ecommerce.service.JWTService;
 import com.prj.ecommerce.service.UserService;
@@ -103,12 +104,14 @@ public class UserServiceImpl implements UserService {
         UserEntity userEntity = getCurrentUser();
         if (request.getEmail() != null &&
                 userRepository.existsByEmailAndIdNot(request.getEmail(), userEntity.getId())) {
-            throw new ResourceAlreadyExistsException("Email already exists");
+//            throw new ResourceAlreadyExistsException("Email already exists");
+            throw new UpdateResourceExistException("Email already exists");
         }
 
         if (request.getPhoneNumber() != null &&
                 userRepository.existsByPhoneNumberAndIdNot(request.getPhoneNumber(), userEntity.getId())) {
-            throw new ResourceAlreadyExistsException("Phone number already exists");
+//            throw new ResourceAlreadyExistsException("Phone number already exists");
+            throw new UpdateResourceExistException("Phone number already exists");
         }
         userEntity.setFullName(request.getFullName());
         userEntity.setPhoneNumber(request.getPhoneNumber());

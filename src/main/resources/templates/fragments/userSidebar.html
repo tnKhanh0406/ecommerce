@@ -4,7 +4,7 @@
 <div th:fragment="userSidebar">
   <div class="user-sidebar bg-white rounded p-3">
     <div th:if="${currentUser != null}" class="user-information d-flex align-items-center pb-3 mb-3 border-bottom">
-      <p class="font-weight-bold mb-0 mr-2" th:text="${currentUser.name}"></p>
+      <p class="font-weight-bold mb-0 mr-2" th:text="${currentUser.username}"></p>
       <p class="text-muted small mb-0 edit-profile">Edit Profile</p>
     </div>
     <div class="sidebar-menu">
@@ -27,7 +27,7 @@
           <span class="menu-title flex-fill">My Account</span>
         </a>
         <div class="menu-items ml-4">
-          <a href="#" class="menu-item d-block py-2 text-muted text-decoration-none">Profile</a>
+          <a th:href="@{/user/account/profile}" class="menu-item d-block py-2 text-muted text-decoration-none">Profile</a>
           <a href="#" class="menu-item d-block py-2 text-muted text-decoration-none">Address</a>
           <a href="#" class="menu-item d-block py-2 text-muted text-decoration-none">Change Password</a>
         </div>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<div th:fragment="productCard(product)">
+    <a th:href="@{'/products/' + ${product.id}}" class="text-decoration-none">
+        <div class="card product-card h-100 border">
+            <img th:src="${product.imageUrl}"
+                 th:alt="${product.name}"
+                 class="card-img-top"
+                 style="height: 180px; object-fit: cover;"/>
+
+            <div class="card-body p-2">
+                <p class="card-text small product-name mb-2"
+                   th:text="${product.name}"></p>
+
+                <p class="text-danger font-weight-bold mb-1">
+                    <span class="price-symbol">₫</span>
+                    <span th:text="${product.minPrice}"></span>
+                </p>
+
+                <p class="text-muted small mb-0"
+                   th:text="'Đã bán ' + ${product.soldCount}"></p>
+            </div>
+        </div>
+    </a>
+</div>
+
+</body>
+</html>

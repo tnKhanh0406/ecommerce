@@ -91,3 +91,77 @@ a.text-decoration-none:hover {
     color: var(--shopee-primary) !important;
     font-weight: 500;
 }
+
+/* User Sidebar */
+.user-sidebar {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.edit-profile {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.edit-profile:hover {
+    color:  var(--shopee-primary) !important;
+}
+
+.menu-header:hover,
+.menu-header:hover .menu-title {
+    color:  var(--shopee-primary) !important;
+}
+
+.menu-item:hover {
+    color: var(--shopee-primary) !important;
+}
+
+.menu-item.active {
+    color: var(--shopee-primary) !important;
+    font-weight: 500;
+}
+
+/* User Profile */
+.user-profile {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.profile-header h4 {
+    font-size: 18px;
+    color: rgba(0, 0, 0, 0.87);
+}
+
+.col-form-label {
+    font-size: 14px;
+}
+
+.form-control {
+    font-size: 14px;
+    border-color: rgba(0, 0, 0, 0.14);
+}
+
+.form-control:focus {
+    border-color: var(--shopee-primary);
+    box-shadow: 0 0 0 0.2rem rgba(238, 77, 45, 0.25);
+}
+
+.form-control-plaintext {
+    color: rgba(0, 0, 0, 0.87);
+    font-size: 14px;
+}
+
+.btn-danger {
+    background-color: var(--shopee-primary);
+    border-color: var(--shopee-primary);
+    font-size: 14px;
+    padding: 10px 0;
+    transition: background-color 0.2s;
+}
+
+.btn-danger:hover {
+    background-color: #d73211;
+    border-color: #d73211;
+}
+
+.btn-danger:focus {
+    box-shadow: 0 0 0 0.2rem rgba(238, 77, 45, 0.5);
+}
