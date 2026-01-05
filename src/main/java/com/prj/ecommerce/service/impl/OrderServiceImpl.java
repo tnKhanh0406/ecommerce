@@ -41,6 +41,7 @@ public class OrderServiceImpl implements OrderService {
     private final VoucherUsageRepository voucherUsageRepository;
     private final VoucherRepository voucherRepository;
     private final NotificationService notificationService;
+    private final ShopRepository shopRepository;
 
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -228,9 +229,12 @@ public class OrderServiceImpl implements OrderService {
             UserAddressEntity address,
             VoucherEntity voucher,
             CreateOrderRequest request) {
+        ShopEntity shop = shopRepository.findById(shopId)
+                .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
         OrderEntity order = new OrderEntity();
         order.setUser(getCurrentUser());
         order.setShopId(shopId);
+        order.setShopName(shop.getShopName());
         order.setNote(request.getNote());
         order.setPaymentMethod(request.getPaymentMethod());
         order.setReceiverAddress(address. getAddress());

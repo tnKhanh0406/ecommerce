@@ -50,6 +50,9 @@ public class OrderEntity {
     @Column(nullable = false)
     private Long shopId;
 
+    @Column(nullable = false)
+    private String shopName;
+
     @Column(columnDefinition = "TEXT")
     private String note;
 
