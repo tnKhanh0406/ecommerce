@@ -48,9 +48,6 @@
                                 <div>
                                     <span class="badge badge-danger mr-2">Yêu thích</span>
                                     <span class="font-weight-bold" th:text="${order.shopName}"></span>
-                                    <a th:href="@{/shop/{id}(id=${order.shopId})}" class="btn btn-sm btn-outline-secondary ml-2">
-                                        💬 Chat
-                                    </a>
                                     <a th:href="@{/shop/{id}(id=${order.shopId})}" class="btn btn-sm btn-outline-secondary ml-1">
                                         👁 Xem Shop
                                     </a>
@@ -68,7 +65,7 @@
                                     <div class="col-md-7 d-flex">
                                         <img th:src="${item.imageUrl}" alt="Product Image" class="order-item-img mr-3"/>
                                         <div>
-                                            <p class="mb-1 font-weight-normal" th:text="${item.productName}"></p>
+                                            <a th:href="@{'/products/' + ${item.productId}}" class="mb-1 font-weight-normal" th:text="${item.productName}"></a>
                                             <p class="text-muted small mb-1">
                                                 <span>Phân loại hàng:  </span>
                                                 <span th:text="${item. productVariantName}"></span>

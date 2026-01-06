@@ -20,6 +20,7 @@ public class CreateOrderResponse {
     private String note;
     private String orderStatus;
     private String paymentStatus;
+    private String paymentMethod;
     private String receiverAddress;
     private String receiverPhone;
     private String receiverName;
@@ -34,6 +35,7 @@ public class CreateOrderResponse {
     private BigDecimal discountValue;
     private BigDecimal voucherMaxDiscount;
     private List<CreateOrderItemResponse> items;
+    private List<OrderHistoryResponse> histories;
 
     public static CreateOrderResponse fromEntity(OrderEntity entity) {
         CreateOrderResponse response = new CreateOrderResponse();
@@ -42,6 +44,7 @@ public class CreateOrderResponse {
         response.setNote(entity.getNote());
         response.setOrderStatus(entity.getOrderStatus().toString());
         response.setPaymentStatus(entity.getPaymentStatus().toString());
+        response.setPaymentMethod(entity.getPaymentMethod());
         response.setReceiverAddress(entity.getReceiverAddress());
         response.setReceiverPhone(entity.getReceiverPhone());
         response.setReceiverName(entity.getReceiverName());
@@ -59,7 +62,12 @@ public class CreateOrderResponse {
         List<CreateOrderItemResponse> items = entity.getOrderItems().stream()
                 .map(CreateOrderItemResponse::fromEntity)
                 .toList();
+
+        List<OrderHistoryResponse> histories = entity.getStatusHistories().stream()
+                .map(OrderHistoryResponse::fromEntity)
+                .toList();
         response.setItems(items);
+        response.setHistories(histories);
         return response;
     }
 }

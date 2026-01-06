@@ -258,20 +258,82 @@ a.text-decoration-none:hover {
     background-color: #fff;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .order-tabs {
-        gap: 15px;
-        overflow-x: auto;
-        white-space: nowrap;
-    }
+.timeline {
+    position: relative;
+    padding-left: 40px;
+}
 
-    .tab-link {
-        font-size: 13px;
-    }
+.timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+    display: flex;
+}
 
-    .order-item-img {
-        width: 60px;
-        height: 60px;
-    }
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 30px;
+    width: 2px;
+    height: calc(100% - 10px);
+    background-color:  #e0e0e0;
+}
+
+.timeline-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-right: 15px;
+    z-index: 1;
+}
+
+.timeline-content {
+    flex: 1;
+}
+
+/* Order Summary */
+.order-summary {
+    max-width: 400px;
+    margin-left: auto;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 14px;
+}
+
+.summary-row.total-row {
+    padding-top: 15px;
+    margin-top: 10px;
+    border-top:  1px solid #e0e0e0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* Order Item Image */
+.order-item-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border:  1px solid #f0f0f0;
+}
+
+/* Price Symbol */
+.price-symbol {
+    text-decoration: underline;
+    font-size: 0.9em;
+}
+
+/* Badge */
+.badge-success {
+    background-color: #28a745;
 }

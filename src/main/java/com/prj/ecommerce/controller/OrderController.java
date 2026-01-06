@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
@@ -19,5 +20,12 @@ public class OrderController {
                             @RequestParam(required = false) OrderStatus status) {
         model.addAttribute("orders", orderService.getOrders(keyword, status).getOrders());
         return "order";
+    }
+
+    @GetMapping("/user/order/orderDetail/{orderId}")
+    public String orderDetailPage(Model model,
+                                  @PathVariable Long orderId) {
+        model.addAttribute("orderDetail", orderService.getOrderItems(orderId));
+        return "orderDetail";
     }
 }

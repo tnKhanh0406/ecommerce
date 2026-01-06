@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class CreateOrderItemResponse {
     private Long orderItemId;
+    private Long productId;
     private String imageUrl;
     private BigDecimal price;
     private Integer quantity;
@@ -24,6 +25,7 @@ public class CreateOrderItemResponse {
     public static CreateOrderItemResponse fromEntity(OrderItemEntity entity) {
         return new CreateOrderItemResponse(
                 entity.getId(),
+                entity.getProductId(),
                 entity.getImageUrl(),
                 entity.getPrice(),
                 entity.getQuantity(),

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    <link rel="stylesheet" href="/css/style.css">
+    <title>Order Detail</title>
+</head>
+<body class="bg-light">
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-3 col-md-4 mb-4">
+            <div th:replace="~{fragments/userSidebar ::  userSidebar}"></div>
+        </div>
+        <div class="col-lg-9 col-md-8">
+            <!-- Order Status Header -->
+            <div class="bg-white rounded p-3 mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-muted">Mã đơn hàng:  </span>
+                        <span class="font-weight-bold" th:text="${orderDetail.id}"></span>
+                    </div>
+                    <div>
+                        <span class="text-danger font-weight-bold text-uppercase" th:text="${orderDetail.orderStatus}"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery Address -->
+            <div class="bg-white rounded p-4 mb-3">
+                <h5 class="mb-3 pb-3 border-bottom">Địa Chỉ Nhận Hàng</h5>
+                <div class="row">
+                    <div class="col-md-12">
+                        <p class="mb-1 font-weight-bold" th:text="'Tên người nhận hàng: ' + ${orderDetail. receiverName}"></p>
+                        <p class="mb-1 text-muted" th:text="'Số điện thoại: ' + ${orderDetail.receiverPhone}"></p>
+                        <p class="mb-0 text-muted" th:text="'Địa chỉ: ' + ${orderDetail.receiverAddress}"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order History Timeline -->
+            <div class="bg-white rounded p-4 mb-3">
+                <h5 class="mb-3">Lịch Sử Đơn Hàng</h5>
+                <div class="timeline">
+                    <th:block th:each="history :  ${orderDetail.histories}">
+                        <div class="timeline-item" th:if="${history.toStatus.equals('COMPLETED')}">
+                            <div class="timeline-icon bg-success">✓</div>
+                            <div class="timeline-content">
+                                <p class="mb-0 font-weight-bold text-success">Đã giao</p>
+                                <p class="mb-0 text-muted small" th:text="'Giao hàng thành công - ' + ${history.createdAt}"></p>
+                            </div>
+                        </div>
+                        <div class="timeline-item" th:if="${history.toStatus.equals('SHIPPING')}">
+                            <div class="timeline-icon bg-info">📦</div>
+                            <div class="timeline-content">
+                                <p class="mb-0 font-weight-bold">Đang vận chuyển</p>
+                                <p class="mb-0 text-muted small" th:text="'Đơn hàng đang được giao - ' + ${history.createdAt}"></p>
+                            </div>
+                        </div>
+                        <div class="timeline-item" th:if="${history.toStatus.equals('CANCELLED')}">
+                            <div class="timeline-icon bg-danger">✕</div>
+                            <div class="timeline-content">
+                                <p class="mb-0 font-weight-bold text-danger">Đã hủy</p>
+                                <p class="mb-0 text-muted small" th:text="'Đơn hàng đã bị hủy - ' + ${history.createdAt}"></p>
+                            </div>
+                        </div>
+                        <div class="timeline-item" th:if="${history.toStatus.equals('PENDING')}">
+                            <div class="timeline-icon bg-warning">⏱</div>
+                            <div class="timeline-content">
+                                <p class="mb-0 font-weight-bold">Đơn hàng đã đặt</p>
+                                <p class="mb-0 text-muted small" th:text="'Đơn hàng được tạo thành công - ' + ${history. createdAt}"></p>
+                            </div>
+                        </div>
+                    </th:block>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="bg-white rounded p-4 mb-3">
+                <div class="pb-3 border-bottom mb-3">
+                    <span class="badge badge-danger mr-2">Yêu thích</span>
+                    <span class="font-weight-bold" th:text="${orderDetail. shopName}"></span>
+                    <a th:href="@{/shop/{id}(id=${orderDetail.shopId})}" class="btn btn-sm btn-outline-secondary ml-2">
+                        👁 Xem Shop
+                    </a>
+                </div>
+
+                <div>
+                    <th:block th:each="item :  ${orderDetail.items}">
+                        <div class="row mb-3 pb-3 border-bottom">
+                            <div class="col-md-7 d-flex">
+                                <img th:src="${item.imageUrl}" alt="Product Image" class="order-item-img mr-3"/>
+                                <div>
+                                    <a th:href="@{'/products/' + ${item.productId}}" class="mb-1 font-weight-normal" th:text="${item.productName}"></a>
+                                    <p class="text-muted small mb-1">
+                                        <span>Phân loại hàng:  </span>
+                                        <span th:text="${item.productVariantName}"></span>
+                                    </p>
+                                    <p class="mb-0">
+                                        <span th:text="'x' + ${item.quantity}"></span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-5 text-right d-flex align-items-center justify-content-end">
+                                <div>
+                                    <p class="mb-0">
+                                        <span class="price-symbol">₫</span>
+                                        <span th:text="${item.price}"></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </th:block>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="bg-white rounded p-4">
+                <div class="order-summary">
+                    <div class="summary-row">
+                        <span class="text-muted">Tổng tiền hàng</span>
+                        <span>
+                            <span class="price-symbol">₫</span>
+                            <span th:text="${orderDetail.subtotal}"></span>
+                        </span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="text-muted">Phí vận chuyển</span>
+                        <span>
+                            <span class="price-symbol">₫</span>
+                            <span th:text="${orderDetail.shippingFee}"></span>
+                        </span>
+                    </div>
+                    <div class="summary-row" th:if="${orderDetail.voucherCode != null}">
+                        <span class="text-muted">Voucher từ Shop</span>
+                        <span class="text-danger">
+                            -<span class="price-symbol">₫</span>
+                            <span th:text="${orderDetail.discountValue}"></span>
+                        </span>
+                    </div>
+                    <div class="summary-row total-row">
+                        <span>Thành tiền</span>
+                        <span class="text-danger h5 mb-0">
+                            <span class="price-symbol">₫</span>
+                            <span th:text="${orderDetail.totalPrice}"></span>
+                        </span>
+                    </div>
+                    <div class="summary-row mt-3 pt-3 border-top">
+                        <span class="text-muted">Phương thức Thanh toán</span>
+                        <span class="font-weight-bold" th:text="${orderDetail.paymentMethod}"></span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="text-muted">Trạng thái thanh toán</span>
+                        <span class="badge badge-success" th:text="${orderDetail.paymentStatus}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js" integrity="sha384-+sLIOodYLS7CIrQpBjl+C7nPvqq+FbNUBDunl/OZv93DB7Ln/533i8e/mZXLi/P+" crossorigin="anonymous"></script>
+</body>
+</html>
