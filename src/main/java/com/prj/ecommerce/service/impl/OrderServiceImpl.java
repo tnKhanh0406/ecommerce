@@ -42,6 +42,7 @@ public class OrderServiceImpl implements OrderService {
     private final VoucherRepository voucherRepository;
     private final NotificationService notificationService;
     private final ShopRepository shopRepository;
+    private final ProductRepository productRepository;
 
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -102,7 +103,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new EntityNotFoundException("UserAddress not found"));
 
         // 4. Xử lý từng shop để tạo nhiều order
-        List<CreateOrderResponse> orderResponses = createOrdersForShops(itemsByShop, address, request);
+        List<CreateOrderResponse> orderResponses = createOrdersForShops(itemsByShop, address, request, userId);
 
         // 5. Xóa cart items sau khi đã xử lý
         cartItemRepository.deleteAll(cartItems);
@@ -116,36 +117,63 @@ public class OrderServiceImpl implements OrderService {
     public CreateOrderResponse cancelOrder(Long orderId) {
         OrderEntity order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found"));
-        if (!order.getUser().getId().equals(getCurrentUserId())) {
-            throw new AccessDeniedException("This order is not belong to the current user");
+        Long currentUserId = getCurrentUserId();
+        if (currentUserId == null) {
+            throw new AccessDeniedException("User not authenticated");
+        }
+
+        if (!order.getUser().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("This order does not belong to the current user");
         }
         if (!order.getOrderStatus().equals(OrderStatus.PENDING)) {
             throw new BadRequestException("Order cannot be canceled");
         }
+
+        OrderStatus oldStatus = order.getOrderStatus();
         order.setOrderStatus(OrderStatus.CANCELLED);
 
-        OrderStatusHistoryEntity orderStatusHistory = addInitialStatusHistory(
+        // Tạo status history
+        addInitialStatusHistory(
                 order,
-                order.getOrderStatus(),
+                oldStatus,
                 OrderStatus.CANCELLED,
-                UserRole.CUSTOMER
+                UserRole.CUSTOMER,
+                currentUserId
         );
-        order.getStatusHistories().add(orderStatusHistory);
 
-        orderRepository.save(order);
+        // Save order TRƯỚC khi lock các entity khác
+        order = orderRepository.saveAndFlush(order); // Dùng saveAndFlush để commit ngay
+
+        // Sau đó mới update variants và products với lock
         List<ProductVariantEntity> updatedVariants = new ArrayList<>();
+        List<ProductEntity> updatedProducts = new ArrayList<>();
+
         for (OrderItemEntity item : order.getOrderItems()) {
             ProductVariantEntity variant = productVariantRepository.findByIdForUpdate(item.getProductVariant().getId())
                     .orElseThrow(() -> new EntityNotFoundException("Product variant not found"));
-            variant.setStock(variant.getStock() + item.getQuantity());
+            Integer quantity = item.getQuantity();
+            if (quantity == null) {
+                quantity = 0;
+            }
+            Integer stock = variant.getStock();
+            if (stock == null) stock = 0;
+
+            variant.setStock(stock + quantity);
             updatedVariants.add(variant);
 
             ProductEntity product = variant.getProduct();
-            product.setSoldCount(product.getSoldCount() - item.getQuantity());
-        }
-        productVariantRepository.saveAll(updatedVariants);
+            Integer sold = product.getSoldCount();
+            if (sold == null) sold = 0;
 
-        //Gui thong bao
+            product.setSoldCount(sold - quantity);
+            updatedProducts.add(product);
+        }
+
+        // Save variants và products
+        productVariantRepository.saveAllAndFlush(updatedVariants); // Dùng saveAllAndFlush
+        productRepository.saveAllAndFlush(updatedProducts);
+
+        // Gửi thông báo
         NotificationRequest notificationRequest = new NotificationRequest(
                 "Hủy đơn hàng thành công",
                 "Đơn hàng #" + order.getId() + " đã được hủy",
@@ -164,12 +192,13 @@ public class OrderServiceImpl implements OrderService {
     protected List<CreateOrderResponse> createOrdersForShops(
             Map<Long, List<CartItemEntity>> itemsByShop,
             UserAddressEntity address,
-            CreateOrderRequest request) {
+            CreateOrderRequest request,
+            Long userId) {
         List<CreateOrderResponse> orderResponses = new ArrayList<>();
         for (Map. Entry<Long, List<CartItemEntity>> entry : itemsByShop.entrySet()) {
             Long shopId = entry.getKey();
             List<CartItemEntity> items = entry.getValue();
-            CreateOrderResponse orderResponse = createOrderForShop(shopId, items, address, request);
+            CreateOrderResponse orderResponse = createOrderForShop(shopId, items, address, request, userId);
             orderResponses.add(orderResponse);
         }
 
@@ -181,7 +210,8 @@ public class OrderServiceImpl implements OrderService {
             Long shopId,
             List<CartItemEntity> items,
             UserAddressEntity address,
-            CreateOrderRequest request) {
+            CreateOrderRequest request,
+            Long userId) {
         Long voucherId = request.getShopVouchers() != null
                 ? request.getShopVouchers().get(shopId)
                 : null;
@@ -190,7 +220,7 @@ public class OrderServiceImpl implements OrderService {
         OrderEntity order = buildOrderEntity(shopId, items, address, voucher, request);
 
         // Tạo order status history
-        addInitialStatusHistory(order, null, OrderStatus.PENDING, UserRole.CUSTOMER);
+        addInitialStatusHistory(order, null, OrderStatus.PENDING, UserRole.CUSTOMER, userId);
 
         // Save order
         orderRepository.save(order);
@@ -313,12 +343,13 @@ public class OrderServiceImpl implements OrderService {
     private OrderStatusHistoryEntity addInitialStatusHistory(OrderEntity order,
                                                              OrderStatus from,
                                                              OrderStatus to,
-                                                             UserRole userRole) {
+                                                             UserRole userRole,
+                                                             Long currentUserId) {
         OrderStatusHistoryEntity orderStatusHistory = new OrderStatusHistoryEntity();
         orderStatusHistory.setFromStatus(from);
         orderStatusHistory.setToStatus(to);
         orderStatusHistory.setChangedBy(userRole);
-        orderStatusHistory.setChangedById(getCurrentUserId());
+        orderStatusHistory.setChangedById(currentUserId);
         orderStatusHistory.setOrder(order);
 
         order.getStatusHistories().add(orderStatusHistory);

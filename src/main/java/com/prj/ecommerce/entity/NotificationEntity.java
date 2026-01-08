@@ -44,5 +44,8 @@ public class NotificationEntity {
     @PrePersist
     void prePersist() {
         createdAt = LocalDateTime.now();
+        if (isRead == null) {
+            isRead = false;
+        }
     }
 }
