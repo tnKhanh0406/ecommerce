@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 public class ProductFilterRequest {
     private String keyword;
     private Long categoryId;
+    private Long shopId;
     private BigDecimal minPrice;
     private BigDecimal maxPrice;
     private ProductSortType sortType = ProductSortType.NEWEST;

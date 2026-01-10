@@ -14,12 +14,13 @@ import java.util.List;
 
 public class ProductSpecification {
 
-    public static Specification<ProductEntity> search(ProductFilterRequest req) {
+    public static Specification<ProductEntity> search(ProductFilterRequest req, List<Long> categoryIds) {
         return (root, query, cb) -> {
 
             Predicate predicate = filter(
                     req.getKeyword(),
-                    req.getCategoryId(),
+                    categoryIds,
+                    req.getShopId(),
                     req.getMinPrice(),
                     req.getMaxPrice()
             ).toPredicate(root, query, cb);
@@ -32,7 +33,8 @@ public class ProductSpecification {
 
 
     public static Specification<ProductEntity> filter (String keyword,
-                                                       Long categoryId,
+                                                       List<Long> categoryIds,
+                                                       Long shopId,
                                                        BigDecimal minPrice,
                                                        BigDecimal maxPrice) {
         return (root, query, cb) -> {
@@ -47,16 +49,22 @@ public class ProductSpecification {
             }
 
             /* category (M:N) */
-            if (categoryId != null) {
+            if (categoryIds != null && !categoryIds.isEmpty()) {
                 Join<ProductEntity, ProductCategoryEntity> pcJoin =
                         root.join("productCategories", JoinType.INNER);
 
                 Join<ProductCategoryEntity, CategoryEntity> categoryJoin =
                         pcJoin.join("category", JoinType.INNER);
 
-                predicates.add(cb.equal(categoryJoin.get("id"), categoryId));
+                predicates.add(categoryJoin.get("id").in(categoryIds));
             }
 
+            /* shop */
+            if (shopId != null) {
+                predicates.add(
+                        cb.equal(root.get("shop").get("id"), shopId)
+                );
+            }
 
             /* price nằm ở product_variant */
             if (minPrice != null || maxPrice != null) {

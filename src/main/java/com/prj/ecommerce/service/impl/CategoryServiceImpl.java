@@ -10,6 +10,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -56,5 +57,22 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void deleteCategory(Long categoryId) {
         categoryRepository.deleteById(categoryId);
+    }
+
+    @Override
+    public List<Long> getAllCategoryIds(Long rootCategoryId) {
+        List<Long> result = new ArrayList<>();
+        dfs(rootCategoryId, result);
+        return result;
+    }
+
+    private void dfs(Long categoryId, List<Long> result) {
+        result.add(categoryId);
+
+        List<CategoryEntity> children = categoryRepository.findByParentId(categoryId);
+
+        for (CategoryEntity child : children) {
+            dfs(child.getId(), result);
+        }
     }
 }

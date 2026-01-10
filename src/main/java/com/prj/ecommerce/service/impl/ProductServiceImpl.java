@@ -5,12 +5,14 @@ import com.prj.ecommerce.dto.request.*;
 import com.prj.ecommerce.dto.response.*;
 import com.prj.ecommerce.entity.*;
 import com.prj.ecommerce.repository.*;
+import com.prj.ecommerce.service.CategoryService;
 import com.prj.ecommerce.service.ProductService;
 import com.prj.ecommerce.specification.ProductSpecification;
 import com.prj.ecommerce.utils.SkuUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -40,6 +42,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductVariantRepository productVariantRepository;
     private final ProductVariantAttributeValueRepository productVariantAttributeValueRepository;
     private final ProductReviewRepository productReviewRepository;
+    private final CategoryService categoryService;
 
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -54,43 +57,30 @@ public class ProductServiceImpl implements ProductService {
                 request.getSize()
         );
 
+        List<Long> categoryIds = new ArrayList<>();
+        if (request.getCategoryId() != null) {
+            categoryIds = categoryService.getAllCategoryIds(request.getCategoryId());
+        }
+
         Page<ProductEntity> productPage = productRepo.findAll(
-                ProductSpecification.search(request),
+                ProductSpecification.search(request, categoryIds),
                 pageable
         );
 
-        return productPage.map(CreateProductResponse::fromEntity);
+        List<CreateProductResponse> responses = attachPriceRange(productPage.getContent());
+
+        return new PageImpl<>(
+                responses,
+                pageable,
+                productPage.getTotalElements()
+        );
     }
 
     @Override
     public List<CreateProductResponse> getRecommendProducts() {
         List<ProductEntity> products = productRepo.findRandomProducts(PageRequest.of(0, 30));
 
-        if (products.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<Long> productIds = products.stream()
-                .map(ProductEntity::getId)
-                .toList();
-
-        List<ProductPriceRangeResponse> priceRanges = productVariantRepository.findPriceRangeByProductIds(productIds);
-
-        Map<Long, ProductPriceRangeResponse> priceMap = priceRanges.stream()
-                .collect(Collectors.toMap(
-                                ProductPriceRangeResponse::getProductId,
-                                Function.identity()));
-
-        return products.stream().map(p -> {
-                    CreateProductResponse r = CreateProductResponse.fromEntity(p);
-                    ProductPriceRangeResponse price = priceMap.get(p.getId());
-                    if (price != null) {
-                        r.setMinPrice(price.getMinPrice());
-                        r.setMaxPrice(price.getMaxPrice());
-                    }
-                    return r;
-                })
-                .toList();
+        return attachPriceRange(products);
     }
 
     @Override
@@ -305,6 +295,36 @@ public class ProductServiceImpl implements ProductService {
         }
         productCategoryRepo.deleteAllByProduct_Id(productId);
         productRepo.deleteById(productId);
+    }
+
+    private List<CreateProductResponse> attachPriceRange(List<ProductEntity> products) {
+        if (products.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> productIds = products.stream()
+                .map(ProductEntity::getId)
+                .toList();
+
+        List<ProductPriceRangeResponse> priceRanges =
+                productVariantRepository.findPriceRangeByProductIds(productIds);
+
+        Map<Long, ProductPriceRangeResponse> priceMap =
+                priceRanges.stream()
+                        .collect(Collectors.toMap(
+                                ProductPriceRangeResponse::getProductId,
+                                Function.identity()
+                        ));
+
+        return products.stream().map(p -> {
+            CreateProductResponse r = CreateProductResponse.fromEntity(p);
+            ProductPriceRangeResponse price = priceMap.get(p.getId());
+            if (price != null) {
+                r.setMinPrice(price.getMinPrice());
+                r.setMaxPrice(price.getMaxPrice());
+            }
+            return r;
+        }).toList();
     }
 
     private List<ProductAttributeResponse> getProductAttributes(ProductEntity product) {
