@@ -21,6 +21,8 @@ public class CategoryController {
         List<CategoryResponse> topLevelCategories = categoryService.getTopLevelCategories();
         model.addAttribute("topLevelCategories", topLevelCategories);
         model.addAttribute("products", productService.getRecommendProducts());
+        model.addAttribute("currentCategoryId", null);
+        model.addAttribute("currentShopId", null);
         return "home";
     }
 }

@@ -66,6 +66,11 @@ public class CategoryServiceImpl implements CategoryService {
         return result;
     }
 
+    @Override
+    public CategoryEntity findBySlug(String slug) {
+        return categoryRepository.findBySlug(slug);
+    }
+
     private void dfs(Long categoryId, List<Long> result) {
         result.add(categoryId);
 

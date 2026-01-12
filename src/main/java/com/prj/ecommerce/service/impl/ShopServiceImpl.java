@@ -29,6 +29,13 @@ public class ShopServiceImpl implements ShopService {
     }
 
     @Override
+    public CreateShopResponse getShopById(Long shopId) {
+        ShopEntity shop = shopRepository.findById(shopId)
+                .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
+        return CreateShopResponse.fromEntity(shop);
+    }
+
+    @Override
     public CreateShopResponse createShop(CreateShopRequest createShopRequest) {
         UserEntity user = getCurrentUser();
         if (shopRepository.findByUser_Id(user.getId()).isPresent()) {

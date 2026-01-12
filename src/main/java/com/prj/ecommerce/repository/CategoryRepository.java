@@ -8,4 +8,5 @@ import java.util.List;
 public interface CategoryRepository extends JpaRepository<CategoryEntity, Long> {
     List<CategoryEntity> findByParentIsNull();
     List<CategoryEntity> findByParentId(Long id);
+    CategoryEntity findBySlug(String slug);
 }
