@@ -81,7 +81,7 @@
                 <div class="pb-3 border-bottom mb-3">
                     <span class="badge badge-danger mr-2">Yêu thích</span>
                     <span class="font-weight-bold" th:text="${orderDetail. shopName}"></span>
-                    <a th:href="@{/shop/{id}(id=${orderDetail.shopId})}" class="btn btn-sm btn-outline-secondary ml-2">
+                    <a th:href="@{'/products?shopId=' + ${orderDetail.shopId}}" class="btn btn-sm btn-outline-secondary ml-2">
                         👁 Xem Shop
                     </a>
                 </div>
