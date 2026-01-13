@@ -8,6 +8,7 @@
     <title th:text="${productDetail.name}">Product Detail</title>
 </head>
 <body class="bg-light">
+    <div th:replace="~{fragments/header :: header}"></div>
     <!--    BreadCrumb-->
     <div class="breadcrumb-section bg-white py-3 mb-3">
         <div class="container">
@@ -18,7 +19,7 @@
                     </li>
                     <th:block th:each="category :  ${productDetail.getBreadcrumb()}">
                         <li class="breadcrumb-item">
-                            <a th:text="${category.name}" th:href="@{'/' + ${category.slug}}" class="text-primary"></a>
+                            <a th:text="${category.name}" th:href="@{'/c/' + ${category.slug}}" class="text-primary"></a>
                         </li>
                     </th:block>
                     <li class="breadcrumb-item active" aria-current="page">
