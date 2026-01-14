@@ -15,8 +15,12 @@
           <span class="menu-title flex-fill">Notification</span>
         </a>
         <div class="menu-items ml-4">
-          <a href="#" class="menu-item d-block py-2 text-muted text-decoration-none">Order Update</a>
-          <a href="#" class="menu-item d-block py-2 text-muted text-decoration-none">Shopee Update</a>
+          <a th:href="@{/user/notifications(referenceType=${T(com.prj.ecommerce.common.ReferenceType).VOUCHER})}"
+             class="menu-item d-block py-2 text-muted text-decoration-none">Voucher</a>
+          <a th:href="@{/user/notifications(referenceType=${T(com.prj.ecommerce.common.ReferenceType).REVIEW})}"
+             class="menu-item d-block py-2 text-muted text-decoration-none">Review</a>
+          <a th:href="@{/user/notifications(referenceType=${T(com.prj.ecommerce.common.ReferenceType).ORDER})}"
+             class="menu-item d-block py-2 text-muted text-decoration-none">Order Update</a>
         </div>
       </div>
 
