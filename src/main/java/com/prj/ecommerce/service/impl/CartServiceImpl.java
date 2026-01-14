@@ -45,10 +45,23 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    public List<AddCartItemResponse> getTop5CartItems() {
+        List<CartItemEntity> items = cartItemRepository.findTop5ByCart_User_IdOrderByIdDesc(getCurrentUserId());
+        if (items == null || items.isEmpty()) {
+            return null;
+        }
+        return items.stream()
+                .map(AddCartItemResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<AddCartItemResponse> getCartItems() {
         Long userId = getCurrentUserId();
         List<CartItemEntity> items = cartItemRepository.findAllByCart_User_Id(userId);
-
+        if (items == null || items.isEmpty()) {
+            return null;
+        }
         return items.stream()
                 .map(AddCartItemResponse::fromEntity)
                 .collect(Collectors.toList());

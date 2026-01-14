@@ -18,6 +18,7 @@ public class ProductVariantResponse {
     private String sku;
     private BigDecimal price;
     private Integer stock;
+    private String productName;
     private List<ProductImageResponse> images = new ArrayList<>();
     private List<ProductVariantAttributeValueResponse> attributes = new ArrayList<>();
 
@@ -27,6 +28,7 @@ public class ProductVariantResponse {
         response.setSku(entity.getSku());
         response.setPrice(entity.getPrice());
         response.setStock(entity.getStock());
+        response.setProductName(entity.getProduct().getName());
 
         if (entity.getImages() != null) {
             response.setImages(

@@ -1,5 +1,6 @@
 package com.prj.ecommerce.api;
 
+import com.prj.ecommerce.common.ReferenceType;
 import com.prj.ecommerce.dto.response.NotificationResponse;
 import com.prj.ecommerce.service.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -14,9 +15,9 @@ import java.util.List;
 public class NotificationApiController {
     private final NotificationService notificationService;
 
-    @GetMapping
-    public List<NotificationResponse> getAllNotifications() {
-        return notificationService.getAllNotifications(false);
+    @GetMapping("/{referenceType}")
+    public List<NotificationResponse> getAllNotifications(@PathVariable ReferenceType referenceType) {
+        return notificationService.getAllNotifications(referenceType);
     }
 
     @DeleteMapping("/{notificationId}")

@@ -1,0 +1,160 @@
+/* header.css */
+
+/* Shopee Colors */
+:root {
+    --shopee-primary: #ee4d2d;
+}
+
+.bg-danger {
+    background-color: var(--shopee-primary) !important;
+}
+
+.btn-danger {
+    background-color: var(--shopee-primary) !important;
+    border-color: var(--shopee-primary) !important;
+}
+
+/* Top Bar */
+.top-bar {
+    font-size: 12px;
+}
+
+/* Main Header */
+.main-header {
+    background:  linear-gradient(0, #f53d2d, #f63);
+}
+
+.main-header a:hover {
+    opacity: 0.9;
+}
+
+/* Search Bar */
+.main-header .form-control {
+    border:  none;
+    font-size: 14px;
+    height: 40px;
+}
+
+.main-header .form-control:focus {
+    box-shadow: none;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.main-header .btn-light {
+    background-color: #fb5533;
+    border:  none;
+    color: white;
+    height: 40px;
+}
+
+.main-header .btn-light:hover {
+    background-color: #d73211;
+}
+
+/* Icons */
+.icon-lg {
+    font-size: 24px;
+}
+
+.notification-text {
+    font-size: 14px;
+}
+
+/* Badges */
+.notification-badge,
+.cart-badge {
+    top: -5px;
+    right: -10px;
+    font-size: 10px;
+    min-width: 18px;
+    height: 18px;
+    padding: 2px 5px;
+}
+
+/* Dropdown Menus */
+.notification-dropdown,
+.cart-dropdown {
+    width: 400px;
+    max-height: 500px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: none;
+}
+
+.notification-list,
+.cart-list {
+    max-height: 400px;
+    overflow-y:  auto;
+}
+
+/* Notification Item */
+.notification-item {
+    padding: 12px 20px;
+    background-color: #fef8f5;
+    border-left: 3px solid transparent;
+}
+
+.notification-item:hover {
+    background-color: #fff5f0;
+    border-left-color: var(--shopee-primary);
+}
+
+.notification-content p {
+    line-height: 1.4;
+}
+
+/* Cart Item */
+.cart-item {
+    padding: 12px 20px;
+}
+
+.cart-item:hover {
+    background-color:  #f5f5f5;
+}
+
+.cart-item-img {
+    width: 50px;
+    height: 50px;
+    object-fit:  cover;
+    border:  1px solid #f0f0f0;
+}
+
+/* Price Symbol */
+.price-symbol {
+    text-decoration: underline;
+    font-size: 0.9em;
+}
+
+/* Dropdown Header */
+.dropdown-header {
+    color: rgba(0, 0, 0, 0.54);
+    font-size: 14px;
+    padding:  12px 20px;
+}
+
+/* Scrollbar */
+.notification-list::-webkit-scrollbar,
+.cart-list::-webkit-scrollbar {
+    width:  6px;
+}
+
+.notification-list::-webkit-scrollbar-thumb,
+.cart-list::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius:  3px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .notification-dropdown,
+    .cart-dropdown {
+        width: 320px;
+    }
+
+    .notification-text {
+        display: none;
+    }
+
+    .top-bar {
+        display: none;
+    }
+}
