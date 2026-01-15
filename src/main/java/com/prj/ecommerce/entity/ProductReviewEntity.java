@@ -29,8 +29,8 @@ public class ProductReviewEntity {
 
     private String variantSnapshot;
 
-    @ManyToOne
-    @JoinColumn(name = "order_item_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_item_id", nullable = false, unique = true)
     private OrderItemEntity orderItem;
 
     @ManyToOne

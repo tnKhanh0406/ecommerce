@@ -35,6 +35,9 @@ public class OrderItemEntity {
     @Column(nullable = false)
     private String imageUrl;
 
+    @OneToOne(mappedBy = "orderItem")
+    private ProductReviewEntity review;
+
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
     private OrderEntity order;
