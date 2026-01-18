@@ -8,6 +8,7 @@ import com.prj.ecommerce.dto.response.ProductReviewResponse;
 import com.prj.ecommerce.dto.response.ReviewReplyResponse;
 
 public interface ProductReviewService {
+    ProductReviewResponse getReviewByOrderItem(Long orderItemId);
     ProductReviewResponse createReview(ProductReviewRequest request);
     ProductReviewResponse updateReview(UpdateReviewRequest request);
     ReviewReplyResponse createReply(ReviewReplyRequest request);

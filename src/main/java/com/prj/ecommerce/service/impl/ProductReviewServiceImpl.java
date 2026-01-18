@@ -14,6 +14,7 @@ import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.NotificationService;
 import com.prj.ecommerce.service.ProductReviewService;
+import com.prj.ecommerce.service.ReviewPolicyService;
 import com.prj.ecommerce.utils.VariantUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
     private final ReviewReplyRepository reviewReplyRepository;
     private final NotificationService notificationService;
+    private final ReviewPolicyService reviewPolicyService;
 
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -54,6 +56,11 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         return ((UserPrincipal) SecurityContextHolder.getContext()
                 .getAuthentication().getPrincipal())
                 .getUserEntity().getId();
+    }
+
+    @Override
+    public ProductReviewResponse getReviewByOrderItem(Long orderItemId) {
+        return ProductReviewResponse.fromEntity(productReviewRepository.findByOrderItem_Id(orderItemId));
     }
 
     @Override
@@ -69,7 +76,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
             throw new AccessDeniedException("You do not have permission to review this item");
         }
 
-        if (!canReview(order, 10)) {
+        if (!reviewPolicyService.canReview(order, 10)) {
             throw new BadRequestException("You cannot review this item");
         }
 
@@ -128,7 +135,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
             throw new AccessDeniedException("You do not have permission to review this item");
         }
 
-        if (!canUpdate(review, 5)) {
+        if (!reviewPolicyService.canUpdate(review, 5)) {
             throw new BadRequestException("You cannot update this review");
         }
 
@@ -233,15 +240,6 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         return ReviewReplyResponse.fromEntity(reply);
     }
 
-    private boolean canReview(OrderEntity order, Integer day) {
-        OrderStatusHistoryEntity history = orderStatusHistoryRepository.findByOrder_IdAndToStatus(order.getId(), OrderStatus.COMPLETED);
-        if (history == null) {
-            return false;
-        }
-        return order.getOrderStatus() == OrderStatus.COMPLETED
-                && Duration.between(history.getCreatedAt(), LocalDateTime.now()).toDays() <= day;
-    }
-
     private void createImages(List<ProductImageRequest> images, ProductReviewEntity review) {
         for (ProductImageRequest imageRequest : images) {
             ProductImageEntity image = new ProductImageEntity();
@@ -252,10 +250,6 @@ public class ProductReviewServiceImpl implements ProductReviewService {
             image.setReview(review);
             review.getImages().add(image);
         }
-    }
-
-    private boolean canUpdate(ProductReviewEntity review, Integer day) {
-        return Duration.between(review.getCreatedAt(), LocalDateTime.now()).toDays() <= day;
     }
 
     private void updateImages(List<ProductImageRequest> images, ProductReviewEntity review) {

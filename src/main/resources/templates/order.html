@@ -12,22 +12,41 @@
 <div class="container py-4">
     <div class="row">
         <div class="col-lg-3 col-md-4 mb-4">
-            <div th:replace="~{fragments/userSidebar ::  userSidebar}"></div>
+            <div th:replace="~{fragments/userSidebar :: userSidebar}"></div>
         </div>
         <div class="col-lg-9 col-md-8">
             <div class="bg-white rounded p-3 mb-3">
                 <!-- Order Status Tabs -->
                 <div class="order-tabs border-bottom">
-                    <a th:href="@{/user/order}" class="tab-link active">Tất cả</a>
-                    <a th:href="@{/user/order(status=${T(com.prj.ecommerce.common.OrderStatus).PENDING})}" class="tab-link">Chờ thanh toán</a>
-                    <a th:href="@{/user/order(status=${T(com.prj.ecommerce.common.OrderStatus).CONFIRMED})}" class="tab-link">Vận chuyển</a>
-                    <a th:href="@{/user/order(status=${T(com.prj. ecommerce.common.OrderStatus).SHIPPING})}" class="tab-link">Chờ giao hàng</a>
-                    <a th:href="@{/user/order(status=${T(com.prj. ecommerce.common.OrderStatus).COMPLETED})}" class="tab-link">Hoàn thành</a>
-                    <a th:href="@{/user/order(status=${T(com.prj.ecommerce.common. OrderStatus).CANCELLED})}" class="tab-link">Đã hủy</a>
+                    <a th:href="@{/user/order}"
+                       th:class="${param.status == null ? 'tab-link active' : 'tab-link'}">
+                        Tất cả
+                    </a>
+                    <a th:href="@{/user/order(status=${T(com.prj.ecommerce.common.OrderStatus).PENDING})}"
+                       th:class="${param.status != null && param.status[0] == 'PENDING' ? 'tab-link active' : 'tab-link'}">
+                        Chờ thanh toán
+                    </a>
+                    <a th:href="@{/user/order(status=${T(com.prj.ecommerce.common.OrderStatus).CONFIRMED})}"
+                       th:class="${param.status != null && param.status[0] == 'CONFIRMED' ?  'tab-link active' :  'tab-link'}">
+                        Vận chuyển
+                    </a>
+                    <a th:href="@{/user/order(status=${T(com.prj.ecommerce.common.OrderStatus).SHIPPING})}"
+                       th:class="${param.status != null && param.status[0] == 'SHIPPING' ?  'tab-link active' :  'tab-link'}">
+                        Chờ giao hàng
+                    </a>
+                    <a th:href="@{/user/order(status=${T(com.prj.ecommerce.common.OrderStatus).COMPLETED})}"
+                       th:class="${param.status != null && param.status[0] == 'COMPLETED' ? 'tab-link active' : 'tab-link'}">
+                        Hoàn thành
+                    </a>
+                    <a th:href="@{/user/order(status=${T(com.prj.ecommerce.common.OrderStatus).CANCELLED})}"
+                       th:class="${param.status != null && param.status[0] == 'CANCELLED' ? 'tab-link active' : 'tab-link'}">
+                        Đã hủy
+                    </a>
                 </div>
 
                 <!-- Search Form -->
                 <form th:action="@{/user/order}" method="get" class="mt-3">
+                    <input type="hidden" name="status" th:value="${param.status != null ? param.status[0] : ''}" th:if="${param.status != null}"/>
                     <div class="input-group">
                         <input type="text" name="keyword" class="form-control" placeholder="Bạn có thể tìm kiếm theo tên Shop, ID đơn hàng hoặc Tên Sản phẩm"/>
                         <div class="input-group-append">
@@ -41,7 +60,7 @@
 
             <!-- Order List -->
             <div class="order-list">
-                <th:block th:each="order :  ${orders}">
+                <th:block th:each="order : ${orders}">
                     <div class="card mb-3">
                         <!-- Order Header -->
                         <div class="card-header bg-white border-bottom">
@@ -54,22 +73,22 @@
                                     </a>
                                 </div>
                                 <div>
-                                    <a th:href="@{'/user/order/orderDetail/' + ${order.id}}" class="text-danger text-decoration-none" th:text="${order.orderStatus}"></a>
+                                    <a th:href="@{'/user/order/orderDetail/' + ${order. id}}" class="text-danger text-decoration-none" th:text="${order.orderStatus}"></a>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Order Items -->
                         <div class="card-body">
-                            <th:block th:each="item :  ${order.items}">
+                            <th:block th:each="item, itemStat : ${order.items}">
                                 <div class="row mb-3 pb-3 border-bottom">
                                     <div class="col-md-7 d-flex">
                                         <img th:src="${item.imageUrl}" alt="Product Image" class="order-item-img mr-3"/>
                                         <div>
-                                            <a th:href="@{'/products/' + ${item.productId}}" class="mb-1 font-weight-normal" th:text="${item.productName}"></a>
+                                            <a th:href="@{'/products/' + ${item.productId}}" class="mb-1 font-weight-normal d-block text-decoration-none text-dark" th:text="${item.productName}"></a>
                                             <p class="text-muted small mb-1">
-                                                <span>Phân loại hàng:  </span>
-                                                <span th:text="${item. productVariantName}"></span>
+                                                <span>Phân loại hàng:   </span>
+                                                <span th:text="${item.productVariantName}"></span>
                                             </p>
                                             <p class="mb-0">
                                                 <span th:text="'x' + ${item.quantity}"></span>
@@ -85,6 +104,99 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Review Actions -->
+                                <div class="review-actions text-right mb-3">
+                                    <!-- Đã review - Xem đánh giá -->
+                                    <button th:if="${item.reviewed}"
+                                            type="button"
+                                            class="btn btn-sm btn-outline-primary"
+                                            data-toggle="modal"
+                                            th:data-target="'#reviewModal' + ${order.id} + '_' + ${itemStat.index}">
+                                        👁 Xem đánh giá
+                                    </button>
+
+                                    <!-- Chưa review nhưng có thể review -->
+                                    <a th:if="${!item.reviewed && item.canReview}"
+                                       th:href="@{'/user/review/create? orderId=' + ${order.id} + '&productId=' + ${item.productId}}"
+                                       class="btn btn-sm btn-primary">
+                                        ⭐ Đánh giá
+                                    </a>
+
+                                    <!-- Hết hạn đánh giá -->
+                                    <span th:if="${!item.reviewed && ! item.canReview}"
+                                          class="text-muted small">
+                                        ⏰ Hết thời gian đánh giá
+                                    </span>
+                                </div>
+
+                                <!-- Review Modal -->
+                                <div th:if="${item.reviewed}"
+                                     class="modal fade"
+                                     th:id="'reviewModal' + ${order.id} + '_' + ${itemStat.index}"
+                                     tabindex="-1"
+                                     role="dialog">
+                                    <div class="modal-dialog modal-lg" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Đánh Giá Sản Phẩm</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <!-- Product Info -->
+                                                <div class="d-flex mb-4 pb-3 border-bottom">
+                                                    <img th:src="${item.imageUrl}" alt="Product Image" class="review-modal-img mr-3"/>
+                                                    <div>
+                                                        <h6 class="mb-1" th:text="${item.productName}"></h6>
+                                                        <p class="text-muted small mb-0">
+                                                            <span>Phân loại: </span>
+                                                            <span th:text="${item.productVariantName}"></span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Review Content -->
+                                                <div class="review-content">
+                                                    <div class="d-flex align-items-center mb-3">
+                                                        <strong class="mr-3" th:text="${currentUser.username}"></strong>
+                                                        <span class="text-warning mr-2">
+                                                            <th:block th:each="i : ${#numbers.sequence(1,5)}">
+                                                                <span th:text="${i <= item.reviewResponse.rating ? '★' : '☆'}"></span>
+                                                            </th:block>
+                                                        </span>
+                                                        <span class="text-muted small" th:text="${item.reviewResponse.createdAt}"></span>
+                                                    </div>
+
+                                                    <p class="review-comment mb-3" th:text="${item.reviewResponse.comment}"></p>
+
+                                                    <!-- Review Images -->
+                                                    <div class="review-images-modal d-flex flex-wrap mb-3"
+                                                         th:if="${item.reviewResponse.reviewImageUrls != null && ! item.reviewResponse.reviewImageUrls.isEmpty()}">
+                                                        <th:block th:each="img : ${item.reviewResponse.reviewImageUrls}">
+                                                            <img th:src="${img.imageUrl}"
+                                                                 th:alt="${img.imageType}"
+                                                                 class="review-img-modal mr-2 mb-2"/>
+                                                        </th:block>
+                                                    </div>
+
+                                                    <!-- Seller Reply -->
+                                                    <div class="seller-reply bg-light p-3 rounded"
+                                                         th:if="${item.reviewResponse.reply != null}">
+                                                        <strong class="d-block mb-2 text-danger">
+                                                            <span>💬</span> Phản Hồi Của Người Bán
+                                                        </strong>
+                                                        <p class="mb-0" th:text="${item.reviewResponse.reply.content}"></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </th:block>
                         </div>
 
@@ -93,9 +205,9 @@
                             <div class="text-right">
                                 <span class="mr-2">Thành tiền:</span>
                                 <span class="text-danger font-weight-bold h5">
-                                        <span class="price-symbol">₫</span>
-                                        <span th:text="${order.totalPrice}"></span>
-                                    </span>
+                                    <span class="price-symbol">₫</span>
+                                    <span th:text="${order.totalPrice}"></span>
+                                </span>
                             </div>
                         </div>
                     </div>

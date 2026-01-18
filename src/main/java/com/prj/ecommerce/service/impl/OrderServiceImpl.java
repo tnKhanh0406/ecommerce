@@ -12,6 +12,7 @@ import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.NotificationService;
 import com.prj.ecommerce.service.OrderService;
+import com.prj.ecommerce.service.ReviewPolicyService;
 import com.prj.ecommerce.utils.VariantUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,6 +42,8 @@ public class OrderServiceImpl implements OrderService {
     private final NotificationService notificationService;
     private final ShopRepository shopRepository;
     private final ProductRepository productRepository;
+    private final ReviewPolicyService reviewPolicyService;
+    private final ProductReviewRepository productReviewRepository;
 
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -68,7 +69,13 @@ public class OrderServiceImpl implements OrderService {
         } else {
             orderEntities = orderRepository.findAllByUser_IdOrderByCreatedAtDesc(getCurrentUserId());
         }
-        return CreateOrderListResponse.fromEntity(orderEntities);
+        List<CreateOrderResponse> responses = orderEntities.stream()
+                .map(order -> {
+                    CreateOrderResponse response = CreateOrderResponse.fromEntity(order);
+                    enrichOrderItemsWithReviewStatus(response, order);
+                    return response;
+                }).toList();
+        return new CreateOrderListResponse(responses);
     }
 
     @Override
@@ -78,7 +85,9 @@ public class OrderServiceImpl implements OrderService {
         if (!order.getUser().getId().equals(getCurrentUserId())) {
             throw new AccessDeniedException("This order is not belong to the current user");
         }
-        return CreateOrderResponse.fromEntity(order);
+        CreateOrderResponse response = CreateOrderResponse.fromEntity(order);
+        enrichOrderItemsWithReviewStatus(response, order);
+        return response;
     }
 
     @Override
@@ -187,6 +196,34 @@ public class OrderServiceImpl implements OrderService {
 
         return CreateOrderResponse.fromEntity(order);
     }
+
+    private void enrichOrderItemsWithReviewStatus(CreateOrderResponse response, OrderEntity order) {
+        Set<Long> reviewedItemIds = new HashSet<>(productReviewRepository
+                .findReviewedOrderItemIds(order.getId()));
+        boolean canReviewOrder = reviewPolicyService.canReview(order, 10);
+
+        List<CreateOrderItemResponse> orderItemResponses =
+                order.getOrderItems().stream().map(item -> {
+
+                    CreateOrderItemResponse dto = CreateOrderItemResponse.fromEntity(item);
+                    boolean reviewed = reviewedItemIds.contains(item.getId());
+                    boolean canReview = !reviewed && canReviewOrder;
+
+                    boolean canUpdate = false;
+                    if (item.getReview() != null) {
+                        canUpdate = reviewPolicyService.canUpdate(item.getReview(), 5);
+                    }
+
+                    dto.setReviewed(reviewed);
+                    dto.setCanReview(canReview);
+                    dto.setCanUpdate(canUpdate);
+
+                    return dto;
+                }).toList();
+
+        response.setItems(orderItemResponses);
+    }
+
 
     @Transactional
     protected List<CreateOrderResponse> createOrdersForShops(

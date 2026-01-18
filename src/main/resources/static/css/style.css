@@ -411,3 +411,78 @@ a.text-decoration-none:hover {
 .badge-secondary {
     background-color: #95a5a6;
 }
+/* Thêm vào style.css */
+
+/* Review Actions */
+.review-actions {
+    margin-top: -10px;
+}
+
+/* Review Modal */
+.review-modal-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border:  1px solid #f0f0f0;
+    border-radius: 4px;
+}
+
+.review-images-modal {
+    gap: 8px;
+}
+
+.review-img-modal {
+    width: 100px;
+    height: 100px;
+    object-fit:  cover;
+    border: 1px solid #eee;
+    border-radius:  4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.review-img-modal:hover {
+    transform:  scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.seller-reply {
+    border-left: 3px solid #ee4d2d;
+}
+
+/* Review Comment */
+.review-comment {
+    line-height: 1.6;
+    color: rgba(0, 0, 0, 0.87);
+}
+
+/* Modal Styling */
+.modal-header {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.modal-footer {
+    border-top: 1px solid #e5e5e5;
+}
+
+/* Button Styles */
+.btn-outline-primary {
+    color: #1890ff;
+    border-color:  #1890ff;
+}
+
+.btn-outline-primary:hover {
+    background-color: #1890ff;
+    border-color: #1890ff;
+    color: white;
+}
+
+.btn-primary {
+    background-color: #ee4d2d;
+    border-color: #ee4d2d;
+}
+
+.btn-primary:hover {
+    background-color: #d73211;
+    border-color: #d73211;
+}

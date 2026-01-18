@@ -22,7 +22,16 @@ public class CreateOrderItemResponse {
     private String productVariantName;
     private BigDecimal totalPrice;
 
+    private Boolean reviewed;
+    private Boolean canReview;
+    private Boolean canUpdate;
+    private ProductReviewResponse reviewResponse;
+
     public static CreateOrderItemResponse fromEntity(OrderItemEntity entity) {
+        ProductReviewResponse review =
+                entity.getReview() != null
+                        ? ProductReviewResponse.fromEntity(entity.getReview())
+                        : null;
         return new CreateOrderItemResponse(
                 entity.getId(),
                 entity.getProductId(),
@@ -31,7 +40,11 @@ public class CreateOrderItemResponse {
                 entity.getQuantity(),
                 entity.getProductName(),
                 entity.getProductVariantName(),
-                entity.getTotalPrice()
+                entity.getTotalPrice(),
+                false,
+                false,
+                false,
+                review
         );
     }
 }
