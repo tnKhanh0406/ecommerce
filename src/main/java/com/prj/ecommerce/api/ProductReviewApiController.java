@@ -10,8 +10,12 @@ import com.prj.ecommerce.service.ProductReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/review")
@@ -19,9 +23,10 @@ import org.springframework.web.bind.annotation.*;
 public class ProductReviewApiController {
     private final ProductReviewService productReviewService;
 
-    @PostMapping
-    public ResponseEntity<ProductReviewResponse> review(@Valid @RequestBody ProductReviewRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(productReviewService.createReview(request));
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ProductReviewResponse> review(@Valid @ModelAttribute ProductReviewRequest request,
+                                                        @RequestParam(value = "images", required = false) List<MultipartFile> images) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(productReviewService.createReview(request, images));
     }
 
     @PutMapping("/{reviewId}")

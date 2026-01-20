@@ -2,7 +2,6 @@ package com.prj.ecommerce.service.impl;
 
 import com.prj.ecommerce.common.ImageType;
 import com.prj.ecommerce.common.NotificationType;
-import com.prj.ecommerce.common.OrderStatus;
 import com.prj.ecommerce.common.ReferenceType;
 import com.prj.ecommerce.dto.request.*;
 import com.prj.ecommerce.dto.response.ProductReviewResponse;
@@ -12,6 +11,7 @@ import com.prj.ecommerce.exception.BadRequestException;
 import com.prj.ecommerce.exception.ConcurrentUpdateException;
 import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.*;
+import com.prj.ecommerce.service.CloudinaryService;
 import com.prj.ecommerce.service.NotificationService;
 import com.prj.ecommerce.service.ProductReviewService;
 import com.prj.ecommerce.service.ReviewPolicyService;
@@ -23,11 +23,10 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -45,6 +44,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     private final ReviewReplyRepository reviewReplyRepository;
     private final NotificationService notificationService;
     private final ReviewPolicyService reviewPolicyService;
+    private final CloudinaryService cloudinaryService;
 
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -65,7 +65,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
 
     @Override
     @Transactional
-    public ProductReviewResponse createReview(ProductReviewRequest request) {
+    public ProductReviewResponse createReview(ProductReviewRequest request, List<MultipartFile> images) {
         ProductReviewEntity review = new ProductReviewEntity();
         OrderItemEntity orderItem = orderItemRepository.findById(request.getOrderItemId())
                         .orElseThrow(() -> new EntityNotFoundException("Order item not found"));
@@ -100,9 +100,8 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         review.setVariantSnapshot(VariantUtil.generateVariantName(variant));
 
         updateProductRatingWithRetry(product.getId(), 0, request.getRating(), true);
-        if (request.getImages() != null && !request.getImages().isEmpty()) {
-            createImages(request.getImages(), review);
-        }
+        List<String> imageUrls = cloudinaryService.uploadImages(images);
+        createImages(imageUrls, review);
         productReviewRepository.save(review);
 
         //Gui thong bao
@@ -240,13 +239,13 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         return ReviewReplyResponse.fromEntity(reply);
     }
 
-    private void createImages(List<ProductImageRequest> images, ProductReviewEntity review) {
-        for (ProductImageRequest imageRequest : images) {
+    private void createImages(List<String> urls, ProductReviewEntity review) {
+        for (String url : urls) {
             ProductImageEntity image = new ProductImageEntity();
             image.setProduct(review.getProduct());
             image.setVariant(review.getOrderItem().getProductVariant());
             image.setImageType(ImageType.REVIEW);
-            image.setImageUrl(imageRequest.getImageUrl());
+            image.setImageUrl(url);
             image.setReview(review);
             review.getImages().add(image);
         }

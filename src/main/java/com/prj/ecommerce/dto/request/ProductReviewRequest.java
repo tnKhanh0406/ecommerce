@@ -21,5 +21,5 @@ public class ProductReviewRequest {
     @NotNull
     private Long orderItemId;
 
-    private List<ProductImageRequest> images;
+//    private List<ProductImageRequest> images;
 }
