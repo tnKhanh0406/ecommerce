@@ -6,20 +6,16 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
 public class ProductReviewRequest {
-    @NotNull
-    @Min(1)
-    @Max(5)
+    @NotNull(message = "Vui lòng chọn đánh giá")
+    @Min(value = 1, message = "Đánh giá tối thiểu 1 sao")
+    @Max(value = 5, message = "Đánh giá tối đa 5 sao")
     private Integer rating;
 
-    @Size(max = 1000)
+    @Size(max = 1000, message = "Nhận xét không được vượt quá 1000 ký tự")
     private String comment;
 
-    @NotNull
+    @NotNull(message = "Order Item ID không được để trống")
     private Long orderItemId;
-
-//    private List<ProductImageRequest> images;
 }

@@ -117,11 +117,106 @@
                                     </button>
 
                                     <!-- Chưa review nhưng có thể review -->
-                                    <a th:if="${!item.reviewed && item.canReview}"
-                                       th:href="@{'/user/review/create? orderId=' + ${order.id} + '&productId=' + ${item.productId}}"
-                                       class="btn btn-sm btn-primary">
+                                    <button th:if="${!item.reviewed && item.canReview}"
+                                            type="button"
+                                            class="btn btn-sm btn-primary"
+                                            data-toggle="modal"
+                                            th:data-target="'#createReviewModal' + ${order.id} + '_' + ${itemStat.index}"
+                                            th:attr="data-order-item-id=${item.orderItemId},data-product-name=${item.productName},data-product-image=${item.imageUrl},data-variant-name=${item.productVariantName}">
                                         ⭐ Đánh giá
-                                    </a>
+                                    </button>
+                                </div>
+
+                                <!-- Create Review Modal -->
+                                <div th:if="${!item.reviewed && item.canReview}"
+                                     class="modal fade"
+                                     th:id="'createReviewModal' + ${order.id} + '_' + ${itemStat.index}"
+                                     tabindex="-1"
+                                     role="dialog">
+                                    <div class="modal-dialog modal-lg" role="document">
+                                        <div class="modal-content">
+                                            <form th:action="@{/user/review/create}"
+                                                  method="post"
+                                                  enctype="multipart/form-data">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Đánh Giá Sản Phẩm</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <!-- Product Info -->
+                                                    <div class="d-flex mb-4 pb-3 border-bottom">
+                                                        <img th:src="${item.imageUrl}"
+                                                             alt="Product Image"
+                                                             class="review-modal-img mr-3"/>
+                                                        <div>
+                                                            <h6 class="mb-1" th:text="${item.productName}"></h6>
+                                                            <p class="text-muted small mb-0">
+                                                                <span>Phân loại: </span>
+                                                                <span th:text="${item.productVariantName}"></span>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Hidden Fields -->
+                                                    <input type="hidden" name="orderItemId" th:value="${item.orderItemId}"/>
+                                                    <input type="hidden" name="orderId" th:value="${order.id}"/>
+
+                                                    <!-- Rating -->
+                                                    <div class="form-group">
+                                                        <label class="font-weight-bold">Chất lượng sản phẩm <span class="text-danger">*</span></label>
+                                                        <div class="star-rating d-flex align-items-center">
+                                                            <div class="stars" data-rating="0">
+                                                                <span class="star" data-value="1">☆</span>
+                                                                <span class="star" data-value="2">☆</span>
+                                                                <span class="star" data-value="3">☆</span>
+                                                                <span class="star" data-value="4">☆</span>
+                                                                <span class="star" data-value="5">☆</span>
+                                                            </div>
+                                                            <span class="ml-3 rating-text text-muted">Chưa đánh giá</span>
+                                                        </div>
+                                                        <input type="hidden" name="rating" id="ratingInput" value="0" required/>
+                                                        <small class="form-text text-danger d-none" id="ratingError">Vui lòng chọn đánh giá</small>
+                                                    </div>
+
+                                                    <!-- Comment -->
+                                                    <div class="form-group">
+                                                        <label for="comment" class="font-weight-bold">Nhận xét của bạn</label>
+                                                        <textarea name="comment"
+                                                                  id="comment"
+                                                                  class="form-control"
+                                                                  rows="5"
+                                                                  placeholder="Hãy chia sẻ nhận xét cho sản phẩm này nhé!"
+                                                                  maxlength="1000"></textarea>
+                                                        <small class="form-text text-muted">Tối đa 1000 ký tự</small>
+                                                    </div>
+
+                                                    <!-- Images -->
+                                                    <div class="form-group">
+                                                        <label class="font-weight-bold">Thêm hình ảnh</label>
+                                                        <div class="custom-file">
+                                                            <input type="file"
+                                                                   class="custom-file-input"
+                                                                   name="images"
+                                                                   id="reviewImages"
+                                                                   accept="image/*"
+                                                                   multiple/>
+                                                            <label class="custom-file-label" for="reviewImages">Chọn hình ảnh</label>
+                                                        </div>
+                                                        <small class="form-text text-muted">Bạn có thể tải lên tối đa 5 hình ảnh</small>
+
+                                                        <!-- Image Preview -->
+                                                        <div class="image-preview mt-3 d-flex flex-wrap"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                                                    <button type="submit" class="btn btn-danger">Gửi Đánh Giá</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Review Modal -->
@@ -214,5 +309,103 @@
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js" integrity="sha384-+sLIOodYLS7CIrQpBjl+C7nPvqq+FbNUBDunl/OZv93DB7Ln/533i8e/mZXLi/P+" crossorigin="anonymous"></script>
+<script>
+    $(document).ready(function() {
+        // Star Rating
+        $('.stars').on('click', '.star', function() {
+            const value = $(this).data('value');
+            const $container = $(this).closest('.star-rating');
+            const $stars = $container.find('.star');
+            const $input = $container.closest('.modal-body').find('#ratingInput');
+            const $ratingText = $container.find('.rating-text');
+            const ratingTexts = ['', 'Tệ', 'Không hài lòng', 'Bình thường', 'Hài lòng', 'Tuyệt vời'];
+
+            // Update stars
+            $stars.each(function(index) {
+                if (index < value) {
+                    $(this).addClass('active').text('★');
+                } else {
+                    $(this).removeClass('active').text('☆');
+                }
+            });
+
+            // Update hidden input and text
+            $input.val(value);
+            $ratingText.text(ratingTexts[value]);
+            $('#ratingError').addClass('d-none');
+        });
+
+        // Star hover effect
+        $('.stars').on('mouseenter', '.star', function() {
+            const value = $(this).data('value');
+            const $stars = $(this).closest('.stars').find('.star');
+
+            $stars.each(function(index) {
+                if (index < value) {
+                    $(this).text('★');
+                } else {
+                    $(this).text('☆');
+                }
+            });
+        });
+
+        $('.stars').on('mouseleave', function() {
+            const currentRating = $(this).data('rating') || 0;
+            const $stars = $(this).find('.star');
+
+            $stars.each(function(index) {
+                if (index < currentRating) {
+                    $(this).text('★');
+                } else {
+                    $(this).text('☆');
+                }
+            });
+        });
+
+        // Image Upload Preview
+        $('input[type="file"][name="images"]').on('change', function(e) {
+            const files = e.target.files;
+            const $preview = $(this).closest('.form-group').find('.image-preview');
+            const $label = $(this).next('.custom-file-label');
+
+            $preview.empty();
+
+            if (files.length > 0) {
+                $label.text(files.length + ' hình ảnh đã chọn');
+
+                Array.from(files).slice(0, 5).forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const $item = $('<div class="preview-item"></div>');
+                        const $img = $('<img>').attr('src', e.target.result);
+                        const $remove = $('<button type="button" class="remove-preview">&times;</button>');
+
+                        $remove.on('click', function() {
+                            $item.remove();
+                            // Note: Removing from FileList is complex, better to track separately
+                        });
+
+                        $item.append($img).append($remove);
+                        $preview.append($item);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                $label.text('Chọn hình ảnh');
+            }
+        });
+
+        // Form Validation
+        $('form[action="/user/review/create"]').on('submit', function(e) {
+            const rating = $(this).find('#ratingInput').val();
+
+            if (!rating || rating == '0') {
+                e.preventDefault();
+                $('#ratingError').removeClass('d-none');
+                return false;
+            }
+        });
+    });
+</script>
 </body>
 </html>
