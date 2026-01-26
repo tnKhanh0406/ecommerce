@@ -121,7 +121,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
 
     @Override
     @Transactional
-    public ProductReviewResponse updateReview(UpdateReviewRequest request) {
+    public ProductReviewResponse updateReview(UpdateReviewRequest request, List<MultipartFile> images) {
         ProductReviewEntity review = productReviewRepository.findById(request.getReviewId())
                 .orElseThrow(() -> new EntityNotFoundException("Review not found"));
 
@@ -146,9 +146,12 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         }
 
         review.setComment(request.getComment());
-        if (request.getImages() != null && !request.getImages().isEmpty()) {
-            updateImages(request.getImages(), review);
+
+        // Update images with MultipartFile
+        if (images != null && !images.isEmpty()) {
+            updateImagesFromMultipart(images, review);
         }
+
         productReviewRepository.save(review);
         return ProductReviewResponse.fromEntity(review);
     }
@@ -251,29 +254,32 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         }
     }
 
-    private void updateImages(List<ProductImageRequest> images, ProductReviewEntity review) {
-        Set<String> newImageUrls = images.stream()
-                .map(ProductImageRequest::getImageUrl)
-                .collect(Collectors.toSet());
+    private void updateImagesFromMultipart(List<MultipartFile> images, ProductReviewEntity review) {
+        // Xóa tất cả ảnh cũ của review này
+        List<ProductImageEntity> currentImages = productImageRepository
+                .findAllByReviewId(review.getId());
 
-        List<ProductImageEntity> currentImages = productImageRepository.findAllByProduct_IdAndImageType(review.getProduct().getId(), ImageType.REVIEW);
-
-        Set<String> currentImageUrls = currentImages.stream()
-                .map(ProductImageEntity::getImageUrl)
-                .collect(Collectors.toSet());
-
-        for (ProductImageEntity image : currentImages) {
-            if (!newImageUrls.contains(image.getImageUrl())) {
-                review.getImages().remove(image);
+        if (!currentImages.isEmpty()) {
+            // Xóa ảnh cũ từ Cloudinary (nếu cần)
+            for (ProductImageEntity image : currentImages) {
+                // Optional: Delete from Cloudinary
+                // cloudinaryService.deleteImage(image.getImageUrl());
             }
+
+            // Xóa khỏi database
+            review.getImages().clear();
+            productImageRepository.deleteAll(currentImages);
         }
 
-        for (ProductImageRequest imageRequest : images) {
-            if (!currentImageUrls.contains(imageRequest.getImageUrl())) {
+        // Upload và thêm ảnh mới
+        if (images != null && !images.isEmpty()) {
+            List<String> uploadedUrls = cloudinaryService.uploadImages(images);
+
+            for (String imageUrl : uploadedUrls) {
                 ProductImageEntity image = new ProductImageEntity();
                 image.setReview(review);
                 image.setImageType(ImageType.REVIEW);
-                image.setImageUrl(imageRequest.getImageUrl());
+                image.setImageUrl(imageUrl);
                 image.setProduct(review.getProduct());
                 image.setVariant(review.getOrderItem().getProductVariant());
                 review.getImages().add(image);

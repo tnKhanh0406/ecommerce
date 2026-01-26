@@ -246,15 +246,15 @@
                                                     </div>
                                                 </div>
 
-                                                <!-- Review Content -->
-                                                <div class="review-content">
+                                                <!-- Review Content (View Mode) -->
+                                                <div class="review-content" th:id="'reviewView' + ${order.id} + '_' + ${itemStat.index}">
                                                     <div class="d-flex align-items-center mb-3">
                                                         <strong class="mr-3" th:text="${currentUser.username}"></strong>
                                                         <span class="text-warning mr-2">
-                                                            <th:block th:each="i : ${#numbers.sequence(1,5)}">
-                                                                <span th:text="${i <= item.reviewResponse.rating ? '★' : '☆'}"></span>
-                                                            </th:block>
-                                                        </span>
+                            <th:block th:each="i : ${#numbers.sequence(1,5)}">
+                                <span th:text="${i <= item.reviewResponse.rating ? '★' : '☆'}"></span>
+                            </th:block>
+                        </span>
                                                         <span class="text-muted small" th:text="${item.reviewResponse.createdAt}"></span>
                                                     </div>
 
@@ -262,7 +262,7 @@
 
                                                     <!-- Review Images -->
                                                     <div class="review-images-modal d-flex flex-wrap mb-3"
-                                                         th:if="${item.reviewResponse.reviewImageUrls != null && ! item.reviewResponse.reviewImageUrls.isEmpty()}">
+                                                         th:if="${item.reviewResponse.reviewImageUrls != null && !item.reviewResponse.reviewImageUrls.isEmpty()}">
                                                         <th:block th:each="img : ${item.reviewResponse.reviewImageUrls}">
                                                             <img th:src="${img.imageUrl}"
                                                                  th:alt="${img.imageType}"
@@ -279,8 +279,122 @@
                                                         <p class="mb-0" th:text="${item.reviewResponse.reply.content}"></p>
                                                     </div>
                                                 </div>
+
+                                                <!-- Review Form (Edit Mode) - Hidden by default -->
+                                                <div class="review-form d-none" th:id="'reviewEdit' + ${order.id} + '_' + ${itemStat.index}">
+                                                    <form th:action="@{/user/review/update}"
+                                                          method="post"
+                                                          enctype="multipart/form-data"
+                                                          th:id="'updateReviewForm' + ${order.id} + '_' + ${itemStat.index}">
+
+                                                        <!-- Hidden Fields -->
+                                                        <input type="hidden" name="reviewId" th:value="${item.reviewResponse.productReviewId}"/>
+                                                        <input type="hidden" name="orderId" th:value="${order.id}"/>
+
+                                                        <!-- Rating -->
+                                                        <div class="form-group">
+                                                            <label class="font-weight-bold">Chất lượng sản phẩm <span class="text-danger">*</span></label>
+                                                            <div class="star-rating d-flex align-items-center">
+                                                                <div class="stars" th:attr="data-rating=${item.reviewResponse.rating}">
+                                                                    <th:block th:each="i : ${#numbers.sequence(1,5)}">
+                                        <span class="star"
+                                              th:attr="data-value=${i}"
+                                              th:classappend="${i <= item.reviewResponse.rating ? 'active' : ''}"
+                                              th:text="${i <= item.reviewResponse.rating ? '★' : '☆'}"></span>
+                                                                    </th:block>
+                                                                </div>
+                                                                <span class="ml-3 rating-text text-muted"
+                                                                      th:text="${item.reviewResponse.rating == 1 ? 'Tệ' :
+                                                 (item.reviewResponse.rating == 2 ? 'Không hài lòng' :
+                                                 (item.reviewResponse.rating == 3 ? 'Bình thường' :
+                                                 (item.reviewResponse.rating == 4 ? 'Hài lòng' : 'Tuyệt vời')))}"></span>
+                                                            </div>
+                                                            <input type="hidden"
+                                                                   name="rating"
+                                                                   th:id="'ratingInput' + ${order.id} + '_' + ${itemStat.index}"
+                                                                   th:value="${item.reviewResponse.rating}"
+                                                                   required/>
+                                                            <small class="form-text text-danger d-none"
+                                                                   th:id="'ratingError' + ${order.id} + '_' + ${itemStat.index}">
+                                                                Vui lòng chọn đánh giá
+                                                            </small>
+                                                        </div>
+
+                                                        <!-- Comment -->
+                                                        <div class="form-group">
+                                                            <label th:for="'comment' + ${order.id} + '_' + ${itemStat.index}"
+                                                                   class="font-weight-bold">Nhận xét của bạn</label>
+                                                            <textarea name="comment"
+                                                                      th:id="'comment' + ${order.id} + '_' + ${itemStat.index}"
+                                                                      class="form-control"
+                                                                      rows="5"
+                                                                      placeholder="Hãy chia sẻ nhận xét cho sản phẩm này nhé!"
+                                                                      maxlength="1000"
+                                                                      th:text="${item.reviewResponse.comment}"></textarea>
+                                                            <small class="form-text text-muted">Tối đa 1000 ký tự</small>
+                                                        </div>
+
+                                                        <!-- Current Images Display -->
+                                                        <div class="form-group" th:if="${item.reviewResponse.reviewImageUrls != null && !item.reviewResponse.reviewImageUrls.isEmpty()}">
+                                                            <label class="font-weight-bold">Hình ảnh hiện tại</label>
+                                                            <div class="current-images d-flex flex-wrap mb-2">
+                                                                <th:block th:each="img : ${item.reviewResponse.reviewImageUrls}">
+                                                                    <div class="current-image-item position-relative mr-2 mb-2">
+                                                                        <img th:src="${img.imageUrl}"
+                                                                             alt="Current review image"
+                                                                             class="review-img-modal"/>
+                                                                    </div>
+                                                                </th:block>
+                                                            </div>
+                                                            <small class="form-text text-muted">
+                                                                <strong>Lưu ý:</strong> Upload ảnh mới sẽ thay thế toàn bộ ảnh cũ
+                                                            </small>
+                                                        </div>
+
+                                                        <!-- New Images Upload -->
+                                                        <div class="form-group">
+                                                            <label class="font-weight-bold">Thay đổi hình ảnh (không bắt buộc)</label>
+                                                            <div class="custom-file">
+                                                                <input type="file"
+                                                                       class="custom-file-input"
+                                                                       name="images"
+                                                                       th:id="'reviewImages' + ${order.id} + '_' + ${itemStat.index}"
+                                                                       accept="image/*"
+                                                                       multiple/>
+                                                                <label class="custom-file-label"
+                                                                       th:for="'reviewImages' + ${order.id} + '_' + ${itemStat.index}">
+                                                                    Chọn hình ảnh mới
+                                                                </label>
+                                                            </div>
+                                                            <small class="form-text text-muted">
+                                                                Bạn có thể tải lên tối đa 5 hình ảnh. Nếu không chọn ảnh mới, ảnh cũ sẽ được giữ nguyên.
+                                                            </small>
+
+                                                            <!-- New Image Preview -->
+                                                            <div class="new-image-preview mt-3 d-flex flex-wrap"></div>
+                                                        </div>
+
+                                                        <div class="d-flex justify-content-end">
+                                                            <button type="button"
+                                                                    class="btn btn-secondary mr-2 cancel-edit-btn"
+                                                                    th:attr="data-order-id=${order.id},data-item-index=${itemStat.index}">
+                                                                Hủy
+                                                            </button>
+                                                            <button type="submit" class="btn btn-danger">
+                                                                Cập nhật đánh giá
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
                                             </div>
                                             <div class="modal-footer">
+                                                <!-- Edit Button - Only show if canUpdate -->
+                                                <button th:if="${item.canUpdate}"
+                                                        type="button"
+                                                        class="btn btn-primary edit-review-btn"
+                                                        th:attr="data-order-id=${order.id},data-item-index=${itemStat.index}">
+                                                    ✏️ Chỉnh sửa đánh giá
+                                                </button>
                                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
                                             </div>
                                         </div>
@@ -403,6 +517,141 @@
                 e.preventDefault();
                 $('#ratingError').removeClass('d-none');
                 return false;
+            }
+        });
+    });
+</script>
+<script>
+    $(document).ready(function() {
+        // Star Rating for both create and edit forms
+        $(document).on('click', '.star', function() {
+            const value = $(this).data('value');
+            const $container = $(this).closest('.star-rating');
+            const $stars = $container.find('.star');
+            const $input = $container.closest('form, .review-form').find('input[name="rating"]');
+            const $ratingText = $container.find('.rating-text');
+            const ratingTexts = ['', 'Tệ', 'Không hài lòng', 'Bình thường', 'Hài lòng', 'Tuyệt vời'];
+
+            // Update stars
+            $stars.each(function(index) {
+                if (index < value) {
+                    $(this).addClass('active').text('★');
+                } else {
+                    $(this).removeClass('active').text('☆');
+                }
+            });
+
+            // Update hidden input and text
+            $input.val(value);
+            $container.find('.stars').attr('data-rating', value);
+            $ratingText.text(ratingTexts[value]);
+            $container.closest('form, .review-form').find('.form-text.text-danger').addClass('d-none');
+        });
+
+        // Star hover effect
+        $(document).on('mouseenter', '.star', function() {
+            const value = $(this).data('value');
+            const $stars = $(this).closest('.stars').find('.star');
+
+            $stars.each(function(index) {
+                if (index < value) {
+                    $(this).text('★');
+                } else {
+                    $(this).text('☆');
+                }
+            });
+        });
+
+        $(document).on('mouseleave', '.stars', function() {
+            const currentRating = $(this).attr('data-rating') || 0;
+            const $stars = $(this).find('.star');
+
+            $stars.each(function(index) {
+                if (index < currentRating) {
+                    $(this).text('★');
+                } else {
+                    $(this).text('☆');
+                }
+            });
+        });
+
+        // Image Upload Preview for edit form
+        $(document).on('change', 'input[type="file"][name="images"]', function(e) {
+            const files = e.target.files;
+            const $preview = $(this).closest('.form-group').find('.new-image-preview');
+            const $label = $(this).next('.custom-file-label');
+
+            $preview.empty();
+
+            if (files.length > 0) {
+                $label.text(files.length + ' hình ảnh đã chọn');
+
+                Array.from(files).slice(0, 5).forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const $item = $('<div class="preview-item position-relative mr-2 mb-2"></div>');
+                        const $img = $('<img class="review-img-modal">').attr('src', e.target.result);
+                        const $remove = $('<button type="button" class="remove-preview">&times;</button>');
+
+                        $remove.on('click', function() {
+                            $item.remove();
+                            if ($preview.children().length === 0) {
+                                $label.text('Chọn hình ảnh mới');
+                            }
+                        });
+
+                        $item.append($img).append($remove);
+                        $preview.append($item);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                $label.text('Chọn hình ảnh mới');
+            }
+        });
+
+        // Toggle Edit Mode
+        $(document).on('click', '.edit-review-btn', function() {
+            const orderId = $(this).data('order-id');
+            const itemIndex = $(this).data('item-index');
+
+            $('#reviewView' + orderId + '_' + itemIndex).addClass('d-none');
+            $('#reviewEdit' + orderId + '_' + itemIndex).removeClass('d-none');
+            $(this).addClass('d-none');
+        });
+
+        // Cancel Edit Mode
+        $(document).on('click', '.cancel-edit-btn', function() {
+            const orderId = $(this).data('order-id');
+            const itemIndex = $(this).data('item-index');
+
+            $('#reviewView' + orderId + '_' + itemIndex).removeClass('d-none');
+            $('#reviewEdit' + orderId + '_' + itemIndex).addClass('d-none');
+            $('.edit-review-btn[data-order-id="' + orderId + '"][data-item-index="' + itemIndex + '"]').removeClass('d-none');
+        });
+
+        // Form Validation
+        $(document).on('submit', 'form[action="/user/review/update"]', function(e) {
+            const $form = $(this);
+            const rating = $form.find('input[name="rating"]').val();
+
+            if (!rating || rating == '0') {
+                e.preventDefault();
+                $form.find('.form-text.text-danger').removeClass('d-none');
+                return false;
+            }
+        });
+
+        // Reset form when modal is closed
+        $('.modal').on('hidden.bs.modal', function() {
+            const $modal = $(this);
+            const orderId = $modal.find('.cancel-edit-btn').data('order-id');
+            const itemIndex = $modal.find('.cancel-edit-btn').data('item-index');
+
+            if (orderId && itemIndex) {
+                $('#reviewView' + orderId + '_' + itemIndex).removeClass('d-none');
+                $('#reviewEdit' + orderId + '_' + itemIndex).addClass('d-none');
+                $('.edit-review-btn[data-order-id="' + orderId + '"][data-item-index="' + itemIndex + '"]').removeClass('d-none');
             }
         });
     });

@@ -10,16 +10,13 @@ import java.util.List;
 
 @Data
 public class UpdateReviewRequest {
-
-    @NotNull
+    @NotNull(message = "Review ID không được để trống")
     private Long reviewId;
 
-    @Min(1)
-    @Max(5)
+    @Min(value = 1, message = "Đánh giá tối thiểu 1 sao")
+    @Max(value = 5, message = "Đánh giá tối đa 5 sao")
     private Integer rating;
 
-    @Size(max = 1000)
+    @Size(max = 1000, message = "Nhận xét không được vượt quá 1000 ký tự")
     private String comment;
-
-    private List<ProductImageRequest> images;
 }

@@ -29,9 +29,10 @@ public class ProductReviewApiController {
         return ResponseEntity.status(HttpStatus.CREATED).body(productReviewService.createReview(request, images));
     }
 
-    @PutMapping("/{reviewId}")
-    public ResponseEntity<ProductReviewResponse> updateReview(@Valid @RequestBody UpdateReviewRequest request) {
-        return ResponseEntity.ok(productReviewService.updateReview(request));
+    @PutMapping(name = "/{reviewId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ProductReviewResponse> updateReview(@Valid @RequestBody UpdateReviewRequest request,
+                                                              @RequestParam(value = "images", required = false) List<MultipartFile> images) {
+        return ResponseEntity.ok(productReviewService.updateReview(request, images));
     }
 
     @PostMapping("/reply")

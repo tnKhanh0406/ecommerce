@@ -13,7 +13,7 @@ import java.util.List;
 public interface ProductReviewService {
     ProductReviewResponse getReviewByOrderItem(Long orderItemId);
     ProductReviewResponse createReview(ProductReviewRequest request, List<MultipartFile> images);
-    ProductReviewResponse updateReview(UpdateReviewRequest request);
+    ProductReviewResponse updateReview(UpdateReviewRequest request, List<MultipartFile> images);
     ReviewReplyResponse createReply(ReviewReplyRequest request);
     ReviewReplyResponse updateReply(Long replyId, UpdateReplyRequest request);
 }
