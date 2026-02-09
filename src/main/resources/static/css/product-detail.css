@@ -214,3 +214,93 @@
         height: 60px;
     }
 }
+/* Attribute buttons */
+.attribute-value-btn {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 80px;
+}
+
+.attribute-value-btn:hover {
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.attribute-value-btn.active {
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+
+/* Price section */
+.price-section {
+    border-radius: 4px;
+}
+
+.price-symbol {
+    font-size: 1.2rem;
+    color: #dc3545;
+}
+
+.price-value,
+.price-min,
+.price-max {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #dc3545;
+}
+
+.price-single .price-value {
+    font-size: 2rem;
+}
+
+/* Stock info */
+.stock-info {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    display: inline-block;
+    color: #28a745;
+    font-weight: 500;
+}
+
+/* Disabled buttons */
+.btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Quantity control */
+.quantity-control {
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.quantity-control .btn {
+    border: none;
+    background: #f8f9fa;
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.quantity-control .btn:hover {
+    background: #e9ecef;
+}
+
+.quantity-control input {
+    max-width: 60px;
+    text-align: center;
+}
+
+/* Remove arrow from number input */
+.quantity-control input[type="number"]::-webkit-inner-spin-button,
+.quantity-control input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.quantity-control input[type="number"] {
+    -moz-appearance: textfield;
+}

@@ -48,8 +48,8 @@ public class ProductController {
 
     @GetMapping("/c/{slug}")
     public String filterProductsBySlug(Model model,
-                                 @PathVariable String slug,
-                                 @ModelAttribute @Valid ProductFilterRequest request) {
+                                       @PathVariable String slug,
+                                       @ModelAttribute @Valid ProductFilterRequest request) {
         CategoryEntity category = categoryService.findBySlug(slug);
         request.setCategoryId(category.getId());
         Page<CreateProductResponse> responses = productService.getProducts(request);
