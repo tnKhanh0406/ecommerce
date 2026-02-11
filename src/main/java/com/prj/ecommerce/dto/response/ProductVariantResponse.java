@@ -1,6 +1,7 @@
 package com.prj.ecommerce.dto.response;
 
 import com.prj.ecommerce.entity.ProductVariantEntity;
+import com.prj.ecommerce.entity.ShopEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,9 @@ public class ProductVariantResponse {
     private String productName;
     private List<ProductImageResponse> images = new ArrayList<>();
     private List<ProductVariantAttributeValueResponse> attributes = new ArrayList<>();
+    private Long shopId;
+    private String shopName;
+    private String logoUrl;
 
     public static ProductVariantResponse fromEntity(ProductVariantEntity entity) {
         ProductVariantResponse response = new ProductVariantResponse();
@@ -45,6 +49,10 @@ public class ProductVariantResponse {
                             .collect(Collectors.toList())
             );
         }
+        ShopEntity shop = entity.getProduct().getShop();
+        response.setShopId(shop.getId());
+        response.setShopName(shop.getShopName());
+        response.setLogoUrl(shop.getLogoUrl());
         return response;
     }
 }

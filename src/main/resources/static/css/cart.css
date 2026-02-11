@@ -1,0 +1,76 @@
+.cart-page {
+    min-height: 400px;
+}
+
+.cart-header {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.shop-section {
+    margin-bottom: 10px;
+}
+
+.shop-header {
+    background-color: #fafafa;
+}
+
+.shop-icon {
+    font-size: 1.2rem;
+    margin-right: 8px;
+}
+
+.cart-item {
+    transition: background-color 0.2s;
+}
+
+.cart-item:hover {
+    background-color: #fafafa;
+}
+
+.cart-item-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border: 1px solid #e5e5e5;
+}
+
+.quantity-control {
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.quantity-control .btn {
+    border: none;
+    background: transparent;
+    padding: 4px 8px;
+}
+
+.quantity-control .btn:hover {
+    background-color: #f5f5f5;
+}
+
+.quantity-control input {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.cart-summary {
+    border-top: 1px solid #e5e5e5;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+}
+
+.sticky-bottom {
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+}
+
+/* Custom checkbox */
+.custom-control-label::before {
+    border-radius: 2px;
+}
+
+.custom-control-input:checked ~ .custom-control-label::before {
+    background-color: #ee4d2d;
+    border-color: #ee4d2d;
+}

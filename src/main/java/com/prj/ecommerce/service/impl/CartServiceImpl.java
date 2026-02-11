@@ -87,9 +87,9 @@ public class CartServiceImpl implements CartService {
         // 2. Kiểm tra item trong cart
         CartItemEntity cartItemEntity = cartItemRepository.findByCart_IdAndProductVariant_Id(
                         cartEntity.getId(),
-                        addCartItemRequest.getItem().getId());
+                        addCartItemRequest.getVariantId());
 
-        ProductVariantEntity variant = productVariantRepository.findById(addCartItemRequest.getItem().getId())
+        ProductVariantEntity variant = productVariantRepository.findById(addCartItemRequest.getVariantId())
                         .orElseThrow(() -> new EntityNotFoundException("Product variant not found"));
 
         if (variant.getProduct().getShop().getUser().getId().equals(currentUser.getId())) {

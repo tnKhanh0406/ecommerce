@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class AddCartItemRequest {
-    private UpdateProductVariantRequest item;
+    private Long variantId;
 
     @Min(value = 1)
     private Integer quantity;

@@ -91,7 +91,7 @@
                         </div>
                     </div>
 
-                    <!-- Hidden variants data - Sử dụng structure ProductVariantResponse của bạn -->
+                    <!-- Hidden variants data -->
                     <div style="display: none;">
                         <th:block th:each="variant : ${productDetail.variants}">
                             <div class="variant-data"
@@ -99,7 +99,6 @@
                                  th:data-variant-price="${variant.price}"
                                  th:data-variant-stock="${variant.stock}"
                                  th:data-variant-sku="${variant.sku}">
-                                <!-- Lặp qua attributes của variant -->
                                 <th:block th:each="attr : ${variant.attributes}">
                                         <span class="variant-attribute"
                                               th:data-attr-name="${attr.attribute}"
@@ -110,39 +109,46 @@
                         </th:block>
                     </div>
 
-                    <div class="attributes-section mb-4">
-                        <th:block th:each="attribute : ${productDetail.attributes}">
-                            <div class="attribute-group mb-3">
-                                <label class="attribute-label d-block mb-2" th:text="${attribute.name}">Màu Sắc</label>
-                                <div class="attribute-values d-flex flex-wrap">
-                                    <th:block th:each="value : ${attribute.values}">
-                                        <button class="btn btn-outline-secondary btn-sm mr-2 mb-2 attribute-value-btn"
-                                                th:text="${value.displayName}"
-                                                th:data-attribute-name="${attribute.name}"
-                                                th:data-attribute-value="${value.value}">
-                                            Silentium Đen
-                                        </button>
-                                    </th:block>
+                    <!-- Form để add to cart -->
+                    <form th:action="@{/cart/add}" method="post" id="add-to-cart-form">
+                        <div class="attributes-section mb-4">
+                            <th:block th:each="attribute : ${productDetail.attributes}">
+                                <div class="attribute-group mb-3">
+                                    <label class="attribute-label d-block mb-2" th:text="${attribute.name}">Màu Sắc</label>
+                                    <div class="attribute-values d-flex flex-wrap">
+                                        <th:block th:each="value : ${attribute.values}">
+                                            <button type="button"
+                                                    class="btn btn-outline-secondary btn-sm mr-2 mb-2 attribute-value-btn"
+                                                    th:text="${value.displayName}"
+                                                    th:data-attribute-name="${attribute.name}"
+                                                    th:data-attribute-value="${value.value}">
+                                                Silentium Đen
+                                            </button>
+                                        </th:block>
+                                    </div>
                                 </div>
-                            </div>
-                        </th:block>
-                    </div>
-
-                    <div class="quantity-section mb-4">
-                        <label class="d-block mb-2">Số Lượng:</label>
-                        <div class="quantity-control d-inline-flex align-items-center border">
-                            <button class="btn btn-sm px-3 btn-decrease">-</button>
-                            <input type="number" value="1" min="1" class="form-control form-control-sm text-center border-0" style="width: 60px;"/>
-                            <button class="btn btn-sm px-3 btn-increase">+</button>
+                            </th:block>
                         </div>
-                    </div>
 
-                    <div class="action-buttons d-flex">
-                        <button class="btn btn-outline-danger mr-3 px-4 btn-add-to-cart disabled" disabled>
-                            <span class="mr-2">🛒</span> Thêm Vào Giỏ Hàng
-                        </button>
-                        <button class="btn btn-danger px-5 btn-buy-now disabled" disabled>Mua Ngay</button>
-                    </div>
+                        <div class="quantity-section mb-4">
+                            <label class="d-block mb-2">Số Lượng:</label>
+                            <div class="quantity-control d-inline-flex align-items-center border">
+                                <button type="button" class="btn btn-sm px-3 btn-decrease">-</button>
+                                <input type="number" name="quantity" value="1" min="1" class="form-control form-control-sm text-center border-0" style="width: 60px;"/>
+                                <button type="button" class="btn btn-sm px-3 btn-increase">+</button>
+                            </div>
+                        </div>
+
+                        <!-- Hidden input để lưu variantId -->
+                        <input type="hidden" name="variantId" id="selected-variant-id" value="" />
+
+                        <div class="action-buttons d-flex">
+                            <button type="submit" class="btn btn-outline-danger mr-3 px-4 btn-add-to-cart disabled" disabled>
+                                <span class="mr-2">🛒</span> Thêm Vào Giỏ Hàng
+                            </button>
+                            <button type="button" class="btn btn-danger px-5 btn-buy-now disabled" disabled>Mua Ngay</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/cart.css">
+    <title>Giỏ Hàng - Shopee</title>
+</head>
+<body class="bg-light">
+<div th:replace="~{fragments/header :: header}"></div>
+
+<div class="container my-4">
+    <!-- Alert messages -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+
+    <div class="cart-page bg-white">
+        <!-- Cart Header -->
+        <div class="cart-header bg-white p-3 mb-2">
+            <div class="row align-items-center">
+                <div class="col-md-5">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" id="select-all">
+                        <label class="custom-control-label" for="select-all">Sản Phẩm</label>
+                    </div>
+                </div>
+                <div class="col-md-2 text-center text-muted">Đơn Giá</div>
+                <div class="col-md-2 text-center text-muted">Số Lượng</div>
+                <div class="col-md-2 text-center text-muted">Số Tiền</div>
+                <div class="col-md-1 text-center text-muted">Thao Tác</div>
+            </div>
+        </div>
+
+        <!-- Cart Items -->
+        <th:block th:if="${itemsByShop != null and !itemsByShop.isEmpty()}">
+            <th:block th:each="shopEntry : ${itemsByShop}">
+                <div class="shop-section bg-white mb-2">
+                    <!-- Shop Header -->
+                    <div class="shop-header p-3 border-bottom">
+                        <div class="custom-control custom-checkbox d-inline-block mr-3">
+                            <input type="checkbox" class="custom-control-input shop-checkbox"
+                                   th:id="'shop-' + ${shopEntry.key}">
+                            <label class="custom-control-label" th:for="'shop-' + ${shopEntry.key}"></label>
+                        </div>
+                        <span class="shop-icon">🏪</span>
+                        <!-- Lấy shop name từ item đầu tiên -->
+                        <strong th:text="${shopEntry.value[0].product.shop.shopName}">Shop Name</strong>
+                    </div>
+
+                    <!-- Shop Items -->
+                    <th:block th:each="item : ${shopEntry.value}">
+                        <div class="cart-item p-3 border-bottom">
+                            <div class="row align-items-center">
+                                <!-- Checkbox + Product Info -->
+                                <div class="col-md-5">
+                                    <div class="d-flex align-items-center">
+                                        <div class="custom-control custom-checkbox mr-3">
+                                            <input type="checkbox" class="custom-control-input item-checkbox"
+                                                   th:id="'item-' + ${item.product.id}"
+                                                   th:data-shop-id="${shopEntry.key}">
+                                            <label class="custom-control-label"
+                                                   th:for="'item-' + ${item.product.id}"></label>
+                                        </div>
+                                        <img th:if="${item.product.images != null and !item.product.images.isEmpty()}"
+                                             th:src="${item.product.images[0].imageUrl}"
+                                             alt="Product"
+                                             class="cart-item-image mr-3">
+                                        <div>
+                                            <p class="mb-1 font-weight-bold" th:text="${item.product.productName}">Product Name</p>
+                                            <p class="mb-0 text-muted small">
+                                                <span>Phân Loại Hàng: </span>
+                                                <th:block th:each="attr, iterStat : ${item.product.attributes}">
+                                                    <span th:text="${attr.displayName}"></span>
+                                                    <span th:if="${!iterStat.last}">, </span>
+                                                </th:block>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Price -->
+                                <div class="col-md-2 text-center">
+                                    <span class="text-muted">₫</span>
+                                    <span th:text="${#numbers.formatDecimal(item.product.price, 0, 'COMMA', 0, 'POINT')}">98,000</span>
+                                </div>
+
+                                <!-- Quantity -->
+                                <div class="col-md-2">
+                                    <form th:action="@{/cart/update}" method="post" class="d-inline">
+                                        <input type="hidden" name="cartItemId" th:value="${item.product.id}" />
+                                        <div class="quantity-control d-inline-flex align-items-center border">
+                                            <button type="button" class="btn btn-sm px-2 btn-qty-decrease">-</button>
+                                            <input type="number"
+                                                   name="quantity"
+                                                   th:value="${item.quantity}"
+                                                   min="1"
+                                                   th:max="${item.product.stock}"
+                                                   class="form-control form-control-sm text-center border-0 qty-input"
+                                                   style="width: 50px;"
+                                                   th:data-price="${item.product.price}"
+                                                   onchange="this.form.submit()"/>
+                                            <button type="button" class="btn btn-sm px-2 btn-qty-increase">+</button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <!-- Total -->
+                                <div class="col-md-2 text-center">
+                                        <span class="text-danger font-weight-bold">
+                                            <span>₫</span>
+                                            <span class="item-total" th:text="${#numbers.formatDecimal(item.product.price * item.quantity, 0, 'COMMA', 0, 'POINT')}">196,000</span>
+                                        </span>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="col-md-1 text-center">
+                                    <form th:action="@{/cart/delete}" method="post" class="d-inline">
+                                        <input type="hidden" name="cartItemId" th:value="${item.product.id}" />
+                                        <button type="submit" class="btn btn-link text-danger p-0"
+                                                onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">Xóa</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </th:block>
+                </div>
+            </th:block>
+        </th:block>
+
+        <!-- Empty Cart -->
+        <th:block th:if="${itemsByShop == null or itemsByShop.isEmpty()}">
+            <div class="text-center py-5">
+                <img src="https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/cart/9bdd8040b334d31946f4.png"
+                     alt="Empty cart"
+                     style="width: 150px; opacity: 0.5;">
+                <p class="text-muted mt-3">Giỏ hàng của bạn còn trống</p>
+                <a th:href="@{/}" class="btn btn-danger mt-2">Mua Ngay</a>
+            </div>
+        </th:block>
+    </div>
+
+    <!-- Cart Summary -->
+    <div th:if="${itemsByShop != null and !itemsByShop.isEmpty()}"
+         class="cart-summary bg-white p-3 mt-2 sticky-bottom">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="custom-control custom-checkbox d-inline-block mr-3">
+                    <input type="checkbox" class="custom-control-input" id="select-all-bottom">
+                    <label class="custom-control-label" for="select-all-bottom">Chọn Tất Cả</label>
+                </div>
+                <button class="btn btn-link text-danger">Xóa</button>
+                <span class="text-muted">Lưu vào mục Đã thích</span>
+            </div>
+            <div class="col-md-6 text-right">
+                    <span class="mr-3">
+                        Tổng thanh toán (<span id="selected-count">0</span> Sản phẩm):
+                        <span class="text-danger font-weight-bold" style="font-size: 1.5rem;">
+                            ₫<span id="total-amount">0</span>
+                        </span>
+                    </span>
+                <button class="btn btn-danger btn-lg px-5" id="checkout-btn" disabled>Mua Hàng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
+<script src="/js/cart.js"></script>
+</body>
+</html>

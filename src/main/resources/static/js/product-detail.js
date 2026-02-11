@@ -1,10 +1,11 @@
 document.addEventListener('DOMContentLoaded', function() {
     const attributeButtons = document.querySelectorAll('.attribute-value-btn');
-    const quantityInput = document.querySelector('input[type="number"]');
+    const quantityInput = document.querySelector('input[name="quantity"]');
     const addToCartBtn = document.querySelector('.btn-add-to-cart');
     const buyNowBtn = document.querySelector('.btn-buy-now');
     const priceSection = document.querySelector('.price-section');
     const quantitySection = document.querySelector('.quantity-section');
+    const selectedVariantInput = document.getElementById('selected-variant-id');
 
     let selectedAttributes = {};
     let allVariants = [];
@@ -16,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
             id: variantEl.dataset.variantId,
             price: parseFloat(variantEl.dataset.variantPrice),
             stock: parseInt(variantEl.dataset.variantStock),
+            sku: variantEl.dataset.variantSku,
             attributes: {}
         };
 
@@ -77,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!stockInfo) {
                 stockInfo = document.createElement('div');
                 stockInfo.id = 'stock-info';
-                stockInfo.className = 'stock-info mb-3 text-muted';
+                stockInfo.className = 'stock-info mb-3';
                 quantitySection.parentElement.insertBefore(stockInfo, quantitySection);
             }
             stockInfo.textContent = `Còn lại: ${matchedVariant.stock} sản phẩm`;
@@ -89,22 +91,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 quantityInput.value = matchedVariant.stock > 0 ? matchedVariant.stock : 0;
             }
 
+            // Update hidden input với variant ID
+            selectedVariantInput.value = matchedVariant.id;
+
             // Enable buttons nếu còn hàng
             if (matchedVariant.stock > 0) {
                 addToCartBtn.disabled = false;
                 buyNowBtn.disabled = false;
                 addToCartBtn.classList.remove('disabled');
                 buyNowBtn.classList.remove('disabled');
+                stockInfo.classList.remove('text-danger');
+                stockInfo.classList.add('text-success');
             } else {
                 addToCartBtn.disabled = true;
                 buyNowBtn.disabled = true;
                 addToCartBtn.classList.add('disabled');
                 buyNowBtn.classList.add('disabled');
+                stockInfo.textContent = 'Hết hàng';
+                stockInfo.classList.remove('text-success');
+                stockInfo.classList.add('text-danger');
             }
-
-            // Store variant ID for cart operations
-            addToCartBtn.dataset.variantId = matchedVariant.id;
-            buyNowBtn.dataset.variantId = matchedVariant.id;
 
         } else {
             // Hiển thị range price
@@ -125,6 +131,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (stockInfo) {
                 stockInfo.style.display = 'none';
             }
+
+            // Clear hidden input
+            selectedVariantInput.value = '';
 
             // Disable buttons
             addToCartBtn.disabled = true;
