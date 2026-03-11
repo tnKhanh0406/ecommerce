@@ -1,12 +1,16 @@
 package com.prj.ecommerce.dto.response;
 
 import com.prj.ecommerce.entity.ProductVariantEntity;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ProductVariantListResponse {
     private List<ProductVariantResponse> productVariants;
 

@@ -9,12 +9,14 @@ import com.prj.ecommerce.repository.UserRepository;
 import com.prj.ecommerce.service.UserAddressService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -77,11 +79,12 @@ public class UserAddressServiceImpl implements UserAddressService {
     }
 
     @Override
+//    @Cacheable(value = "userAddresses", key = "#root.methodName + '_' + #root.args[0]")
     public List<CreateAddressResponse> getAllAddresses() {
         return userAddressRepository.findAllByUser_Id(getCurrentUser().getId())
                 .stream()
                 .map(CreateAddressResponse::fromEntity)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override

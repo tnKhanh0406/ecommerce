@@ -11,6 +11,7 @@ import com.prj.ecommerce.specification.ProductSpecification;
 import com.prj.ecommerce.utils.SkuUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -77,6 +78,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value = "trending")
     public List<CreateProductResponse> getRecommendProducts() {
         List<ProductEntity> products = productRepo.findRandomProducts(PageRequest.of(0, 30));
 
@@ -84,6 +86,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value = "product", key = "#id")
     public ProductDetailResponse getProductDetail(Long id) {
         ProductEntity product = productRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
@@ -304,7 +307,7 @@ public class ProductServiceImpl implements ProductService {
 
         List<Long> productIds = products.stream()
                 .map(ProductEntity::getId)
-                .toList();
+                .collect(Collectors.toList());
 
         List<ProductPriceRangeResponse> priceRanges =
                 productVariantRepository.findPriceRangeByProductIds(productIds);
@@ -324,7 +327,7 @@ public class ProductServiceImpl implements ProductService {
                 r.setMaxPrice(price.getMaxPrice());
             }
             return r;
-        }).toList();
+        }).collect(Collectors.toList());
     }
 
     private List<ProductAttributeResponse> getProductAttributes(ProductEntity product) {
