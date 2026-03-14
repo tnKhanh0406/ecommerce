@@ -1,18 +1,108 @@
 package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.common.OrderStatus;
+import com.prj.ecommerce.dto.request.CreateOrderRequest;
+import com.prj.ecommerce.dto.response.AddCartItemResponse;
+import com.prj.ecommerce.dto.response.VoucherResponse;
+import com.prj.ecommerce.entity.CartItemEntity;
+import com.prj.ecommerce.entity.UserAddressEntity;
+import com.prj.ecommerce.model.UserPrincipal;
+import com.prj.ecommerce.repository.CartItemRepository;
+import com.prj.ecommerce.repository.UserAddressRepository;
 import com.prj.ecommerce.service.OrderService;
+import com.prj.ecommerce.service.VoucherService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
 public class OrderController {
     private final OrderService orderService;
+    private final VoucherService voucherService;
+    private final UserAddressRepository userAddressRepository;
+    private final CartItemRepository cartItemRepository;
+
+    @PostMapping("/checkout")
+    public String checkoutPage(@ModelAttribute CreateOrderRequest request, Model model) {
+        try {
+            // request.getCartItemIds() đã là List<Long>
+            List<Long> itemIds = request.getCartItemIds();
+
+            if (itemIds == null || itemIds.isEmpty()) {
+                return "redirect:/cart";
+            }
+
+            // Get current user
+            UserPrincipal principal = (UserPrincipal) SecurityContextHolder.getContext()
+                    .getAuthentication().getPrincipal();
+            Long userId = principal.getUserEntity().getId();
+
+            // Lấy chi tiết cart items từ IDs
+            List<CartItemEntity> cartItems = itemIds.stream()
+                    .map(id -> cartItemRepository.findById(id).orElse(null))
+                    .filter(item -> item != null && item.getCart().getUser().getId().equals(userId))
+                    .collect(Collectors.toList());
+
+            if (cartItems.isEmpty()) {
+                return "redirect:/cart";
+            }
+
+            // Convert to AddCartItemResponse và group by shop
+            List<AddCartItemResponse> selectedItems = cartItems.stream()
+                    .map(AddCartItemResponse::fromEntity)
+                    .collect(Collectors.toList());
+
+            Map<Long, List<AddCartItemResponse>> itemsByShop = selectedItems.stream()
+                    .collect(Collectors.groupingBy(item -> item.getProduct().getShopId()));
+
+            // Get vouchers for each shop
+            Map<Long, List<VoucherResponse>> vouchersByShop = itemsByShop.keySet().stream()
+                    .collect(Collectors.toMap(
+                            shopId -> shopId,
+                            shopId -> voucherService.getVoucherByShopId(shopId)
+                    ));
+
+            // Get user addresses
+            List<UserAddressEntity> userAddresses = userAddressRepository.findAllByUser_Id(userId);
+
+            if (userAddresses.isEmpty()) {
+                model.addAttribute("errorMessage", "Vui lòng thêm địa chỉ giao hàng trước khi thanh toán");
+                return "redirect:/user/address";
+            }
+
+            // Add to model
+            model.addAttribute("itemsByShop", itemsByShop);
+            model.addAttribute("vouchersByShop", vouchersByShop);
+            model.addAttribute("addresses", userAddresses);
+            model.addAttribute("cartItems", selectedItems);
+
+            return "checkout";
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "redirect:/cart";
+        }
+    }
+
+    @PostMapping("/confirm-order")
+    public String createOrder(@ModelAttribute CreateOrderRequest request, Model model) {
+        try {
+            orderService.createOrder(request);
+            return "redirect:/user/order";
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            return "redirect:/checkout";
+        }
+    }
 
     @GetMapping("/user/order")
     public String orderPage(Model model,

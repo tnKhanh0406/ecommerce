@@ -11,11 +11,13 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AddCartItemResponse {
+    private Long id;
     private ProductVariantResponse product;
     private Integer quantity;
 
     public static AddCartItemResponse fromEntity(CartItemEntity entity) {
         return new AddCartItemResponse(
+                entity.getId(),
                 ProductVariantResponse.fromEntity(entity.getProductVariant()),
                 entity.getQuantity()
         );
