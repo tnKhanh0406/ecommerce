@@ -23,10 +23,10 @@
                         <th:block th:if="${addresses != null and !addresses.isEmpty()}">
                             <th:block th:each="address : ${addresses}">
                                 <div class="address-card mb-2">
-                                    <input type="radio" name="addressId" th:value="${address.id}"
-                                           th:id="'address-' + ${address.id}"
+                                    <input type="radio" name="addressId" th:value="${address.addressId}"
+                                           th:id="'address-' + ${address.addressId}"
                                            th:checked="${address.isDefault == 1}" required>
-                                    <label th:for="'address-' + ${address.id}" class="address-label">
+                                    <label th:for="'address-' + ${address.addressId}" class="address-label">
                                         <div class="address-info">
                                             <strong th:text="${address.receiverName}">Name</strong>
                                             <span class="text-muted" th:text="'(' + ${address.receiverPhone} + ')'">Phone</span>
@@ -92,60 +92,56 @@
                         <div class="voucher-section mb-3">
                             <label class="font-weight-bold">Chọn Voucher của Shop</label>
                             <div class="voucher-list">
-                                <th:block th:set="shopId=${shopEntry.key}">
-                                  <th:block th:set="shopVouchers=${vouchersByShop.get(shopId)}">
-                                      <th:block th:if="${shopVouchers != null and !shopVouchers.isEmpty()}">
-                                          <th:block th:each="voucher : ${shopVouchers}">
-                                              <th:set name="isExpired"
-                                                      th:value="${T(java.time.LocalDateTime).now().isAfter(voucher.endAt)}"/>
-                                              <th:set name="notStarted"
-                                                      th:value="${T(java.time.LocalDateTime).now().isBefore(voucher.startAt)}"/>
-                                              <th:set name="outOfUsage"
-                                                      th:value="${voucher.usedCount >= voucher.usageLimit}"/>
-                                              <th:set name="isAvailable"
-                                                      th:value="${!isExpired and !notStarted and !outOfUsage}"/>
+                                <th:block th:with="shopId=${shopEntry.key}, shopVouchers=${vouchersByShop.get(shopId)}">
+                                    <th:block th:if="${shopVouchers != null and !shopVouchers.isEmpty()}">
+                                        <th:block th:each="voucher : ${shopVouchers}">
+                                            <th:block th:with="
+                        isExpired=${T(java.time.LocalDateTime).now().isAfter(voucher.endAt)},
+                        notStarted=${T(java.time.LocalDateTime).now().isBefore(voucher.startAt)},
+                        outOfUsage=${voucher.usedCount >= voucher.usageLimit},
+                        isAvailable=${!isExpired and !notStarted and !outOfUsage}">
 
-                                              <div class="voucher-card mb-2"
-                                                   th:classappend="${isAvailable ? 'available' : 'unavailable'}">
-                                                  <input type="radio"
-                                                         th:name="'shopVouchers[' + ${shopId} + ']'"
-                                                         th:value="${voucher.id}"
-                                                         th:id="'voucher-' + ${voucher.id}"
-                                                         th:disabled="${!isAvailable}">
-                                                  <label th:for="'voucher-' + ${voucher.id}"
-                                                         class="voucher-label">
-                                                      <div class="voucher-info">
-                                                          <div class="voucher-left">
-                                                              <strong th:text="${voucher.code}">CODE</strong>
-                                                              <span class="voucher-discount">
-                                                                <span th:if="${voucher.discountType.toString() == 'PERCENTAGE'}">
-                                                                    -<span th:text="${voucher.discountValue}">10</span>%
-                                                                </span>
-                                                                <span th:if="${voucher.discountType.toString() == 'FIXED'}">
-                                                                    -₫<span th:text="${#numbers.formatDecimal(voucher.discountValue, 0, 'COMMA', 0, 'POINT')}">100k</span>
-                                                                </span>
-                                                            </span>
-                                                          </div>
-                                                          <div class="voucher-right">
-                                                            <span class="voucher-condition text-muted small">
-                                                                Đơn tối thiểu: ₫<span th:text="${#numbers.formatDecimal(voucher.minOrderValue, 0, 'COMMA', 0, 'POINT')}">50000</span>
-                                                            </span>
-                                                              <span th:if="${!isAvailable}" class="unavailable-badge ml-2">
-                                                                <span th:if="${notStarted}">Chưa bắt đầu</span>
-                                                                <span th:if="${isExpired}">Hết hạn</span>
-                                                                <span th:if="${outOfUsage}">Hết lượt</span>
-                                                            </span>
-                                                          </div>
-                                                      </div>
-                                                  </label>
-                                              </div>
-                                          </th:block>
-                                      </th:block>
-                                      <div th:if="${shopVouchers == null or shopVouchers.isEmpty()}"
-                                           class="text-muted text-center p-3">
-                                          Không có voucher nào
-                                      </div>
-                                  </th:block>
+                                                <div class="voucher-card mb-2"
+                                                     th:classappend="${isAvailable ? 'available' : 'unavailable'}">
+                                                    <input type="radio"
+                                                           th:name="'shopVouchers[' + ${shopId} + ']'"
+                                                           th:value="${voucher.id}"
+                                                           th:id="'voucher-' + ${voucher.id}"
+                                                           th:disabled="${!isAvailable}">
+                                                    <label th:for="'voucher-' + ${voucher.id}"
+                                                           class="voucher-label">
+                                                        <div class="voucher-info">
+                                                            <div class="voucher-left">
+                                                                <strong th:text="${voucher.code}">CODE</strong>
+                                                                <span class="voucher-discount">
+                                            <span th:if="${voucher.discountType.toString() == 'PERCENTAGE'}">
+                                                -<span th:text="${voucher.discountValue}">10</span>%
+                                            </span>
+                                            <span th:if="${voucher.discountType.toString() == 'FIXED'}">
+                                                -₫<span th:text="${#numbers.formatDecimal(voucher.discountValue, 0, 'COMMA', 0, 'POINT')}">100k</span>
+                                            </span>
+                                        </span>
+                                                            </div>
+                                                            <div class="voucher-right">
+                                        <span class="voucher-condition text-muted small">
+                                            Đơn tối thiểu: ₫<span th:text="${#numbers.formatDecimal(voucher.minOrderValue, 0, 'COMMA', 0, 'POINT')}">50000</span>
+                                        </span>
+                                                                <span th:if="${!isAvailable}" class="unavailable-badge ml-2">
+                                            <span th:if="${notStarted}">Chưa bắt đầu</span>
+                                            <span th:if="${isExpired}">Hết hạn</span>
+                                            <span th:if="${outOfUsage}">Hết lượt</span>
+                                        </span>
+                                                            </div>
+                                                        </div>
+                                                    </label>
+                                                </div>
+                                            </th:block>
+                                        </th:block>
+                                    </th:block>
+                                    <div th:if="${shopVouchers == null or shopVouchers.isEmpty()}"
+                                         class="text-muted text-center p-3">
+                                        Không có voucher nào
+                                    </div>
                                 </th:block>
                             </div>
                         </div>

@@ -79,7 +79,6 @@ public class UserAddressServiceImpl implements UserAddressService {
     }
 
     @Override
-//    @Cacheable(value = "userAddresses", key = "#root.methodName + '_' + #root.args[0]")
     public List<CreateAddressResponse> getAllAddresses() {
         return userAddressRepository.findAllByUser_Id(getCurrentUser().getId())
                 .stream()

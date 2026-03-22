@@ -3,13 +3,13 @@ package com.prj.ecommerce.controller;
 import com.prj.ecommerce.common.OrderStatus;
 import com.prj.ecommerce.dto.request.CreateOrderRequest;
 import com.prj.ecommerce.dto.response.AddCartItemResponse;
+import com.prj.ecommerce.dto.response.CreateAddressResponse;
 import com.prj.ecommerce.dto.response.VoucherResponse;
 import com.prj.ecommerce.entity.CartItemEntity;
-import com.prj.ecommerce.entity.UserAddressEntity;
 import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.CartItemRepository;
-import com.prj.ecommerce.repository.UserAddressRepository;
 import com.prj.ecommerce.service.OrderService;
+import com.prj.ecommerce.service.UserAddressService;
 import com.prj.ecommerce.service.VoucherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,13 +26,12 @@ import java.util.stream.Collectors;
 public class OrderController {
     private final OrderService orderService;
     private final VoucherService voucherService;
-    private final UserAddressRepository userAddressRepository;
+    private final UserAddressService userAddressService;
     private final CartItemRepository cartItemRepository;
 
     @PostMapping("/checkout")
     public String checkoutPage(@ModelAttribute CreateOrderRequest request, Model model) {
         try {
-            // request.getCartItemIds() đã là List<Long>
             List<Long> itemIds = request.getCartItemIds();
 
             if (itemIds == null || itemIds.isEmpty()) {
@@ -70,7 +69,7 @@ public class OrderController {
                     ));
 
             // Get user addresses
-            List<UserAddressEntity> userAddresses = userAddressRepository.findAllByUser_Id(userId);
+            List<CreateAddressResponse> userAddresses = userAddressService.getAllAddresses();
 
             if (userAddresses.isEmpty()) {
                 model.addAttribute("errorMessage", "Vui lòng thêm địa chỉ giao hàng trước khi thanh toán");
