@@ -11,7 +11,18 @@
         <div class="container">
             <div class="row">
                 <div class="col-6">
-                    <small>Kênh Người Bán | Trở thành Người Bán Shopee</small>
+                    <small>
+                        Kênh Người Bán |
+                        <th:block th:if="${currentUser == null}">
+                            <a href="/login" class="text-white text-decoration-none">Trở thành Người Bán Shopee</a>
+                        </th:block>
+                        <th:block th:if="${currentUser != null and currentUser.role.toString() != 'SELLER'}">
+                            <a th:href="@{/shop/register}" class="text-white text-decoration-none">Trở thành Người Bán Shopee</a>
+                        </th:block>
+                        <th:block th:if="${currentUser != null and currentUser.role.toString() == 'SELLER'}">
+                            <a th:href="@{/shop/dashboard}" class="text-white text-decoration-none">Bảng Điều Khiển Seller</a>
+                        </th:block>
+                    </small>
                 </div>
                 <div class="col-6 text-right">
                     <small>Kết nối:  Facebook | Instagram</small>

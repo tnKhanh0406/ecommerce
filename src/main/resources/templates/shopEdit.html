@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/shop-registration.css">
+    <title>Sửa Thông Tin Shop - Shopee</title>
+</head>
+<body class="bg-light">
+<div th:replace="~{fragments/header :: header}"></div>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="registration-card">
+                <div class="registration-header mb-4">
+                    <h2 class="font-weight-bold text-center mb-2">Sửa Thông Tin Shop</h2>
+                    <p class="text-center text-muted">Cập nhật thông tin shop của bạn</p>
+                </div>
+
+                <!-- Error Message -->
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <span th:text="${errorMessage}"></span>
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                </div>
+
+                <!-- Edit Form -->
+                <form th:action="@{/shop/edit/{shopId}(shopId=${shopId})}"
+                      method="post"
+                      enctype="multipart/form-data"
+                      novalidate>
+
+                    <!-- Shop Name -->
+                    <div class="form-group">
+                        <label for="shopName" class="font-weight-bold">
+                            Tên Shop <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               class="form-control form-control-lg"
+                               id="shopName"
+                               name="shopName"
+                               th:value="${updateShopRequest.shopName}"
+                               placeholder="Nhập tên shop của bạn"
+                               required>
+                        <small class="form-text text-muted">
+                            Tên shop phải từ 3 - 60 ký tự
+                        </small>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group">
+                        <label for="description" class="font-weight-bold">
+                            Mô Tả Shop <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control form-control-lg"
+                                  id="description"
+                                  name="description"
+                                  rows="4"
+                                  th:text="${updateShopRequest.description}"
+                                  placeholder="Nhập mô tả chi tiết về shop của bạn"
+                                  required></textarea>
+                        <small class="form-text text-muted">
+                            Mô tả giúp khách hàng hiểu rõ hơn về shop
+                        </small>
+                    </div>
+
+                    <!-- Current Logo -->
+                    <div class="form-group" th:if="${updateShopRequest.logoUrl}">
+                        <label class="font-weight-bold">📸 Logo Hiện Tại</label>
+                        <div class="current-logo mb-3 text-center">
+                            <img th:src="${updateShopRequest.logoUrl}"
+                                 alt="Current Logo"
+                                 class="img-thumbnail"
+                                 style="max-width: 150px; height: auto;">
+                        </div>
+                    </div>
+
+                    <!-- Logo Upload -->
+                    <div class="form-group">
+                        <label for="logoFile" class="font-weight-bold">
+                            🖼️ Cập Nhật Logo (Tùy Chọn)
+                        </label>
+                        <div class="custom-file">
+                            <input type="file"
+                                   class="custom-file-input"
+                                   id="logoFile"
+                                   name="logoFile"
+                                   accept="image/*">
+                            <label class="custom-file-label" for="logoFile">
+                                Chọn file ảnh mới...
+                            </label>
+                        </div>
+                        <small class="form-text text-muted d-block mt-2">
+                            ✓ Hỗ trợ: JPG, PNG, GIF (tối đa 5MB)
+                            <br>
+                            ✓ Để trống nếu không thay đổi
+                        </small>
+                    </div>
+
+                    <!-- Logo Preview -->
+                    <div class="form-group" id="logoPreviewContainer" style="display: none;">
+                        <label class="font-weight-bold">👁️ Xem Trước Logo Mới</label>
+                        <div class="logo-preview text-center">
+                            <img id="logoPreview"
+                                 alt="Logo Preview"
+                                 class="img-thumbnail"
+                                 style="max-width: 150px; height: auto;">
+                        </div>
+                    </div>
+
+                    <!-- Logo URL Alternative -->
+                    <div class="form-group">
+                        <label for="logoUrl" class="font-weight-bold">
+                            🔗 Hoặc Paste Link Logo Mới
+                        </label>
+                        <input type="url"
+                               class="form-control form-control-lg"
+                               id="logoUrl"
+                               name="logoUrl"
+                               th:value="${updateShopRequest.logoUrl}"
+                               placeholder="https://example.com/logo.jpg">
+                        <small class="form-text text-muted">
+                            Nếu không upload ảnh, bạn có thể dán đường dẫn logo mới
+                        </small>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn btn-danger btn-block btn-lg font-weight-bold">
+                            💾 Cập Nhật
+                        </button>
+                        <a th:href="@{/shop/dashboard}" class="btn btn-secondary btn-block btn-lg font-weight-bold mt-2">
+                            ← Hủy
+                        </a>
+                    </div>
+                </form>
+
+                <!-- Info Box -->
+                <div class="alert alert-info mt-4">
+                    <h6 class="alert-heading">💡 Mẹo:</h6>
+                    <ul class="mb-0 small">
+                        <li>Bạn chỉ cần cập nhật những thông tin thay đổi</li>
+                        <li>Nếu không muốn thay đổi logo, để trống phần upload</li>
+                        <li>Logo sẽ được cập nhật ngay lập tức</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
+
+<script>
+    // Preview file khi user chọn
+    document.getElementById('logoFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                alert('Chỉ hỗ trợ file ảnh JPG, PNG, GIF');
+                this.value = '';
+                return;
+            }
+
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File không được vượt quá 5MB');
+                this.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const preview = document.getElementById('logoPreview');
+                preview.src = event.target.result;
+                document.getElementById('logoPreviewContainer').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+
+            // Update label
+            const label = document.querySelector('.custom-file-label');
+            label.textContent = file.name;
+        }
+    });
+
+    // Bootstrap file input label update
+    $('.custom-file-input').on('change', function() {
+        let fileName = $(this).val().split('\\').pop();
+        $(this).siblings('.custom-file-label').addClass("selected").html(fileName);
+    });
+</script>
+</body>
+</html>
