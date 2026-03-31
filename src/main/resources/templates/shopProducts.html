@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <title>Quản Lý Sản Phẩm - Shopee</title>
+</head>
+<body class="bg-light">
+<div th:replace="~{fragments/header :: header}"></div>
+
+<div class="container-fluid my-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h2 class="font-weight-bold text-danger">📦 Quản Lý Sản Phẩm</h2>
+        </div>
+        <div class="col-md-6 text-right">
+            <a th:href="@{/shop/{shopId}/products/create(shopId=${shop.id})}" class="btn btn-danger btn-lg">
+                ➕ Thêm Sản Phẩm
+            </a>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+
+    <!-- Error Message -->
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+
+    <!-- Products Table -->
+    <div class="bg-white p-4 rounded">
+        <div th:if="${products.hasContent()}">
+            <table class="table table-hover">
+                <thead class="table-danger">
+                <tr>
+                    <th>ID</th>
+                    <th>Ảnh</th>
+                    <th>Tên Sản Phẩm</th>
+                    <th>Giá</th>
+                    <th>Đã Bán</th>
+                    <th>Thao Tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="product : ${products.content}">
+                    <td th:text="${product.id}">1</td>
+                    <td>
+                        <img th:if="${product.imageUrl}"
+                             th:src="${product.imageUrl}"
+                             alt="Product Image"
+                             style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                    </td>
+                    <td th:text="${product.name}">Product Name</td>
+                    <td>
+                        <span th:if="${product.minPrice == product.maxPrice}" th:text="'₫' + ${#numbers.formatDecimal(product.minPrice, 0, 'COMMA', 0, 'POINT')}">Price</span>
+                        <span th:if="${product.minPrice != product.maxPrice}"
+                              th:text="'₫' + ${#numbers.formatDecimal(product.minPrice, 0, 'COMMA', 0, 'POINT')} + ' - ₫' + ${#numbers.formatDecimal(product.maxPrice, 0, 'COMMA', 0, 'POINT')}">Price Range</span>
+                    </td>
+                    <td th:text="${product.soldCount}">0</td>
+                    <td>
+                        <a th:href="@{/shop/products/{id}/edit(id=${product.id})}"
+                           class="btn btn-sm btn-primary">
+                            ✏️ Sửa
+                        </a>
+                        <button type="button"
+                                class="btn btn-sm btn-danger"
+                                th:onclick="|deleteProduct(${product.id})|">
+                            🗑️ Xóa
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <nav th:if="${totalPages > 1}">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
+                        <a class="page-link" th:href="@{/shop/products(page=0)}">First</a>
+                    </li>
+                    <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:classappend="${i == currentPage ? 'active' : ''}">
+                        <a class="page-link" th:href="@{/shop/products(page=${i})}" th:text="${i + 1}">1</a>
+                    </li>
+                    <li class="page-item" th:classappend="${currentPage == totalPages - 1 ? 'disabled' : ''}">
+                        <a class="page-link" th:href="@{/shop/products(page=${totalPages - 1})}">Last</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="!${products.hasContent()}" class="text-center py-5">
+            <img src="https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/cart/9bdd8040b334d31946f4.png"
+                 alt="Empty"
+                 style="width: 150px; opacity: 0.5;">
+            <p class="text-muted mt-3">Chưa có sản phẩm nào</p>
+            <a th:href="@{/shop/products/create}" class="btn btn-danger mt-2">
+                ➕ Thêm Sản Phẩm Đầu Tiên
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
+
+<script>
+    function deleteProduct(productId) {
+        if (confirm('Bạn chắc chắn muốn xóa sản phẩm này?')) {
+            fetch(`/api/products/${productId}`, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Xóa sản phẩm thất bại');
+                    }
+                })
+                .catch(error => {
+                    alert('Lỗi: ' + error.message);
+                });
+        }
+    }
+</script>
+</body>
+</html>

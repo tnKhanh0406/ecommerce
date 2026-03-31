@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/product-create.css">
+    <title>Thêm Sản Phẩm - Shopee Seller</title>
+</head>
+<body class="bg-light">
+<div th:replace="~{fragments/header :: header}"></div>
+
+<div class="container-fluid my-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="font-weight-bold text-danger mb-4">➕ Thêm Sản Phẩm Mới</h2>
+        </div>
+    </div>
+
+    <form id="createProductForm"
+          th:action="@{/shop/{shopId}/products/create(shopId=${shop.id})}"
+          method="post"
+          enctype="multipart/form-data"
+          novalidate>
+
+        <div id="errorAlert" class="alert alert-danger d-none" role="alert">
+            <span id="errorMessage"></span>
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- 1. Thông Tin Cơ Bản -->
+                <div class="card mb-4">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">📝 Thông Tin Cơ Bản</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="name" class="font-weight-bold">
+                                Tên Sản Phẩm <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control form-control-lg"
+                                   id="name" name="name" placeholder="Nhập tên sản phẩm" required>
+                            <small class="form-text text-muted">Tên sản phẩm tối thiểu 10 ký tự</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description" class="font-weight-bold">
+                                Mô Tả Sản Phẩm <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control"
+                                      id="description"
+                                      name="description"
+                                      rows="6"
+                                      placeholder="Nhập mô tả chi tiết về sản phẩm"
+                                      required></textarea>
+                            <small class="form-text text-muted">Mô tả tối thiểu 20 ký tự</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="font-weight-bold">
+                                Danh Mục <span class="text-danger">*</span>
+                            </label>
+                            <select name="categoryIds" class="form-control form-control-lg" required>
+                                <option value="">-- Chọn danh mục --</option>
+                                <th:block th:each="category : ${categories}">
+                                    <option th:value="${category.id}"
+                                            th:text="${category.name}">
+                                        Category
+                                    </option>
+                                </th:block>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">🖼️ Ảnh Sản Phẩm</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">Tải lên ảnh chính của sản phẩm (tối đa 5 ảnh)</p>
+
+                        <div class="custom-file mb-3">
+                            <input type="file" class="custom-file-input" id="productImages"
+                                   name="productImages" accept="image/*" multiple>
+                            <label class="custom-file-label" for="productImages">
+                                Chọn ảnh...
+                            </label>
+                        </div>
+
+                        <div id="productImagesPreview" class="row"></div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between">
+                        <h5 class="mb-0">⚙️ Thuộc Tính Sản Phẩm</h5>
+                        <button type="button" class="btn btn-sm btn-light" id="addAttributeBtn">
+                            ➕ Thêm Thuộc Tính
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="attributesContainer">
+                            <!-- Attributes will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between">
+                        <h5 class="mb-0">Phân Loại & Giá</h5>
+                        <button type="button" class="btn btn-sm btn-light" id="addVariantBtn">
+                            ➕ Thêm Phân Loại
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="variantsContainer">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card sticky-top" style="top: 20px;">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">Tóm Tắt</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Shop:</strong>
+                            <p id="summaryShop" class="text-muted" th:text="${shop.shopName}">Shop Name</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <strong>Tên sản phẩm:</strong>
+                            <p id="summaryName" class="text-muted">Chưa nhập</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <strong>Ảnh đã tải:</strong>
+                            <p id="summaryImages" class="text-muted">0 ảnh</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <strong>Thuộc tính:</strong>
+                            <p id="summaryAttributes" class="text-muted">0 thuộc tính</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <strong>Phân loại:</strong>
+                            <p id="summaryVariants" class="text-muted">0 phân loại</p>
+                        </div>
+
+                        <hr>
+
+                        <button type="submit" class="btn btn-danger btn-block btn-lg font-weight-bold mb-2">
+                            Đăng Sản Phẩm
+                        </button>
+
+                        <th:block th:if="${shop != null}">
+                            <a th:href="@{/shop/{shopId}/products(shopId=${shop.id})}"
+                               class="btn btn-secondary btn-block">
+                                ← Hủy
+                            </a>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<template id="attributeTemplate">
+    <div class="attribute-card card mb-3" data-index="[INDEX]">
+        <div class="card-body">
+            <div class="row align-items-end">
+                <div class="col-md-6">
+                    <label class="font-weight-bold">Tên Thuộc Tính</label>
+                    <input type="text" class="form-control attribute-name"
+                           name="attr_name_[INDEX]" placeholder="VD: Màu sắc, Kích cỡ" required>
+                </div>
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-danger btn-sm remove-attribute">
+                        🗑️ Xóa
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <label class="font-weight-bold">Giá Trị Thuộc Tính (cách nhau bằng dấu phẩy)</label>
+                <textarea class="form-control attribute-values" name="attr_values_[INDEX]"
+                          rows="3" placeholder="VD: Đỏ, Xanh, Vàng" required></textarea>
+                <small class="form-text text-muted">
+                    Nhập các giá trị cách nhau bằng dấu phẩy
+                </small>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="variantTemplate">
+    <div class="variant-card card mb-4" data-variant-index="[INDEX]">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">Phân Loại #<span class="variant-number">1</span></h6>
+            <button type="button" class="btn btn-danger btn-sm remove-variant">
+                🗑️ Xóa
+            </button>
+        </div>
+        <div class="card-body">
+            <div id="variantAttributesSection_[INDEX]" class="mb-3">
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="font-weight-bold">SKU (Tùy Chọn)</label>
+                        <input type="text" class="form-control variant-sku"
+                               name="variant_sku_[INDEX]" placeholder="VD: SKU001">
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Giá <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control variant-price" name="variant_price_[INDEX]"
+                               placeholder="0" min="1000" step="1000" required>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Kho <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control variant-stock" name="variant_stock_[INDEX]"
+                               placeholder="0" min="0" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
+<script src="/js/product-create.js"></script>
+
+</body>
+</html>

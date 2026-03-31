@@ -1,0 +1,42 @@
+.attribute-card {
+    border-left: 4px solid #ee4d2d;
+}
+
+.variant-card {
+    border-left: 4px solid #007bff;
+}
+
+.card-header {
+    background-color: #ee4d2d !important;
+    color: white;
+}
+
+.btn-danger {
+    background-color: #ee4d2d;
+    border-color: #ee4d2d;
+}
+
+.btn-danger:hover {
+    background-color: #d63a1f;
+    border-color: #d63a1f;
+}
+
+.form-control:focus,
+.custom-file-input:focus {
+    border-color: #ee4d2d;
+    box-shadow: 0 0 0 0.2rem rgba(238, 77, 45, 0.25);
+}
+
+.custom-file-label::after {
+    content: 'Chọn file';
+}
+
+.sticky-top {
+    z-index: 100;
+}
+
+@media (max-width: 768px) {
+    .sticky-top {
+        position: relative;
+    }
+}

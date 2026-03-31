@@ -1,6 +1,7 @@
 package com.prj.ecommerce.repository;
 
 import com.prj.ecommerce.entity.ProductEntity;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -29,4 +30,5 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long>, J
     List<Long> getCategoryIdsByProductId(@Param("productId") Long productId);
 
     long countByShop_Id(Long shopId);
+    Page<ProductEntity> findByShop_Id(Long shopId, Pageable pageable);
 }

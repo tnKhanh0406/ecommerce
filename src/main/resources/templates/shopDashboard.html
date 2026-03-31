@@ -47,11 +47,11 @@
                 <!-- Dashboard Menu -->
                 <div class="row mt-4">
                     <div class="col-md-3">
-                        <a href="#" class="dashboard-card">
+                        <a th:href="@{'/shop/' + ${shop.id} +'/products'}" class="dashboard-card">
                             <div class="text-center">
                                 <h3>📦</h3>
                                 <p>Sản Phẩm</p>
-                                <small class="text-muted">Quản lý sản phẩm</small>
+                                <small class="text-muted">Quản lý products</small>
                             </div>
                         </a>
                     </div>

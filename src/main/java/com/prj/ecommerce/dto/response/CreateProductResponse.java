@@ -26,7 +26,11 @@ public class CreateProductResponse {
         r.setName(p.getName());
         r.setDescription(p.getDescription());
         r.setSoldCount(p.getSoldCount());
-        r.setImageUrl(p.getImages().get(0).getImageUrl());
+        if (p.getImages() != null && !p.getImages().isEmpty()) {
+            r.setImageUrl(p.getImages().get(0).getImageUrl());
+        } else {
+            r.setImageUrl("https://via.placeholder.com/300?text=No+Image");
+        }
         return r;
     }
 }

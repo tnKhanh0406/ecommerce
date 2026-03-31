@@ -12,10 +12,7 @@ import com.prj.ecommerce.utils.SkuUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -165,7 +162,7 @@ public class ProductServiceImpl implements ProductService {
         Map<String, ProductAttributeEntity> attrMap = processProductAttributes(request.getAttributes(), user);
 
         // 5. create images at product level
-        if (request.getImages() != null) {
+        if (request.getImages() != null && !request.getImages().isEmpty()) {
             createProductImages(product, null, request.getImages());
         }
 
@@ -298,6 +295,42 @@ public class ProductServiceImpl implements ProductService {
         }
         productCategoryRepo.deleteAllByProduct_Id(productId);
         productRepo.deleteById(productId);
+    }
+
+    @Override
+    public Page<CreateProductResponse> getProductsByShopId(Long shopId, int page, int size) {
+        UserEntity user = getCurrentUser();
+        ShopEntity shop = shopRepository.findById(shopId)
+                .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
+
+        // ✅ Verify ownership
+        if (!shop.getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("This shop does not belong to you");
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<ProductEntity> productPage = productRepo.findByShop_Id(shopId, pageable);
+
+        List<CreateProductResponse> responses = attachPriceRange(productPage.getContent());
+
+        return new PageImpl<>(
+                responses,
+                pageable,
+                productPage.getTotalElements()
+        );
+    }
+
+    @Override
+    public ProductDetailResponse getProductForEdit(Long productId) {
+        ProductEntity product = productRepo.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+
+        UserEntity user = getCurrentUser();
+        if (!product.getShop().getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("This product does not belong to you");
+        }
+
+        return getProductDetail(productId);
     }
 
     private List<CreateProductResponse> attachPriceRange(List<ProductEntity> products) {

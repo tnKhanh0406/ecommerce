@@ -18,4 +18,6 @@ public interface ProductService {
     ProductVariantListResponse updateBasicProductVariant(Long productId, ProductVariantListRequest request);
     CreateProductResponse updateAttribute(Long productId, UpdateAttributeRequest updateAttributeRequest);
     void deleteProduct(Long productId);
+    Page<CreateProductResponse> getProductsByShopId(Long shopId, int page, int size);
+    ProductDetailResponse getProductForEdit(Long productId);
 }
