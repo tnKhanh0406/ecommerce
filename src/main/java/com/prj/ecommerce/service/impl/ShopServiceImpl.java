@@ -40,6 +40,18 @@ public class ShopServiceImpl implements ShopService {
     }
 
     @Override
+    public CreateShopResponse getCurrentUserShop() {
+        UserEntity user = getCurrentUser();
+        if (user.getRole() != UserRole.SELLER) {
+            throw new AccessDeniedException("Current user is not seller");
+        }
+
+        ShopEntity shop = shopRepository.findByUser_Id(user.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
+        return CreateShopResponse.fromEntity(shop);
+    }
+
+    @Override
     public CreateShopResponse createShop(CreateShopRequest createShopRequest, MultipartFile image) {
         UserEntity user = getCurrentUser();
         if (shopRepository.findByUser_Id(user.getId()).isPresent()) {

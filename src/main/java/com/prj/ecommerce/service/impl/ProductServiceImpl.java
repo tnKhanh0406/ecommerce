@@ -6,6 +6,7 @@ import com.prj.ecommerce.dto.response.*;
 import com.prj.ecommerce.entity.*;
 import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.CategoryService;
+import com.prj.ecommerce.service.CloudinaryService;
 import com.prj.ecommerce.service.ProductService;
 import com.prj.ecommerce.specification.ProductSpecification;
 import com.prj.ecommerce.utils.SkuUtil;
@@ -17,6 +18,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 import java.util.function.Function;
@@ -41,6 +43,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductVariantAttributeValueRepository productVariantAttributeValueRepository;
     private final ProductReviewRepository productReviewRepository;
     private final CategoryService categoryService;
+    private final CloudinaryService cloudinaryService;
 
     private UserEntity getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -171,6 +174,16 @@ public class ProductServiceImpl implements ProductService {
             createProductVariants(product, request.getVariants(), attrMap);
         }
         return CreateProductResponse.fromEntity(product);
+    }
+
+    @Override
+    @Transactional
+    public CreateProductResponse createProductWithImages(CreateProductRequest request,
+                                                         List<MultipartFile> productImages,
+                                                         Map<String, List<MultipartFile>> variantImageMap) {
+        attachProductImages(request, productImages);
+        attachVariantImages(request.getVariants(), variantImageMap);
+        return createProduct(request);
     }
 
     @Override
@@ -508,6 +521,49 @@ public class ProductServiceImpl implements ProductService {
                     .orElseThrow(() -> new EntityNotFoundException("Category not found"));
             productCategory.setCategory(category);
             productCategoryRepo.save(productCategory);
+        }
+    }
+
+    private void attachProductImages(CreateProductRequest request, List<MultipartFile> productImages) {
+        List<ProductImageRequest> uploadedImages = request.getImages() == null
+                ? new ArrayList<>()
+                : new ArrayList<>(request.getImages());
+
+        if (productImages != null) {
+            for (MultipartFile file : productImages) {
+                if (file != null && !file.isEmpty()) {
+                    uploadedImages.add(new ProductImageRequest(cloudinaryService.uploadImage(file)));
+                }
+            }
+        }
+
+        request.setImages(uploadedImages);
+    }
+
+    private void attachVariantImages(List<ProductVariantRequest> variants,
+                                     Map<String, List<MultipartFile>> variantImageMap) {
+        if (variants == null || variants.isEmpty()) {
+            return;
+        }
+
+        for (int i = 0; i < variants.size(); i++) {
+            ProductVariantRequest variant = variants.get(i);
+            List<ProductImageRequest> uploadedImages = variant.getImages() == null
+                    ? new ArrayList<>()
+                    : new ArrayList<>(variant.getImages());
+
+            if (variantImageMap != null) {
+                List<MultipartFile> files = variantImageMap.get("variantImages_" + i);
+                if (files != null) {
+                    for (MultipartFile file : files) {
+                        if (file != null && !file.isEmpty()) {
+                            uploadedImages.add(new ProductImageRequest(cloudinaryService.uploadImage(file)));
+                        }
+                    }
+                }
+            }
+
+            variant.setImages(uploadedImages);
         }
     }
 

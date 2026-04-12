@@ -1,26 +1,20 @@
 package com.prj.ecommerce.controller;
 
-import com.prj.ecommerce.common.UserRole;
 import com.prj.ecommerce.dto.request.*;
 import com.prj.ecommerce.dto.response.CategoryResponse;
 import com.prj.ecommerce.dto.response.CreateProductResponse;
-import com.prj.ecommerce.entity.UserEntity;
-import com.prj.ecommerce.repository.ShopRepository;
-import com.prj.ecommerce.repository.UserRepository;
 import com.prj.ecommerce.service.CategoryService;
-import com.prj.ecommerce.service.CloudinaryService;
 import com.prj.ecommerce.service.ProductService;
 import com.prj.ecommerce.service.ShopService;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
@@ -31,11 +25,8 @@ import java.util.*;
 @RequiredArgsConstructor
 public class ShopController {
     private final ShopService shopService;
-    private final UserRepository userRepository;
-    private final ShopRepository shopRepository;
     private final ProductService productService;
     private final CategoryService categoryService;
-    private final CloudinaryService cloudinaryService;
 
     @GetMapping("/register")
     public String shopRegisterPage(Model model) {
@@ -80,22 +71,11 @@ public class ShopController {
     @GetMapping("/dashboard")
     public String shopDashboard(Model model) {
         try {
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            UserEntity user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
-
-            if (user.getRole() != UserRole.SELLER) {
-                return "redirect:/shop/register";
-            }
-
-            var shop = shopRepository.findByUser_Id(user.getId())
-                    .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
-
-            model.addAttribute("shop", shop);
+            model.addAttribute("shop", shopService.getCurrentUserShop());
             return "shopDashboard";
 
         } catch (Exception e) {
-            return "redirect:/";
+            return "redirect:/shop/register";
         }
     }
 
@@ -188,28 +168,14 @@ public class ShopController {
                                 @RequestParam(required = false) List<MultipartFile> productImages,
                                 @RequestParam Map<String, String> attributeParams,
                                 @RequestParam Map<String, String> variantParams,
-                                @RequestParam(required = false) List<MultipartFile> variantImages,
                                 @PathVariable Long shopId,
+                                MultipartHttpServletRequest multipartRequest,
                                 RedirectAttributes redirectAttributes) {
         try {
-            // ✅ Parse attributes từ form
             List<ProductAttributeRequest> attributes = parseAttributes(attributeParams);
 
-            // ✅ Parse variants từ form + upload images
-            List<ProductVariantRequest> variants = parseVariants(variantParams, variantImages);
+            List<ProductVariantRequest> variants = parseVariants(variantParams);
 
-            // ✅ Upload product images
-            List<ProductImageRequest> productImageRequests = new ArrayList<>();
-            if (productImages != null) {
-                for (MultipartFile file : productImages) {
-                    if (file != null && !file.isEmpty()) {
-                        String imageUrl = cloudinaryService.uploadImage(file);
-                        productImageRequests.add(new ProductImageRequest(imageUrl));
-                    }
-                }
-            }
-
-            // ✅ Create product request
             CreateProductRequest request = new CreateProductRequest();
             request.setShopId(shopId);
             request.setName(name);
@@ -217,13 +183,11 @@ public class ShopController {
             request.setCategoryIds(categoryIds);
             request.setAttributes(attributes);
             request.setVariants(variants);
-            request.setImages(productImageRequests);
 
-            productService.createProduct(request);
+            productService.createProductWithImages(request, productImages, multipartRequest.getMultiFileMap());
 
             redirectAttributes.addFlashAttribute("successMessage", "Thêm sản phẩm thành công!");
-            return "redirect:/shop/products";
-
+            return String.format("redirect:/shop/%d/products", shopId);
         } catch (Exception e) {
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
@@ -267,9 +231,8 @@ public class ShopController {
         return new ArrayList<>(attrMap.values());
     }
 
-    private List<ProductVariantRequest> parseVariants(Map<String, String> params,
-                                                      List<MultipartFile> variantImagesList) {
-        Map<Integer, ProductVariantRequest> variantMap = new LinkedHashMap<>();
+    private List<ProductVariantRequest> parseVariants(Map<String, String> params) {
+        Map<Integer, ProductVariantRequest> variantMap = new TreeMap<>();
 
         for (String key : params.keySet()) {
             if (key.startsWith("variant_price_")) {
@@ -305,9 +268,7 @@ public class ShopController {
                         }
                         variant.setAttributes(attributes);
 
-                        // ✅ Add images (empty list for now, handle in form)
-                        List<ProductImageRequest> images = new ArrayList<>();
-                        variant.setImages(images);
+                        variant.setImages(new ArrayList<>());
 
                         variantMap.put(variantIndex, variant);
                     }
