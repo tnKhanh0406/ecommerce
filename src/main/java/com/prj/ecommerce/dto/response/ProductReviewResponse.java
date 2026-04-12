@@ -1,7 +1,6 @@
 package com.prj.ecommerce.dto.response;
 
 import com.prj.ecommerce.entity.ProductReviewEntity;
-import com.prj.ecommerce.entity.ReviewReplyEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -9,7 +9,6 @@ import com.prj.ecommerce.repository.UserRepository;
 import com.prj.ecommerce.service.UserAddressService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;

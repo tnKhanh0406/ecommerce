@@ -3,11 +3,9 @@ package com.prj.ecommerce.service.impl;
 import com.prj.ecommerce.dto.request.CreateVoucherRequest;
 import com.prj.ecommerce.dto.response.VoucherResponse;
 import com.prj.ecommerce.entity.ShopEntity;
-import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.entity.VoucherEntity;
 import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.ShopRepository;
-import com.prj.ecommerce.repository.UserRepository;
 import com.prj.ecommerce.repository.VoucherRepository;
 import com.prj.ecommerce.service.VoucherService;
 import jakarta.persistence.EntityNotFoundException;
@@ -18,21 +16,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class VoucherServiceImpl implements VoucherService {
 
     private final VoucherRepository voucherRepository;
-    private final UserRepository userRepository;
     private final ShopRepository shopRepository;
-
-    private UserEntity getCurrentUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-    }
 
     private Long getCurrentUserId() {
         return ((UserPrincipal) SecurityContextHolder.getContext()

@@ -1,7 +1,6 @@
 package com.prj.ecommerce.exception;
 
 import com.prj.ecommerce.dto.request.RegisterRequest;
-import com.prj.ecommerce.dto.request.UpdateProfileRequest;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;

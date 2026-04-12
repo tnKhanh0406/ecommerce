@@ -5,7 +5,6 @@ import com.prj.ecommerce.entity.OrderEntity;
 import com.prj.ecommerce.entity.OrderStatusHistoryEntity;
 import com.prj.ecommerce.entity.ProductReviewEntity;
 import com.prj.ecommerce.repository.OrderStatusHistoryRepository;
-import com.prj.ecommerce.repository.ProductReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

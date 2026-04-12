@@ -4,7 +4,6 @@ import com.prj.ecommerce.dto.request.ProductFilterRequest;
 import com.prj.ecommerce.dto.response.CreateProductResponse;
 import com.prj.ecommerce.dto.response.CreateShopResponse;
 import com.prj.ecommerce.entity.CategoryEntity;
-import com.prj.ecommerce.entity.ShopEntity;
 import com.prj.ecommerce.service.CategoryService;
 import com.prj.ecommerce.service.ProductService;
 import com.prj.ecommerce.service.ShopService;
@@ -16,7 +15,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequiredArgsConstructor

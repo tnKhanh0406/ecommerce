@@ -28,8 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -40,7 +39,6 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     private final ProductRepository productRepository;
     private final OrderItemRepository orderItemRepository;
     private final ProductImageRepository productImageRepository;
-    private final OrderStatusHistoryRepository orderStatusHistoryRepository;
     private final ReviewReplyRepository reviewReplyRepository;
     private final NotificationService notificationService;
     private final ReviewPolicyService reviewPolicyService;
@@ -260,12 +258,6 @@ public class ProductReviewServiceImpl implements ProductReviewService {
                 .findAllByReviewId(review.getId());
 
         if (!currentImages.isEmpty()) {
-            // Xóa ảnh cũ từ Cloudinary (nếu cần)
-            for (ProductImageEntity image : currentImages) {
-                // Optional: Delete from Cloudinary
-                // cloudinaryService.deleteImage(image.getImageUrl());
-            }
-
             // Xóa khỏi database
             review.getImages().clear();
             productImageRepository.deleteAll(currentImages);
