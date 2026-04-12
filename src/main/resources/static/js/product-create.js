@@ -303,14 +303,14 @@ async function uploadVariantImages() {
 
             try {
                 // Tạo input hidden để lưu URL ảnh
-                const response = await fetch('/upload-image', {
+                const response = await fetch('/shop/upload-image', {
                     method: 'POST',
                     body: formData
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    const imageUrl = data.imageUrl; // Giả sử API trả về imageUrl
+                    const imageUrl = data.imageUrl;
 
                     // Thêm hidden input cho mỗi ảnh variant
                     const input = document.createElement('input');
@@ -318,9 +318,13 @@ async function uploadVariantImages() {
                     input.name = `variant_image_${variantIndex}`;
                     input.value = imageUrl;
                     form.appendChild(input);
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error || `Upload thất bại với mã lỗi ${response.status}`);
                 }
             } catch (error) {
                 console.error('Lỗi upload:', error);
+                alert('Lỗi khi upload ảnh phân loại: ' + error.message);
                 throw error;
             }
         }

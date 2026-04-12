@@ -20,6 +20,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -166,6 +168,17 @@ public class ShopController {
         }
     }
 
+    @PostMapping("/upload-image")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) {
+        try {
+            String imageUrl = cloudinaryService.uploadImage(file);
+            return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Upload failed: " + e.getMessage()));
+        }
+    }
+
     @GetMapping("/{shopId}/products/create")
     public String createProductPage(Model model,
                                     @PathVariable Long shopId) {
@@ -188,8 +201,7 @@ public class ShopController {
                                 @RequestParam List<Long> categoryIds,
                                 @RequestParam(required = false) List<MultipartFile> productImages,
                                 @RequestParam Map<String, String> attributeParams,
-                                @RequestParam Map<String, String> variantParams,
-                                @RequestParam(required = false) List<MultipartFile> variantImages,
+                                @RequestParam MultiValueMap<String, String> variantParams,
                                 @PathVariable Long shopId,
                                 RedirectAttributes redirectAttributes) {
         try {
@@ -197,7 +209,7 @@ public class ShopController {
             List<ProductAttributeRequest> attributes = parseAttributes(attributeParams);
 
             // ✅ Parse variants từ form + upload images
-            List<ProductVariantRequest> variants = parseVariants(variantParams, variantImages);
+            List<ProductVariantRequest> variants = parseVariants(variantParams);
 
             // ✅ Upload product images
             List<ProductImageRequest> productImageRequests = new ArrayList<>();
@@ -268,8 +280,7 @@ public class ShopController {
         return new ArrayList<>(attrMap.values());
     }
 
-    private List<ProductVariantRequest> parseVariants(Map<String, String> params,
-                                                      List<MultipartFile> variantImagesList) {
+    private List<ProductVariantRequest> parseVariants(MultiValueMap<String, String> params) {
         Map<Integer, ProductVariantRequest> variantMap = new LinkedHashMap<>();
 
         for (String key : params.keySet()) {
@@ -278,9 +289,9 @@ public class ShopController {
                 try {
                     int variantIndex = Integer.parseInt(indexStr);
 
-                    String sku = params.get("variant_sku_" + variantIndex);
-                    String priceStr = params.get("variant_price_" + variantIndex);
-                    String stockStr = params.get("variant_stock_" + variantIndex);
+                    String sku = params.getFirst("variant_sku_" + variantIndex);
+                    String priceStr = params.getFirst("variant_price_" + variantIndex);
+                    String stockStr = params.getFirst("variant_stock_" + variantIndex);
 
                     if (priceStr != null && !priceStr.isBlank() && stockStr != null && !stockStr.isBlank()) {
                         ProductVariantRequest variant = new ProductVariantRequest();
@@ -293,7 +304,7 @@ public class ShopController {
                         for (String key2 : params.keySet()) {
                             if (key2.startsWith("variant_attr_" + variantIndex + "_")) {
                                 String attrName = key2.substring(("variant_attr_" + variantIndex + "_").length());
-                                String attrValue = params.get(key2);
+                                String attrValue = params.getFirst(key2);
 
                                 if (attrValue != null && !attrValue.isBlank()) {
                                     attributes.add(new ProductVariantAttributeValueRequest(
@@ -306,17 +317,12 @@ public class ShopController {
                         }
                         variant.setAttributes(attributes);
 
-                        // ✅ Add images (empty list for now, handle in form)
+                        // Read pre-uploaded image URLs from hidden inputs
+                        List<String> imageUrls = params.getOrDefault("variant_image_" + variantIndex, Collections.emptyList());
                         List<ProductImageRequest> images = new ArrayList<>();
-                        if (variantImagesList != null) {
-                            for (MultipartFile file : variantImagesList) {
-                                if (file != null && !file.isEmpty()) {
-                                    // Kiểm tra file có phải của variant này không
-                                    if (file.getOriginalFilename() != null) {
-                                        String imageUrl = cloudinaryService.uploadImage(file);
-                                        images.add(new ProductImageRequest(imageUrl));
-                                    }
-                                }
+                        for (String imageUrl : imageUrls) {
+                            if (imageUrl != null && !imageUrl.isBlank()) {
+                                images.add(new ProductImageRequest(imageUrl));
                             }
                         }
                         variant.setImages(images);
