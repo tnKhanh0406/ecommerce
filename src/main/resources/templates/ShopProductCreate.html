@@ -62,7 +62,7 @@
                             <label class="font-weight-bold">
                                 Danh Mục <span class="text-danger">*</span>
                             </label>
-                            <select name="categoryIds" class="form-control form-control-lg" required>
+                            <select name="categoryIds" class="form-control form-control-lg" multiple required>
                                 <option value="">-- Chọn danh mục --</option>
                                 <th:block th:each="category : ${categories}">
                                     <option th:value="${category.id}"

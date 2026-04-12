@@ -3,6 +3,7 @@ package com.prj.ecommerce.controller;
 import com.prj.ecommerce.common.UserRole;
 import com.prj.ecommerce.dto.request.*;
 import com.prj.ecommerce.dto.response.CategoryResponse;
+import com.prj.ecommerce.dto.response.CategoryTreeResponse;
 import com.prj.ecommerce.dto.response.CreateProductResponse;
 import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.repository.ShopRepository;
@@ -169,7 +170,7 @@ public class ShopController {
     public String createProductPage(Model model,
                                     @PathVariable Long shopId) {
         try {
-            List<CategoryResponse> categories = categoryService.getTopLevelCategories();
+            List<CategoryTreeResponse> categories = categoryService.getCategoriesTree();
 
             model.addAttribute("shop", shopService.getShopById(shopId));
             model.addAttribute("categories", categories);
@@ -222,7 +223,7 @@ public class ShopController {
             productService.createProduct(request);
 
             redirectAttributes.addFlashAttribute("successMessage", "Thêm sản phẩm thành công!");
-            return "redirect:/shop/products";
+            return String.format("redirect:/shop/%d/products", shopId);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -307,6 +308,17 @@ public class ShopController {
 
                         // ✅ Add images (empty list for now, handle in form)
                         List<ProductImageRequest> images = new ArrayList<>();
+                        if (variantImagesList != null) {
+                            for (MultipartFile file : variantImagesList) {
+                                if (file != null && !file.isEmpty()) {
+                                    // Kiểm tra file có phải của variant này không
+                                    if (file.getOriginalFilename() != null) {
+                                        String imageUrl = cloudinaryService.uploadImage(file);
+                                        images.add(new ProductImageRequest(imageUrl));
+                                    }
+                                }
+                            }
+                        }
                         variant.setImages(images);
 
                         variantMap.put(variantIndex, variant);

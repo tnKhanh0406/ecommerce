@@ -1,6 +1,7 @@
 let attributeCount = 0;
 let variantCount = 0;
 const attributes = {};
+const variantImages = {};
 
 document.addEventListener('DOMContentLoaded', function() {
     // Add Attribute Button
@@ -94,11 +95,14 @@ function addVariant() {
                     <div class="custom-file">
                         <input type="file" 
                                class="custom-file-input variant-images"
+                               id="variantImages_${index}"
                                name="variantImages_${index}"
                                accept="image/*"
                                multiple
                                onchange="handleVariantImages(event, ${index})">
-                        <label class="custom-file-label">Chọn ảnh...</label>
+                        <label class="custom-file-label" for="variantImages_${index}">
+                            Chọn ảnh...
+                        </label>
                     </div>
                 </div>
 
@@ -151,6 +155,7 @@ function addVariant() {
 
 function removeVariant(index) {
     document.querySelector(`[data-variant-index="${index}"]`).remove();
+    delete variantImages[index];
     updateSummary();
 }
 
@@ -206,18 +211,27 @@ function handleProductImages(e) {
     updateSummary();
 }
 
+
 function handleVariantImages(e, variantIndex) {
     const files = Array.from(e.target.files);
     const variantCard = document.querySelector(`[data-variant-index="${variantIndex}"]`);
     const preview = variantCard.querySelector('.variant-images-preview');
     preview.innerHTML = '';
 
-    files.forEach((file) => {
+    // Lưu trữ files để upload sau
+    variantImages[variantIndex] = files;
+
+    files.forEach((file, fileIndex) => {
         const reader = new FileReader();
         reader.onload = function(event) {
             preview.insertAdjacentHTML('beforeend', `
                 <div class="col-md-3 mb-2">
-                    <img src="${event.target.result}" class="img-fluid img-thumbnail" style="height: 100px; object-fit: cover;">
+                    <div class="card">
+                        <img src="${event.target.result}" class="card-img-top img-thumbnail" style="height: 100px; object-fit: cover;">
+                        <div class="card-body p-2">
+                            <small class="text-truncate d-block">${file.name}</small>
+                        </div>
+                    </div>
                 </div>
             `);
         };
@@ -240,7 +254,7 @@ function handleFormSubmit(e) {
     const variantCount = document.querySelectorAll('.variant-card').length;
 
     if (!name.trim() || name.length < 10) {
-        alert('Tên sản phẩm ph��i tối thiểu 10 ký tự');
+        alert('Tên sản phẩm phải tối thiểu 10 ký tự');
         return;
     }
 
@@ -269,5 +283,46 @@ function handleFormSubmit(e) {
         }
     });
 
-    e.target.submit();
+    // Upload variant images trước khi submit form
+    uploadVariantImages().then(() => {
+        e.target.submit();
+    }).catch((error) => {
+        console.error('Lỗi upload ảnh:', error);
+        alert('Lỗi khi upload ảnh phân loại');
+    });
+}
+async function uploadVariantImages() {
+    const form = document.getElementById('createProductForm');
+
+    for (const variantIndex in variantImages) {
+        const files = variantImages[variantIndex];
+
+        for (const file of files) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                // Tạo input hidden để lưu URL ảnh
+                const response = await fetch('/upload-image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const imageUrl = data.imageUrl; // Giả sử API trả về imageUrl
+
+                    // Thêm hidden input cho mỗi ảnh variant
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = `variant_image_${variantIndex}`;
+                    input.value = imageUrl;
+                    form.appendChild(input);
+                }
+            } catch (error) {
+                console.error('Lỗi upload:', error);
+                throw error;
+            }
+        }
+    }
 }
