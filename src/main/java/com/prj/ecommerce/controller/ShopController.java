@@ -5,6 +5,8 @@ import com.prj.ecommerce.dto.response.CategoryResponse;
 import com.prj.ecommerce.dto.response.CreateProductResponse;
 import com.prj.ecommerce.dto.response.ProductDetailResponse;
 import com.prj.ecommerce.service.CategoryService;
+import com.prj.ecommerce.common.OrderStatus;
+import com.prj.ecommerce.service.OrderService;
 import com.prj.ecommerce.service.ProductService;
 import com.prj.ecommerce.service.ShopService;
 import jakarta.validation.Valid;
@@ -28,6 +30,7 @@ public class ShopController {
     private final ShopService shopService;
     private final ProductService productService;
     private final CategoryService categoryService;
+    private final OrderService orderService;
 
     @GetMapping("/register")
     public String shopRegisterPage(Model model) {
@@ -160,6 +163,39 @@ public class ShopController {
         } catch (Exception e) {
             return "redirect:/shop/dashboard";
         }
+    }
+
+    @GetMapping("/{shopId}/orders")
+    public String shopOrdersPage(Model model,
+                                 @PathVariable Long shopId,
+                                 @RequestParam(required = false) OrderStatus status) {
+        try {
+            model.addAttribute("shop", shopService.getShopById(shopId));
+            model.addAttribute("orders", orderService.getOrdersByShopId(shopId, status));
+            model.addAttribute("currentStatus", status);
+            return "shopOrders";
+        } catch (Exception e) {
+            return "redirect:/shop/dashboard";
+        }
+    }
+
+    @PostMapping("/{shopId}/orders/{orderId}/status")
+    public String updateShopOrderStatus(@PathVariable Long shopId,
+                                        @PathVariable Long orderId,
+                                        @RequestParam("status") OrderStatus status,
+                                        RedirectAttributes redirectAttributes) {
+        try {
+            orderService.updateOrderStatusBySeller(orderId, status);
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái đơn hàng thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật đơn hàng: " + e.getMessage());
+        }
+
+        String redirectUrl = String.format("redirect:/shop/%d/orders", shopId);
+        if (status != null) {
+            redirectUrl += "?status=" + status;
+        }
+        return redirectUrl;
     }
 
     @GetMapping("/products/{productId}/edit")

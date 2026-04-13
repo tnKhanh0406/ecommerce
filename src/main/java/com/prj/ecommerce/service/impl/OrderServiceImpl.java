@@ -78,6 +78,32 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public List<CreateOrderResponse> getOrdersByShopId(Long shopId, OrderStatus status) {
+        UserEntity currentUser = getCurrentUser();
+        ShopEntity shop = shopRepository.findById(shopId)
+                .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
+
+        if (!shop.getUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("This shop does not belong to you");
+        }
+
+        List<OrderEntity> orderEntities;
+        if (status == null) {
+            orderEntities = orderRepository.findAllByShopIdOrderByCreatedAtDesc(shopId);
+        } else {
+            orderEntities = orderRepository.findAllByShopIdAndOrderStatusOrderByCreatedAtDesc(shopId, status);
+        }
+
+        return orderEntities.stream()
+                .map(order -> {
+                    CreateOrderResponse response = CreateOrderResponse.fromEntity(order);
+                    enrichOrderItemsWithReviewStatus(response, order);
+                    return response;
+                })
+                .toList();
+    }
+
+    @Override
     public CreateOrderResponse getOrderItems(Long orderId) {
         OrderEntity order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found"));
@@ -192,6 +218,67 @@ public class OrderServiceImpl implements OrderService {
         );
 
         notificationService.sendNotification(notificationRequest);
+
+        return CreateOrderResponse.fromEntity(order);
+    }
+
+    @Override
+    @Transactional
+    public CreateOrderResponse updateOrderStatusBySeller(Long orderId, OrderStatus newStatus) {
+        OrderEntity order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
+
+        UserEntity currentUser = getCurrentUser();
+        ShopEntity shop = shopRepository.findById(order.getShopId())
+                .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
+
+        if (!shop.getUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("This order does not belong to your shop");
+        }
+
+        if (order.getOrderStatus() == OrderStatus.COMPLETED) {
+            throw new BadRequestException("Completed order cannot be changed");
+        }
+
+        if (order.getOrderStatus() == OrderStatus.CANCELLED) {
+            throw new BadRequestException("Cancelled order cannot be changed");
+        }
+
+        if (newStatus == null) {
+            throw new BadRequestException("Status is required");
+        }
+
+        if (newStatus == OrderStatus.CANCELLED) {
+            throw new BadRequestException("Seller cannot set order to cancelled");
+        }
+
+        if (!isAllowedSellerTransition(order.getOrderStatus(), newStatus)) {
+            throw new BadRequestException("Invalid order status transition");
+        }
+
+        OrderStatus oldStatus = order.getOrderStatus();
+        order.setOrderStatus(newStatus);
+        addInitialStatusHistory(
+                order,
+                oldStatus,
+                newStatus,
+                UserRole.SELLER,
+                currentUser.getId()
+        );
+
+        order = orderRepository.saveAndFlush(order);
+
+        if (newStatus == OrderStatus.COMPLETED) {
+            NotificationRequest notificationRequest = new NotificationRequest(
+                    "Đơn hàng đã hoàn tất",
+                    "Đơn hàng #" + order.getId() + " đã được giao hoàn tất",
+                    NotificationType.ORDER_COMPLETED,
+                    order.getId(),
+                    order.getUser().getId(),
+                    ReferenceType.ORDER
+            );
+            notificationService.sendNotification(notificationRequest);
+        }
 
         return CreateOrderResponse.fromEntity(order);
     }
@@ -374,6 +461,18 @@ public class OrderServiceImpl implements OrderService {
                 .map(i -> i.getProductVariant().getPrice()
                         .multiply(BigDecimal.valueOf(i.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal:: add);
+    }
+
+    private boolean isAllowedSellerTransition(OrderStatus currentStatus, OrderStatus newStatus) {
+        return switch (currentStatus) {
+            case PENDING -> newStatus == OrderStatus.CONFIRMED
+                    || newStatus == OrderStatus.SHIPPING
+                    || newStatus == OrderStatus.COMPLETED;
+            case CONFIRMED -> newStatus == OrderStatus.SHIPPING
+                    || newStatus == OrderStatus.COMPLETED;
+            case SHIPPING -> newStatus == OrderStatus.COMPLETED;
+            default -> false;
+        };
     }
 
     private OrderStatusHistoryEntity addInitialStatusHistory(OrderEntity order,
