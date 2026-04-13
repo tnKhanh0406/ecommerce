@@ -19,8 +19,17 @@ public interface ProductService {
                                                   List<MultipartFile> productImages,
                                                   Map<String, List<MultipartFile>> variantImageMap);
     CreateProductResponse updateBasicProduct(Long productId, UpdateBasicProductRequest request);
+    CreateProductResponse updateBasicProductWithImages(Long productId,
+                                                       UpdateBasicProductRequest request,
+                                                       List<MultipartFile> productImages);
     ProductVariantListResponse updateBasicProductVariant(Long productId, ProductVariantListRequest request);
+    ProductVariantListResponse updateBasicProductVariantWithImages(Long productId,
+                                                                    ProductVariantListRequest request,
+                                                                    Map<String, List<MultipartFile>> variantImageMap);
     CreateProductResponse updateAttribute(Long productId, UpdateAttributeRequest updateAttributeRequest);
+    CreateProductResponse updateAttributeWithImages(Long productId,
+                                                     UpdateAttributeRequest updateAttributeRequest,
+                                                     Map<String, List<MultipartFile>> variantImageMap);
     void deleteProduct(Long productId);
     Page<CreateProductResponse> getProductsByShopId(Long shopId, int page, int size);
     ProductDetailResponse getProductForEdit(Long productId);

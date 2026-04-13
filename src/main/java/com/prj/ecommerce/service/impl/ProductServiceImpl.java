@@ -188,6 +188,35 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    public CreateProductResponse updateBasicProductWithImages(Long productId,
+                                                              UpdateBasicProductRequest request,
+                                                              List<MultipartFile> productImages) {
+        if (productImages != null && !productImages.isEmpty()) {
+            request.setImages(uploadImages(productImages));
+        }
+        return updateBasicProduct(productId, request);
+    }
+
+    @Override
+    @Transactional
+    public ProductVariantListResponse updateBasicProductVariantWithImages(Long productId,
+                                                                           ProductVariantListRequest request,
+                                                                           Map<String, List<MultipartFile>> variantImageMap) {
+        attachVariantUpdateImages(request.getProductVariants(), variantImageMap);
+        return updateBasicProductVariant(productId, request);
+    }
+
+    @Override
+    @Transactional
+    public CreateProductResponse updateAttributeWithImages(Long productId,
+                                                           UpdateAttributeRequest updateAttributeRequest,
+                                                           Map<String, List<MultipartFile>> variantImageMap) {
+        attachVariantCreateImages(updateAttributeRequest.getVariants(), variantImageMap);
+        return updateAttribute(productId, updateAttributeRequest);
+    }
+
+    @Override
+    @Transactional
     public CreateProductResponse updateBasicProduct(Long productId, UpdateBasicProductRequest request) {
         ProductEntity product = productRepo.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
@@ -452,6 +481,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private void updateProductImages(ProductEntity product, ProductVariantEntity variant, List<ProductImageRequest> images) {
+        if (images == null || images.isEmpty()) {
+            return;
+        }
+
         Set<String> newImageUrls = images.stream()
                 .map(ProductImageRequest::getImageUrl)
                 .collect(Collectors.toSet());
@@ -611,6 +644,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private void createProductImages(ProductEntity product, ProductVariantEntity variant, List<ProductImageRequest> images) {
+        if (images == null || images.isEmpty()) {
+            return;
+        }
+
         for (ProductImageRequest im : images) {
             ProductImageEntity image = new ProductImageEntity();
             image.setImageUrl(im.getImageUrl());
@@ -622,6 +659,48 @@ public class ProductServiceImpl implements ProductService {
                 image.setImageType(ImageType.THUMBNAIL);
             }
             imageRepo.save(image);
+        }
+    }
+
+    private List<ProductImageRequest> uploadImages(List<MultipartFile> files) {
+        List<ProductImageRequest> images = new ArrayList<>();
+        if (files == null) {
+            return images;
+        }
+
+        for (MultipartFile file : files) {
+            if (file != null && !file.isEmpty()) {
+                images.add(new ProductImageRequest(cloudinaryService.uploadImage(file)));
+            }
+        }
+        return images;
+    }
+
+    private void attachVariantUpdateImages(List<UpdateProductVariantRequest> variants,
+                                           Map<String, List<MultipartFile>> variantImageMap) {
+        if (variants == null || variants.isEmpty() || variantImageMap == null) {
+            return;
+        }
+
+        for (int i = 0; i < variants.size(); i++) {
+            List<MultipartFile> files = variantImageMap.get("variantImages_" + i);
+            if (files != null && !files.isEmpty()) {
+                variants.get(i).setImages(uploadImages(files));
+            }
+        }
+    }
+
+    private void attachVariantCreateImages(List<ProductVariantRequest> variants,
+                                           Map<String, List<MultipartFile>> variantImageMap) {
+        if (variants == null || variants.isEmpty() || variantImageMap == null) {
+            return;
+        }
+
+        for (int i = 0; i < variants.size(); i++) {
+            List<MultipartFile> files = variantImageMap.get("variantImages_" + i);
+            if (files != null && !files.isEmpty()) {
+                variants.get(i).setImages(uploadImages(files));
+            }
         }
     }
 
