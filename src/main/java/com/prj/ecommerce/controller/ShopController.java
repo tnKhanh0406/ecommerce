@@ -3,6 +3,7 @@ package com.prj.ecommerce.controller;
 import com.prj.ecommerce.dto.request.*;
 import com.prj.ecommerce.dto.response.CategoryResponse;
 import com.prj.ecommerce.dto.response.CreateProductResponse;
+import com.prj.ecommerce.dto.response.ProductDetailResponse;
 import com.prj.ecommerce.service.CategoryService;
 import com.prj.ecommerce.service.ProductService;
 import com.prj.ecommerce.service.ShopService;
@@ -161,6 +162,81 @@ public class ShopController {
         }
     }
 
+    @GetMapping("/products/{productId}/edit")
+    public String editProductPage(Model model,
+                                 @PathVariable Long productId) {
+        try {
+            ProductDetailResponse productDetail = productService.getProductForEdit(productId);
+            model.addAttribute("productDetail", productDetail);
+            model.addAttribute("categories", categoryService.getTopLevelCategories());
+            model.addAttribute("currentCategoryId", resolveCurrentCategoryId(productDetail));
+            return "productEdit";
+
+        } catch (Exception e) {
+            return "redirect:/shop/dashboard";
+        }
+    }
+
+    @PostMapping("/products/{productId}/edit/basic")
+    public String updateBasicProduct(@PathVariable Long productId,
+                                     @RequestParam String name,
+                                     @RequestParam String description,
+                                     @RequestParam List<Long> categoryIds,
+                                     @RequestParam(required = false) List<MultipartFile> productImages,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            UpdateBasicProductRequest request = new UpdateBasicProductRequest();
+            request.setName(name);
+            request.setDescription(description);
+            request.setCategoryIds(categoryIds);
+
+            productService.updateBasicProductWithImages(productId, request, productImages);
+
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin cơ bản thành công!");
+            return String.format("redirect:/shop/products/%d/edit", productId);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            return String.format("redirect:/shop/products/%d/edit", productId);
+        }
+    }
+
+    @PostMapping("/products/{productId}/edit/variants")
+    public String updateBasicProductVariants(@PathVariable Long productId,
+                                             @RequestParam Map<String, String> variantParams,
+                                             MultipartHttpServletRequest multipartRequest,
+                                             RedirectAttributes redirectAttributes) {
+        try {
+            ProductVariantListRequest request = parseVariantList(variantParams);
+            productService.updateBasicProductVariantWithImages(productId, request, multipartRequest.getMultiFileMap());
+
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật variant thành công!");
+            return String.format("redirect:/shop/products/%d/edit", productId);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            return String.format("redirect:/shop/products/%d/edit", productId);
+        }
+    }
+
+    @PostMapping("/products/{productId}/edit/attributes")
+    public String updateAttributeVariants(@PathVariable Long productId,
+                                          @RequestParam Map<String, String> variantParams,
+                                          MultipartHttpServletRequest multipartRequest,
+                                          RedirectAttributes redirectAttributes) {
+        try {
+            UpdateAttributeRequest request = new UpdateAttributeRequest();
+            request.setAttributes(parseAttributes(variantParams));
+            request.setVariants(parseVariants(variantParams));
+
+            productService.updateAttributeWithImages(productId, request, multipartRequest.getMultiFileMap());
+
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thêm/xóa variant thành công!");
+            return String.format("redirect:/shop/products/%d/edit", productId);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            return String.format("redirect:/shop/products/%d/edit", productId);
+        }
+    }
+
     @PostMapping("/{shopId}/products/create")
     public String createProduct(@RequestParam String name,
                                 @RequestParam String description,
@@ -279,5 +355,44 @@ public class ShopController {
         }
 
         return new ArrayList<>(variantMap.values());
+    }
+
+    private ProductVariantListRequest parseVariantList(Map<String, String> params) {
+        Map<Integer, UpdateProductVariantRequest> variantMap = new TreeMap<>();
+
+        for (String key : params.keySet()) {
+            if (key.startsWith("variant_price_")) {
+                String indexStr = key.substring("variant_price_".length());
+                try {
+                    int variantIndex = Integer.parseInt(indexStr);
+                    String idStr = params.get("variant_id_" + variantIndex);
+                    String sku = params.get("variant_sku_" + variantIndex);
+                    String priceStr = params.get("variant_price_" + variantIndex);
+                    String stockStr = params.get("variant_stock_" + variantIndex);
+
+                    if (idStr != null && !idStr.isBlank() && priceStr != null && !priceStr.isBlank() && stockStr != null && !stockStr.isBlank()) {
+                        UpdateProductVariantRequest variant = new UpdateProductVariantRequest();
+                        variant.setId(Long.parseLong(idStr));
+                        variant.setSku(sku != null && !sku.isBlank() ? sku : null);
+                        variant.setPrice(new BigDecimal(priceStr));
+                        variant.setStock(Integer.parseInt(stockStr));
+                        variantMap.put(variantIndex, variant);
+                    }
+                } catch (NumberFormatException e) {
+                    // Skip invalid row
+                }
+            }
+        }
+
+        ProductVariantListRequest request = new ProductVariantListRequest();
+        request.setProductVariants(new ArrayList<>(variantMap.values()));
+        return request;
+    }
+
+    private Long resolveCurrentCategoryId(ProductDetailResponse productDetail) {
+        if (productDetail.getBreadcrumb() == null || productDetail.getBreadcrumb().isEmpty()) {
+            return null;
+        }
+        return productDetail.getBreadcrumb().get(productDetail.getBreadcrumb().size() - 1).getId();
     }
 }
