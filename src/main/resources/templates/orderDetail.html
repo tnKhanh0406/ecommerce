@@ -15,6 +15,16 @@
             <div th:replace="~{fragments/userSidebar ::  userSidebar}"></div>
         </div>
         <div class="col-lg-9 col-md-8">
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <span th:text="${successMessage}"></span>
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <span th:text="${errorMessage}"></span>
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+
             <!-- Order Status Header -->
             <div class="bg-white rounded p-3 mb-3">
                 <div class="d-flex justify-content-between align-items-center">
@@ -22,7 +32,14 @@
                         <span class="text-muted">Mã đơn hàng:  </span>
                         <span class="font-weight-bold" th:text="${orderDetail.id}"></span>
                     </div>
-                    <div>
+                    <div class="d-flex align-items-center">
+                        <form th:if="${#strings.equalsIgnoreCase(orderDetail.orderStatus, 'PENDING')}"
+                              th:action="@{'/user/order/orderDetail/' + ${orderDetail.id} + '/cancel'}"
+                              method="post"
+                              class="mr-2 mb-0"
+                              onsubmit="return confirm('Bạn chắc chắn muốn hủy đơn hàng này?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Hủy đơn hàng</button>
+                        </form>
                         <span class="text-danger font-weight-bold text-uppercase" th:text="${orderDetail.orderStatus}"></span>
                     </div>
                 </div>

@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Map;
@@ -116,5 +117,18 @@ public class OrderController {
                                   @PathVariable Long orderId) {
         model.addAttribute("orderDetail", orderService.getOrderItems(orderId));
         return "orderDetail";
+    }
+
+    @PostMapping("/user/order/orderDetail/{orderId}/cancel")
+    public String cancelOrder(@PathVariable Long orderId,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            orderService.cancelOrder(orderId);
+            redirectAttributes.addFlashAttribute("successMessage", "Hủy đơn hàng thành công");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể hủy đơn hàng: " + e.getMessage());
+        }
+
+        return "redirect:/user/order/orderDetail/" + orderId;
     }
 }
