@@ -90,14 +90,19 @@
                                     <input type="file" class="custom-file-input js-file-label js-basic-images" id="basicImages" name="productImages" accept="image/*" multiple>
                                     <label class="custom-file-label" for="basicImages">Chọn file...</label>
                                 </div>
-                                <small class="text-muted d-block mb-3">Nếu không chọn ảnh mới, hệ thống giữ ảnh hiện tại.</small>
-                                <div id="basicImagesPreview" class="row product-preview">
-                                    <th:block th:each="image : ${productDetail.productImages}">
-                                        <div class="col-4 col-md-3 mb-2">
-                                            <img th:src="${image.imageUrl}" class="img-fluid" style="height: 90px; width: 100%; object-fit: cover;">
+                                <small class="text-muted d-block mb-3">Bạn có thể xóa từng ảnh hiện tại hoặc thêm ảnh mới.</small>
+                                <div id="basicExistingImages" class="row product-preview mb-2">
+                                    <th:block th:each="image, imageStat : ${productDetail.productImages}">
+                                        <div class="col-4 col-md-3 mb-2 existing-image-item">
+                                            <div class="position-relative">
+                                                <input type="hidden" th:name="|product_existing_image_${imageStat.index}|" th:value="${image.imageUrl}">
+                                                <img th:src="${image.imageUrl}" class="img-fluid" style="height: 90px; width: 100%; object-fit: cover;">
+                                                <button type="button" class="btn btn-sm btn-danger position-absolute" style="top: 4px; right: 4px; line-height: 1;" onclick="removeExistingImage(this)">×</button>
+                                            </div>
                                         </div>
                                     </th:block>
                                 </div>
+                                <div id="basicImagesPreview" class="row product-preview"></div>
                             </div>
                         </div>
                     </form>
@@ -174,7 +179,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label class="font-weight-bold">Giá</label>
-                                        <input type="number" class="form-control" th:name="|variant_price_${variantStat.index}|" th:value="${variant.price}" min="1000" step="1000" required>
+                                        <input type="number" class="form-control" th:name="|variant_price_${variantStat.index}|" th:value="${variant.price}" min="0" step="1" required>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -196,13 +201,18 @@
                                            accept="image/*">
                                     <label class="custom-file-label">Chọn file...</label>
                                 </div>
-                                <div class="row variant-preview" th:id="|variantPreview_${variantStat.index}|">
-                                    <th:block th:each="image : ${variant.images}">
-                                        <div class="col-4 col-md-3 mb-2">
-                                            <img th:src="${image.imageUrl}" class="img-fluid" style="height: 80px; width: 100%; object-fit: cover;">
+                                <div class="row variant-preview mb-2" th:id="|variantExistingPreview_${variantStat.index}|">
+                                    <th:block th:each="image, imageStat : ${variant.images}">
+                                        <div class="col-4 col-md-3 mb-2 existing-image-item">
+                                            <div class="position-relative">
+                                                <input type="hidden" th:name="|variant_existing_image_${variantStat.index}_${imageStat.index}|" th:value="${image.imageUrl}">
+                                                <img th:src="${image.imageUrl}" class="img-fluid" style="height: 80px; width: 100%; object-fit: cover;">
+                                                <button type="button" class="btn btn-sm btn-danger position-absolute" style="top: 4px; right: 4px; line-height: 1;" onclick="removeExistingImage(this)">×</button>
+                                            </div>
                                         </div>
                                     </th:block>
                                 </div>
+                                <div class="row variant-preview" th:id="|variantPreview_${variantStat.index}|"></div>
                             </div>
                         </div>
                     </th:block>
@@ -286,7 +296,7 @@
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label class="font-weight-bold">Giá</label>
-                                            <input type="number" class="form-control" th:name="|variant_price_${variantStat.index}|" th:value="${variant.price}" min="1000" step="1000" required>
+                                            <input type="number" class="form-control" th:name="|variant_price_${variantStat.index}|" th:value="${variant.price}" min="0" step="1" required>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
@@ -308,13 +318,18 @@
                                                accept="image/*">
                                         <label class="custom-file-label">Chọn file...</label>
                                     </div>
-                                    <div class="row manage-variant-preview" th:id="|variantPreview_${variantStat.index}|">
-                                        <th:block th:each="image : ${variant.images}">
-                                            <div class="col-4 col-md-3 mb-2">
-                                                <img th:src="${image.imageUrl}" class="img-fluid" style="height: 80px; width: 100%; object-fit: cover;">
+                                    <div class="row manage-variant-preview mb-2" th:id="|variantExistingPreview_${variantStat.index}|">
+                                        <th:block th:each="image, imageStat : ${variant.images}">
+                                            <div class="col-4 col-md-3 mb-2 existing-image-item">
+                                                <div class="position-relative">
+                                                    <input type="hidden" th:name="|variant_existing_image_${variantStat.index}_${imageStat.index}|" th:value="${image.imageUrl}">
+                                                    <img th:src="${image.imageUrl}" class="img-fluid" style="height: 80px; width: 100%; object-fit: cover;">
+                                                    <button type="button" class="btn btn-sm btn-danger position-absolute" style="top: 4px; right: 4px; line-height: 1;" onclick="removeExistingImage(this)">×</button>
+                                                </div>
                                             </div>
                                         </th:block>
                                     </div>
+                                    <div class="row manage-variant-preview" th:id="|variantPreview_${variantStat.index}|"></div>
                                 </div>
                             </div>
                         </th:block>
@@ -347,7 +362,7 @@
             <div class="col-md-4">
                 <div class="form-group">
                     <label class="font-weight-bold">Giá</label>
-                    <input type="number" class="form-control" name="variant_price_[INDEX]" placeholder="0" min="1000" step="1000" required>
+                    <input type="number" class="form-control" name="variant_price_[INDEX]" placeholder="0" min="0" step="1" required>
                 </div>
             </div>
             <div class="col-md-4">

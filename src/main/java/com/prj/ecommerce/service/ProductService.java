@@ -21,11 +21,13 @@ public interface ProductService {
     CreateProductResponse updateBasicProduct(Long productId, UpdateBasicProductRequest request);
     CreateProductResponse updateBasicProductWithImages(Long productId,
                                                        UpdateBasicProductRequest request,
-                                                       List<MultipartFile> productImages);
+                                                       List<MultipartFile> productImages,
+                                                       List<String> existingProductImageUrls);
     ProductVariantListResponse updateBasicProductVariant(Long productId, ProductVariantListRequest request);
     ProductVariantListResponse updateBasicProductVariantWithImages(Long productId,
                                                                     ProductVariantListRequest request,
-                                                                    Map<String, List<MultipartFile>> variantImageMap);
+                                                                    Map<String, List<MultipartFile>> variantImageMap,
+                                                                    Map<Integer, List<String>> existingVariantImageUrls);
     CreateProductResponse updateAttribute(Long productId, UpdateAttributeRequest updateAttributeRequest);
     CreateProductResponse updateAttributeWithImages(Long productId,
                                                      UpdateAttributeRequest updateAttributeRequest,

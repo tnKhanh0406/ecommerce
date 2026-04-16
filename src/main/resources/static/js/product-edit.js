@@ -43,6 +43,13 @@ function handleVariantImagesChange(input, variantIndex, previewSelector) {
     previewFiles(input, previewSelector);
 }
 
+function removeExistingImage(button) {
+    const imageItem = button.closest('.existing-image-item');
+    if (imageItem) {
+        imageItem.remove();
+    }
+}
+
 function removeManageVariant(index) {
     const row = document.querySelector(`[data-manage-variant-index="${index}"]`);
     if (row) {
@@ -128,6 +135,16 @@ function reindexManageVariantRows() {
 
         const preview = row.querySelector('.manage-variant-preview');
         if (preview) preview.id = `variantPreview_${index}`;
+
+        const existingPreview = row.querySelector('[id^="variantExistingPreview_"]');
+        if (existingPreview) {
+            existingPreview.id = `variantExistingPreview_${index}`;
+        }
+
+        const existingInputs = row.querySelectorAll('input[name^="variant_existing_image_"]');
+        existingInputs.forEach((input, imageIndex) => {
+            input.name = `variant_existing_image_${index}_${imageIndex}`;
+        });
     });
 
     manageVariantCount = rows.length;

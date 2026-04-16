@@ -6,6 +6,8 @@ import com.prj.ecommerce.dto.request.NotificationRequest;
 import com.prj.ecommerce.dto.response.CreateOrderItemResponse;
 import com.prj.ecommerce.dto.response.CreateOrderListResponse;
 import com.prj.ecommerce.dto.response.CreateOrderResponse;
+import com.prj.ecommerce.dto.response.ShopSalesAnalyticsResponse;
+import com.prj.ecommerce.dto.response.ShopTopProductResponse;
 import com.prj.ecommerce.entity.*;
 import com.prj.ecommerce.exception.BadRequestException;
 import com.prj.ecommerce.model.UserPrincipal;
@@ -23,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -281,6 +285,160 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return CreateOrderResponse.fromEntity(order);
+    }
+
+    @Override
+    public ShopSalesAnalyticsResponse getShopSalesAnalytics(Long shopId, LocalDate startDate, LocalDate endDate) {
+        ShopEntity shop = validateShopOwnership(shopId);
+
+        LocalDate resolvedEndDate = endDate == null ? LocalDate.now() : endDate;
+        LocalDate resolvedStartDate = startDate == null ? resolvedEndDate.minusDays(29) : startDate;
+
+        if (resolvedStartDate.isAfter(resolvedEndDate)) {
+            LocalDate temp = resolvedStartDate;
+            resolvedStartDate = resolvedEndDate;
+            resolvedEndDate = temp;
+        }
+
+        LocalDateTime from = resolvedStartDate.atStartOfDay();
+        LocalDateTime to = resolvedEndDate.plusDays(1).atStartOfDay().minusNanos(1);
+
+        List<OrderEntity> orders = orderRepository
+                .findAllByShopIdAndCreatedAtBetweenOrderByCreatedAtDesc(shopId, from, to);
+
+        long totalOrders = orders.size();
+        long completedOrders = orders.stream().filter(o -> o.getOrderStatus() == OrderStatus.COMPLETED).count();
+        long cancelledOrders = orders.stream().filter(o -> o.getOrderStatus() == OrderStatus.CANCELLED).count();
+        long pendingOrders = orders.stream().filter(o -> o.getOrderStatus() == OrderStatus.PENDING).count();
+        long confirmedOrders = orders.stream().filter(o -> o.getOrderStatus() == OrderStatus.CONFIRMED).count();
+        long shippingOrders = orders.stream().filter(o -> o.getOrderStatus() == OrderStatus.SHIPPING).count();
+
+        BigDecimal totalRevenue = orders.stream()
+                .filter(o -> o.getOrderStatus() == OrderStatus.COMPLETED)
+                .map(OrderEntity::getTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal averageOrderValue = completedOrders == 0
+                ? BigDecimal.ZERO
+                : totalRevenue.divide(BigDecimal.valueOf(completedOrders), 2, RoundingMode.HALF_UP);
+
+        BigDecimal cancelRate = totalOrders == 0
+                ? BigDecimal.ZERO
+                : BigDecimal.valueOf(cancelledOrders)
+                .multiply(BigDecimal.valueOf(100))
+                .divide(BigDecimal.valueOf(totalOrders), 2, RoundingMode.HALF_UP);
+
+        BigDecimal completionRate = totalOrders == 0
+                ? BigDecimal.ZERO
+                : BigDecimal.valueOf(completedOrders)
+                .multiply(BigDecimal.valueOf(100))
+                .divide(BigDecimal.valueOf(totalOrders), 2, RoundingMode.HALF_UP);
+
+        List<ShopTopProductResponse> topProducts = buildTopProducts(orders);
+
+        ShopSalesAnalyticsResponse response = new ShopSalesAnalyticsResponse();
+        response.setStartDate(resolvedStartDate);
+        response.setEndDate(resolvedEndDate);
+        response.setTotalOrders(totalOrders);
+        response.setCompletedOrders(completedOrders);
+        response.setCancelledOrders(cancelledOrders);
+        response.setPendingOrders(pendingOrders);
+        response.setConfirmedOrders(confirmedOrders);
+        response.setShippingOrders(shippingOrders);
+        response.setTotalRevenue(totalRevenue);
+        response.setAverageOrderValue(averageOrderValue);
+        response.setCancelRate(cancelRate);
+        response.setCompletionRate(completionRate);
+        response.setTopProducts(topProducts);
+
+        return response;
+    }
+
+    private ShopEntity validateShopOwnership(Long shopId) {
+        UserEntity currentUser = getCurrentUser();
+        ShopEntity shop = shopRepository.findById(shopId)
+                .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
+
+        if (!shop.getUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("This shop does not belong to you");
+        }
+        return shop;
+    }
+
+    private List<ShopTopProductResponse> buildTopProducts(List<OrderEntity> orders) {
+        Map<Long, TopProductAggregate> aggregateMap = new HashMap<>();
+
+        for (OrderEntity order : orders) {
+            if (order.getOrderStatus() != OrderStatus.COMPLETED) {
+                continue;
+            }
+
+            Set<Long> seenInOrder = new HashSet<>();
+            for (OrderItemEntity item : order.getOrderItems()) {
+                TopProductAggregate aggregate = aggregateMap.computeIfAbsent(
+                        item.getProductId(),
+                        ignored -> new TopProductAggregate(
+                                item.getProductId(),
+                                item.getProductName(),
+                                item.getImageUrl(),
+                                0L,
+                                0L,
+                                BigDecimal.ZERO
+                        )
+                );
+
+                aggregate.totalQuantity += item.getQuantity() == null ? 0 : item.getQuantity();
+                aggregate.totalRevenue = aggregate.totalRevenue.add(
+                        item.getTotalPrice() == null ? BigDecimal.ZERO : item.getTotalPrice()
+                );
+
+                if (seenInOrder.add(item.getProductId())) {
+                    aggregate.orderCount += 1;
+                }
+            }
+        }
+
+        return aggregateMap.values().stream()
+                .sorted((a, b) -> {
+                    int revenueCompare = b.totalRevenue.compareTo(a.totalRevenue);
+                    if (revenueCompare != 0) {
+                        return revenueCompare;
+                    }
+                    return Long.compare(b.totalQuantity, a.totalQuantity);
+                })
+                .limit(10)
+                .map(item -> new ShopTopProductResponse(
+                        item.productId,
+                        item.productName,
+                        item.imageUrl,
+                        item.totalQuantity,
+                        item.orderCount,
+                        item.totalRevenue
+                ))
+                .toList();
+    }
+
+    private static class TopProductAggregate {
+        private final Long productId;
+        private final String productName;
+        private final String imageUrl;
+        private Long totalQuantity;
+        private Long orderCount;
+        private BigDecimal totalRevenue;
+
+        private TopProductAggregate(Long productId,
+                                    String productName,
+                                    String imageUrl,
+                                    Long totalQuantity,
+                                    Long orderCount,
+                                    BigDecimal totalRevenue) {
+            this.productId = productId;
+            this.productName = productName;
+            this.imageUrl = imageUrl;
+            this.totalQuantity = totalQuantity;
+            this.orderCount = orderCount;
+            this.totalRevenue = totalRevenue;
+        }
     }
 
     private void enrichOrderItemsWithReviewStatus(CreateOrderResponse response, OrderEntity order) {

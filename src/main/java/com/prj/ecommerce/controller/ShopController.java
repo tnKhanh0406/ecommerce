@@ -12,6 +12,7 @@ import com.prj.ecommerce.service.ShopService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -21,6 +22,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.*;
 
 @Controller
@@ -179,6 +181,27 @@ public class ShopController {
         }
     }
 
+    @GetMapping("/{shopId}/analytics")
+    public String shopAnalyticsPage(Model model,
+                                    @PathVariable Long shopId,
+                                    @RequestParam(required = false)
+                                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                    @RequestParam(required = false)
+                                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        try {
+            LocalDate resolvedEndDate = endDate == null ? LocalDate.now() : endDate;
+            LocalDate resolvedStartDate = startDate == null ? resolvedEndDate.minusDays(29) : startDate;
+
+            model.addAttribute("shop", shopService.getShopById(shopId));
+            model.addAttribute("analytics", orderService.getShopSalesAnalytics(shopId, resolvedStartDate, resolvedEndDate));
+            model.addAttribute("startDate", resolvedStartDate);
+            model.addAttribute("endDate", resolvedEndDate);
+            return "shopAnalytics";
+        } catch (Exception e) {
+            return "redirect:/shop/dashboard";
+        }
+    }
+
     @PostMapping("/{shopId}/orders/{orderId}/status")
     public String updateShopOrderStatus(@PathVariable Long shopId,
                                         @PathVariable Long orderId,
@@ -218,6 +241,7 @@ public class ShopController {
                                      @RequestParam String name,
                                      @RequestParam String description,
                                      @RequestParam List<Long> categoryIds,
+                         @RequestParam Map<String, String> imageParams,
                                      @RequestParam(required = false) List<MultipartFile> productImages,
                                      RedirectAttributes redirectAttributes) {
         try {
@@ -226,7 +250,12 @@ public class ShopController {
             request.setDescription(description);
             request.setCategoryIds(categoryIds);
 
-            productService.updateBasicProductWithImages(productId, request, productImages);
+            productService.updateBasicProductWithImages(
+                productId,
+                request,
+                productImages,
+                parseExistingProductImageUrls(imageParams)
+            );
 
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin cơ bản thành công!");
             return String.format("redirect:/shop/products/%d/edit", productId);
@@ -242,8 +271,14 @@ public class ShopController {
                                              MultipartHttpServletRequest multipartRequest,
                                              RedirectAttributes redirectAttributes) {
         try {
-            ProductVariantListRequest request = parseVariantList(variantParams);
-            productService.updateBasicProductVariantWithImages(productId, request, multipartRequest.getMultiFileMap());
+            Map<Integer, List<String>> existingVariantImageUrls = parseExistingVariantImageUrls(variantParams);
+            ProductVariantListRequest request = parseVariantList(variantParams, existingVariantImageUrls);
+            productService.updateBasicProductVariantWithImages(
+                productId,
+                request,
+                multipartRequest.getMultiFileMap(),
+                existingVariantImageUrls
+            );
 
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật variant thành công!");
             return String.format("redirect:/shop/products/%d/edit", productId);
@@ -259,9 +294,10 @@ public class ShopController {
                                           MultipartHttpServletRequest multipartRequest,
                                           RedirectAttributes redirectAttributes) {
         try {
+            Map<Integer, List<String>> existingVariantImageUrls = parseExistingVariantImageUrls(variantParams);
             UpdateAttributeRequest request = new UpdateAttributeRequest();
             request.setAttributes(parseAttributes(variantParams));
-            request.setVariants(parseVariants(variantParams));
+            request.setVariants(parseVariants(variantParams, existingVariantImageUrls));
 
             productService.updateAttributeWithImages(productId, request, multipartRequest.getMultiFileMap());
 
@@ -286,7 +322,7 @@ public class ShopController {
         try {
             List<ProductAttributeRequest> attributes = parseAttributes(attributeParams);
 
-            List<ProductVariantRequest> variants = parseVariants(variantParams);
+            List<ProductVariantRequest> variants = parseVariants(variantParams, Collections.emptyMap());
 
             CreateProductRequest request = new CreateProductRequest();
             request.setShopId(shopId);
@@ -343,7 +379,8 @@ public class ShopController {
         return new ArrayList<>(attrMap.values());
     }
 
-    private List<ProductVariantRequest> parseVariants(Map<String, String> params) {
+    private List<ProductVariantRequest> parseVariants(Map<String, String> params,
+                                                      Map<Integer, List<String>> existingVariantImageUrls) {
         Map<Integer, ProductVariantRequest> variantMap = new TreeMap<>();
 
         for (String key : params.keySet()) {
@@ -380,7 +417,19 @@ public class ShopController {
                         }
                         variant.setAttributes(attributes);
 
-                        variant.setImages(new ArrayList<>());
+                        List<ProductImageRequest> images = new ArrayList<>();
+                        if (existingVariantImageUrls != null) {
+                            List<String> existingUrls = existingVariantImageUrls.get(variantIndex);
+                            if (existingUrls != null) {
+                                for (String url : existingUrls) {
+                                    if (url != null && !url.isBlank()) {
+                                        images.add(new ProductImageRequest(url));
+                                    }
+                                }
+                            }
+                        }
+
+                        variant.setImages(images);
 
                         variantMap.put(variantIndex, variant);
                     }
@@ -393,7 +442,8 @@ public class ShopController {
         return new ArrayList<>(variantMap.values());
     }
 
-    private ProductVariantListRequest parseVariantList(Map<String, String> params) {
+    private ProductVariantListRequest parseVariantList(Map<String, String> params,
+                                                       Map<Integer, List<String>> existingVariantImageUrls) {
         Map<Integer, UpdateProductVariantRequest> variantMap = new TreeMap<>();
 
         for (String key : params.keySet()) {
@@ -412,6 +462,18 @@ public class ShopController {
                         variant.setSku(sku != null && !sku.isBlank() ? sku : null);
                         variant.setPrice(new BigDecimal(priceStr));
                         variant.setStock(Integer.parseInt(stockStr));
+                        List<ProductImageRequest> images = new ArrayList<>();
+                        if (existingVariantImageUrls != null) {
+                            List<String> existingUrls = existingVariantImageUrls.get(variantIndex);
+                            if (existingUrls != null) {
+                                for (String url : existingUrls) {
+                                    if (url != null && !url.isBlank()) {
+                                        images.add(new ProductImageRequest(url));
+                                    }
+                                }
+                            }
+                        }
+                        variant.setImages(images);
                         variantMap.put(variantIndex, variant);
                     }
                 } catch (NumberFormatException e) {
@@ -423,6 +485,43 @@ public class ShopController {
         ProductVariantListRequest request = new ProductVariantListRequest();
         request.setProductVariants(new ArrayList<>(variantMap.values()));
         return request;
+    }
+
+    private List<String> parseExistingProductImageUrls(Map<String, String> params) {
+        return params.entrySet().stream()
+                .filter(entry -> entry.getKey().startsWith("product_existing_image_"))
+                .sorted(Map.Entry.comparingByKey())
+                .map(Map.Entry::getValue)
+                .filter(url -> url != null && !url.isBlank())
+                .toList();
+    }
+
+    private Map<Integer, List<String>> parseExistingVariantImageUrls(Map<String, String> params) {
+        Map<Integer, List<String>> imageMap = new TreeMap<>();
+
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            String key = entry.getKey();
+            if (!key.startsWith("variant_existing_image_")) {
+                continue;
+            }
+
+            String[] parts = key.split("_");
+            if (parts.length < 5) {
+                continue;
+            }
+
+            try {
+                int variantIndex = Integer.parseInt(parts[3]);
+                String url = entry.getValue();
+                if (url != null && !url.isBlank()) {
+                    imageMap.computeIfAbsent(variantIndex, ignored -> new ArrayList<>()).add(url);
+                }
+            } catch (NumberFormatException ignored) {
+                // Skip malformed key
+            }
+        }
+
+        return imageMap;
     }
 
     private Long resolveCurrentCategoryId(ProductDetailResponse productDetail) {
