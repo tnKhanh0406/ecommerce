@@ -35,4 +35,6 @@ public interface ProductService {
     void deleteProduct(Long productId);
     Page<CreateProductResponse> getProductsByShopId(Long shopId, int page, int size);
     ProductDetailResponse getProductForEdit(Long productId);
+    List<Long> getProductCategoryIds(Long productId);
+    List<Long> getCategoryIdsByShopId(Long shopId);
 }

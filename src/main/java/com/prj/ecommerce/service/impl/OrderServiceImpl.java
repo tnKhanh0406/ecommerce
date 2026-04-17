@@ -289,8 +289,6 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public ShopSalesAnalyticsResponse getShopSalesAnalytics(Long shopId, LocalDate startDate, LocalDate endDate) {
-        ShopEntity shop = validateShopOwnership(shopId);
-
         LocalDate resolvedEndDate = endDate == null ? LocalDate.now() : endDate;
         LocalDate resolvedStartDate = startDate == null ? resolvedEndDate.minusDays(29) : startDate;
 

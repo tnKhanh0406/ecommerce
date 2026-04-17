@@ -29,7 +29,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryTreeResponse> getCategoriesTree() {
-        return categoryRepository.findAll()
+        return categoryRepository.findByParentIsNull()
                 .stream()
                 .map(CategoryTreeResponse::fromEntity)
                 .toList();
@@ -64,6 +64,21 @@ public class CategoryServiceImpl implements CategoryService {
         List<Long> result = new ArrayList<>();
         dfs(rootCategoryId, result);
         return result;
+    }
+
+    @Override
+    public CategoryEntity findById(Long categoryId) {
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+    }
+
+    @Override
+    public CategoryEntity findRootCategory(Long categoryId) {
+        CategoryEntity category = findById(categoryId);
+        while (category.getParent() != null) {
+            category = findById(category.getParent().getId());
+        }
+        return category;
     }
 
     @Override

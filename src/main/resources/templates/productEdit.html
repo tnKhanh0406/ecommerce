@@ -74,14 +74,14 @@
 
                             <div class="form-group">
                                 <label class="font-weight-bold">Danh mục</label>
-                                <select name="categoryIds" class="form-control" required>
-                                    <option value="">-- Chọn danh mục --</option>
-                                    <th:block th:each="category : ${categories}">
+                                <select name="categoryIds" class="form-control" multiple size="10" required>
+                                    <th:block th:each="category : ${categoryOptions}">
                                         <option th:value="${category.id}"
-                                                th:selected="${category.id == currentCategoryId}"
-                                                th:text="${category.name}">Category</option>
+                                                th:selected="${selectedCategoryIds != null and #lists.contains(selectedCategoryIds, category.id)}"
+                                                th:text="${category.displayName}">Category</option>
                                     </th:block>
                                 </select>
+                                <small class="text-muted d-block mt-2">Giữ Ctrl để chọn nhiều danh mục.</small>
                             </div>
 
                             <div class="form-group">
@@ -133,7 +133,7 @@
                             </div>
                             <div class="mb-3">
                                 <div class="text-muted small">Danh mục hiện tại</div>
-                                <div class="font-weight-bold" th:if="${currentCategoryId != null}" th:text="${currentCategoryId}">1</div>
+                                <div class="font-weight-bold" th:text="${selectedCategoryIds != null ? #lists.size(selectedCategoryIds) + ' danh mục' : '0 danh mục'}">0 danh mục</div>
                             </div>
                         </div>
                     </div>

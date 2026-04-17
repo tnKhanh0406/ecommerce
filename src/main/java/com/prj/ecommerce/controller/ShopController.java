@@ -2,6 +2,8 @@ package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.dto.request.*;
 import com.prj.ecommerce.dto.response.CategoryResponse;
+import com.prj.ecommerce.dto.response.CategorySelectOptionResponse;
+import com.prj.ecommerce.dto.response.CategoryTreeResponse;
 import com.prj.ecommerce.dto.response.CreateProductResponse;
 import com.prj.ecommerce.dto.response.ProductDetailResponse;
 import com.prj.ecommerce.service.CategoryService;
@@ -155,10 +157,13 @@ public class ShopController {
     public String createProductPage(Model model,
                                     @PathVariable Long shopId) {
         try {
-            List<CategoryResponse> categories = categoryService.getTopLevelCategories();
+            List<CategorySelectOptionResponse> categoryOptions = new ArrayList<>();
+            for (CategoryTreeResponse tree : categoryService.getCategoriesTree()) {
+                flattenCategoryTree(tree, "", categoryOptions);
+            }
 
             model.addAttribute("shop", shopService.getShopById(shopId));
-            model.addAttribute("categories", categories);
+            model.addAttribute("categoryOptions", categoryOptions);
 
             return "ShopProductCreate";
 
@@ -226,9 +231,15 @@ public class ShopController {
                                  @PathVariable Long productId) {
         try {
             ProductDetailResponse productDetail = productService.getProductForEdit(productId);
+            List<CategorySelectOptionResponse> categoryOptions = new ArrayList<>();
+            for (CategoryTreeResponse tree : categoryService.getCategoriesTree()) {
+                flattenCategoryTree(tree, "", categoryOptions);
+            }
+
             model.addAttribute("productDetail", productDetail);
-            model.addAttribute("categories", categoryService.getTopLevelCategories());
-            model.addAttribute("currentCategoryId", resolveCurrentCategoryId(productDetail));
+            model.addAttribute("categoryOptions", categoryOptions);
+            model.addAttribute("selectedCategoryIds", productService.getProductCategoryIds(productId));
+
             return "productEdit";
 
         } catch (Exception e) {
@@ -241,20 +252,21 @@ public class ShopController {
                                      @RequestParam String name,
                                      @RequestParam String description,
                                      @RequestParam List<Long> categoryIds,
-                         @RequestParam Map<String, String> imageParams,
-                                     @RequestParam(required = false) List<MultipartFile> productImages,
+                                     MultipartHttpServletRequest multipartRequest,
                                      RedirectAttributes redirectAttributes) {
         try {
             UpdateBasicProductRequest request = new UpdateBasicProductRequest();
             request.setName(name);
             request.setDescription(description);
             request.setCategoryIds(categoryIds);
+                List<String> existingProductImageUrls = parseExistingProductImageUrls(multipartRequest.getParameterMap());
+                List<MultipartFile> newProductImages = multipartRequest.getFiles("productImages");
 
             productService.updateBasicProductWithImages(
                 productId,
                 request,
-                productImages,
-                parseExistingProductImageUrls(imageParams)
+                newProductImages,
+                existingProductImageUrls
             );
 
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin cơ bản thành công!");
@@ -379,6 +391,21 @@ public class ShopController {
         return new ArrayList<>(attrMap.values());
     }
 
+    private void flattenCategoryTree(CategoryTreeResponse category,
+                                     String prefix,
+                                     List<CategorySelectOptionResponse> options) {
+        options.add(new CategorySelectOptionResponse(category.getId(), prefix + category.getName()));
+
+        if (category.getChildren() == null || category.getChildren().isEmpty()) {
+            return;
+        }
+
+        String childPrefix = prefix + "  └ ";
+        for (CategoryTreeResponse child : category.getChildren()) {
+            flattenCategoryTree(child, childPrefix, options);
+        }
+    }
+
     private List<ProductVariantRequest> parseVariants(Map<String, String> params,
                                                       Map<Integer, List<String>> existingVariantImageUrls) {
         Map<Integer, ProductVariantRequest> variantMap = new TreeMap<>();
@@ -487,13 +514,25 @@ public class ShopController {
         return request;
     }
 
-    private List<String> parseExistingProductImageUrls(Map<String, String> params) {
-        return params.entrySet().stream()
+    private List<String> parseExistingProductImageUrls(Map<String, String[]> params) {
+        List<Map.Entry<String, String[]>> entries = params.entrySet().stream()
                 .filter(entry -> entry.getKey().startsWith("product_existing_image_"))
                 .sorted(Map.Entry.comparingByKey())
-                .map(Map.Entry::getValue)
-                .filter(url -> url != null && !url.isBlank())
                 .toList();
+
+        List<String> urls = new ArrayList<>();
+        for (Map.Entry<String, String[]> entry : entries) {
+            String[] values = entry.getValue();
+            if (values == null) {
+                continue;
+            }
+            for (String url : values) {
+                if (url != null && !url.isBlank()) {
+                    urls.add(url);
+                }
+            }
+        }
+        return urls;
     }
 
     private Map<Integer, List<String>> parseExistingVariantImageUrls(Map<String, String> params) {
@@ -524,10 +563,4 @@ public class ShopController {
         return imageMap;
     }
 
-    private Long resolveCurrentCategoryId(ProductDetailResponse productDetail) {
-        if (productDetail.getBreadcrumb() == null || productDetail.getBreadcrumb().isEmpty()) {
-            return null;
-        }
-        return productDetail.getBreadcrumb().get(productDetail.getBreadcrumb().size() - 1).getId();
-    }
 }

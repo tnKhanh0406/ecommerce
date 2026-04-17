@@ -189,6 +189,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "product", key = "#productId")
     public CreateProductResponse updateBasicProductWithImages(Long productId,
                                                               UpdateBasicProductRequest request,
                                                               List<MultipartFile> productImages,
@@ -211,6 +212,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "product", key = "#productId")
     public ProductVariantListResponse updateBasicProductVariantWithImages(Long productId,
                                                                            ProductVariantListRequest request,
                                                                            Map<String, List<MultipartFile>> variantImageMap,
@@ -221,6 +223,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "product", key = "#productId")
     public CreateProductResponse updateAttributeWithImages(Long productId,
                                                            UpdateAttributeRequest updateAttributeRequest,
                                                            Map<String, List<MultipartFile>> variantImageMap) {
@@ -392,6 +395,24 @@ public class ProductServiceImpl implements ProductService {
         return getProductDetail(productId);
     }
 
+    @Override
+    public List<Long> getProductCategoryIds(Long productId) {
+        ProductEntity product = productRepo.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+
+        UserEntity user = getCurrentUser();
+        if (!product.getShop().getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("This product does not belong to you");
+        }
+
+        return productRepo.getCategoryIdsByProductId(productId);
+    }
+
+    @Override
+    public List<Long> getCategoryIdsByShopId(Long shopId) {
+        return productRepo.getCategoryIdsByShopId(shopId);
+    }
+
     private List<CreateProductResponse> attachPriceRange(List<ProductEntity> products) {
         if (products.isEmpty()) {
             return Collections.emptyList();
@@ -521,7 +542,6 @@ public class ProductServiceImpl implements ProductService {
                 productImageRepository.delete(image);
             }
         }
-
         for(ProductImageRequest imgReq : images){
             if(!currentImageUrls.contains(imgReq.getImageUrl())){
                 ProductImageEntity img = new ProductImageEntity();
