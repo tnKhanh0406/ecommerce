@@ -57,6 +57,14 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     }
 
     @Override
+    public List<ProductReviewResponse> getReviewsByShopId(Long shopId) {
+        return productReviewRepository.findAllByShopIdAndShopOwnerId(shopId, getCurrentUserId())
+                .stream()
+                .map(ProductReviewResponse::fromEntity)
+                .toList();
+    }
+
+    @Override
     public ProductReviewResponse getReviewByOrderItem(Long orderItemId) {
         return ProductReviewResponse.fromEntity(productReviewRepository.findByOrderItem_Id(orderItemId));
     }
@@ -212,13 +220,13 @@ public class ProductReviewServiceImpl implements ProductReviewService {
         review.setReply(reply);
         reviewReplyRepository.save(reply);
 
-        //Gui thong bao
+        //Gui thong bao cho customer
         NotificationRequest notificationRequest = new NotificationRequest(
                 "Phản hồi từ người bán",
-                "Người bán đã phản hồi đánh giá của bạn",
+                "Người bán " + reply.getSeller().getFullName() + " đã phản hồi đánh giá của bạn",
                 NotificationType.REVIEW_REPLY,
-                reply.getId(),
-                reply.getSeller().getId(),
+                review.getId(),
+                review.getUser().getId(),
                 ReferenceType.REVIEW
         );
 

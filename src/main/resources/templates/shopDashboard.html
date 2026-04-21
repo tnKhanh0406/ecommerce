@@ -46,7 +46,7 @@
 
                 <!-- Dashboard Menu -->
                 <div class="row mt-4">
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-sm-6">
                         <a th:href="@{'/shop/' + ${shop.id} +'/products'}" class="dashboard-card">
                             <div class="text-center">
                                 <h3>📦</h3>
@@ -55,7 +55,7 @@
                             </div>
                         </a>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-sm-6">
                         <a th:href="@{'/shop/' + ${shop.id} + '/orders'}" class="dashboard-card">
                             <div class="text-center">
                                 <h3>📋</h3>
@@ -64,7 +64,7 @@
                             </div>
                         </a>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-sm-6">
                         <a th:href="@{'/shop/' + ${shop.id} + '/vouchers'}" class="dashboard-card">
                             <div class="text-center">
                                 <h3>🎟️</h3>
@@ -73,7 +73,16 @@
                             </div>
                         </a>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-sm-6">
+                        <a th:href="@{'/shop/' + ${shop.id} + '/reviews'}" class="dashboard-card">
+                            <div class="text-center">
+                                <h3>💬</h3>
+                                <p>Đánh Giá</p>
+                                <small class="text-muted">Phản hồi khách hàng</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
                         <a th:href="@{'/shop/' + ${shop.id} + '/analytics'}" class="dashboard-card">
                             <div class="text-center">
                                 <h3>📊</h3>

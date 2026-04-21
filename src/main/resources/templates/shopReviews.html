@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <title>Quản Lý Đánh Giá</title>
+</head>
+<body class="bg-light">
+<div th:replace="~{fragments/header :: header}"></div>
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="font-weight-bold text-danger mb-1">Quản Lý Đánh Giá</h2>
+            <p class="text-muted mb-0" th:if="${shop != null}">
+                Shop: <span th:text="${shop.shopName}">Shop Name</span>
+            </p>
+        </div>
+        <a th:href="@{/shop/dashboard}" class="btn btn-outline-secondary btn-sm">Về Dashboard</a>
+    </div>
+
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+
+    <div th:if="${reviews == null or #lists.isEmpty(reviews)}" class="bg-white rounded shadow-sm p-4 text-center">
+        <h5 class="mb-2">Chưa có đánh giá nào</h5>
+        <p class="text-muted mb-0">Khi có khách đánh giá sản phẩm, bạn sẽ thấy danh sách tại đây.</p>
+    </div>
+
+    <div th:if="${reviews != null and !#lists.isEmpty(reviews)}">
+        <div class="card shadow-sm border-0 mb-3" th:each="review : ${reviews}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start flex-wrap mb-2">
+                    <div>
+                        <h5 class="mb-1" th:text="${review.productName}">Tên sản phẩm</h5>
+                        <p class="text-muted mb-0 small">
+                            Khách hàng: <span th:text="${review.fullName}">Tên khách</span>
+                            <span class="mx-2">|</span>
+                            Biến thể: <span th:text="${review.variantSnapshot}">Màu / Size</span>
+                        </p>
+                    </div>
+                    <div class="text-right mt-2 mt-sm-0">
+                        <div class="text-warning font-weight-bold">
+                            <span th:text="${review.rating}">5</span>/5
+                        </div>
+                        <small class="text-muted" th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</small>
+                    </div>
+                </div>
+
+                <p class="mb-2" th:text="${review.comment}">Nội dung review</p>
+
+                <div class="d-flex flex-wrap mb-3" th:if="${review.reviewImageUrls != null and !#lists.isEmpty(review.reviewImageUrls)}">
+                    <img th:each="img : ${review.reviewImageUrls}"
+                         th:src="${img.imageUrl}"
+                         alt="review image"
+                         class="mr-2 mb-2 rounded border"
+                         style="width: 72px; height: 72px; object-fit: cover;">
+                </div>
+
+                <div class="bg-light rounded p-3 mb-3" th:if="${review.reply != null}">
+                    <div class="font-weight-bold text-danger mb-1">Phản hồi hiện tại</div>
+                    <div th:text="${review.reply.content}">Nội dung phản hồi</div>
+                    <small class="text-muted"
+                           th:text="${review.reply.updatedAt != null ? 'Cập nhật: ' + #temporals.format(review.reply.updatedAt, 'dd/MM/yyyy HH:mm') : 'Tạo: ' + #temporals.format(review.reply.createdAt, 'dd/MM/yyyy HH:mm')}">
+                        Cập nhật
+                    </small>
+                </div>
+
+                <form th:if="${review.reply == null}"
+                      th:action="@{/shop/{shopId}/reviews/{reviewId}/reply(shopId=${shop.id}, reviewId=${review.productReviewId})}"
+                      method="post">
+                    <div class="form-group mb-2">
+                        <label class="font-weight-bold">Phản hồi khách hàng</label>
+                        <textarea name="content" class="form-control" rows="3" maxlength="1000" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-danger btn-sm">Gửi phản hồi</button>
+                </form>
+
+                <form th:if="${review.reply != null}"
+                      th:action="@{/shop/{shopId}/reviews/{reviewId}/reply/{replyId}/update(shopId=${shop.id}, reviewId=${review.productReviewId}, replyId=${review.reply.reviewReplyId})}"
+                      method="post">
+                    <div class="form-group mb-2">
+                        <label class="font-weight-bold">Cập nhật phản hồi</label>
+                        <textarea name="content" class="form-control" rows="3" maxlength="1000" required th:text="${review.reply.content}"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Cập nhật phản hồi</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
+</body>
+</html>

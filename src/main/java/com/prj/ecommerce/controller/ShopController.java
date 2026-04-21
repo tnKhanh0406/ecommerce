@@ -10,6 +10,7 @@ import com.prj.ecommerce.service.CategoryService;
 import com.prj.ecommerce.common.OrderStatus;
 import com.prj.ecommerce.service.OrderService;
 import com.prj.ecommerce.service.ProductService;
+import com.prj.ecommerce.service.ProductReviewService;
 import com.prj.ecommerce.service.ShopService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class ShopController {
     private final ProductService productService;
     private final CategoryService categoryService;
     private final OrderService orderService;
+    private final ProductReviewService productReviewService;
 
     @GetMapping("/register")
     public String shopRegisterPage(Model model) {
@@ -205,6 +207,52 @@ public class ShopController {
         } catch (Exception e) {
             return "redirect:/shop/dashboard";
         }
+    }
+
+    @GetMapping("/{shopId}/reviews")
+    public String shopReviewsPage(Model model,
+                                  @PathVariable Long shopId) {
+        try {
+            model.addAttribute("shop", shopService.getShopById(shopId));
+            model.addAttribute("reviews", productReviewService.getReviewsByShopId(shopId));
+            return "shopReviews";
+        } catch (Exception e) {
+            return "redirect:/shop/dashboard";
+        }
+    }
+
+    @PostMapping("/{shopId}/reviews/{reviewId}/reply")
+    public String createShopReviewReply(@PathVariable Long shopId,
+                                        @PathVariable Long reviewId,
+                                        @RequestParam("content") String content,
+                                        RedirectAttributes redirectAttributes) {
+        try {
+            ReviewReplyRequest request = new ReviewReplyRequest();
+            request.setReviewId(reviewId);
+            request.setContent(content);
+            productReviewService.createReply(request);
+            redirectAttributes.addFlashAttribute("successMessage", "Phản hồi đánh giá thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể phản hồi: " + e.getMessage());
+        }
+        return String.format("redirect:/shop/%d/reviews", shopId);
+    }
+
+    @PostMapping("/{shopId}/reviews/{reviewId}/reply/{replyId}/update")
+    public String updateShopReviewReply(@PathVariable Long shopId,
+                                        @PathVariable Long reviewId,
+                                        @PathVariable Long replyId,
+                                        @RequestParam("content") String content,
+                                        RedirectAttributes redirectAttributes) {
+        try {
+            UpdateReplyRequest request = new UpdateReplyRequest();
+            request.setContent(content);
+            productReviewService.updateReply(replyId, request);
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật phản hồi thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật phản hồi: " + e.getMessage());
+        }
+        return String.format("redirect:/shop/%d/reviews", shopId);
     }
 
     @PostMapping("/{shopId}/orders/{orderId}/status")
