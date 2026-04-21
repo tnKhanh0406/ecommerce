@@ -13,6 +13,7 @@ import com.prj.ecommerce.utils.SkuUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.*;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -188,26 +189,41 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "product", key = "#productId")
     public CreateProductResponse updateBasicProductWithImages(Long productId,
                                                               UpdateBasicProductRequest request,
-                                                              List<MultipartFile> productImages) {
-        if (productImages != null && !productImages.isEmpty()) {
-            request.setImages(uploadImages(productImages));
+                                                              List<MultipartFile> productImages,
+                                                              List<String> existingProductImageUrls) {
+        List<ProductImageRequest> mergedImages = new ArrayList<>();
+
+        if (existingProductImageUrls != null) {
+            for (String imageUrl : existingProductImageUrls) {
+                if (imageUrl != null && !imageUrl.isBlank()) {
+                    mergedImages.add(new ProductImageRequest(imageUrl));
+                }
+            }
         }
+
+        mergedImages.addAll(uploadImages(productImages));
+        request.setImages(mergedImages);
+
         return updateBasicProduct(productId, request);
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = "product", key = "#productId")
     public ProductVariantListResponse updateBasicProductVariantWithImages(Long productId,
                                                                            ProductVariantListRequest request,
-                                                                           Map<String, List<MultipartFile>> variantImageMap) {
-        attachVariantUpdateImages(request.getProductVariants(), variantImageMap);
+                                                                           Map<String, List<MultipartFile>> variantImageMap,
+                                                                           Map<Integer, List<String>> existingVariantImageUrls) {
+        attachVariantUpdateImages(request.getProductVariants(), variantImageMap, existingVariantImageUrls);
         return updateBasicProductVariant(productId, request);
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = "product", key = "#productId")
     public CreateProductResponse updateAttributeWithImages(Long productId,
                                                            UpdateAttributeRequest updateAttributeRequest,
                                                            Map<String, List<MultipartFile>> variantImageMap) {
@@ -217,6 +233,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "product", key = "#productId")
     public CreateProductResponse updateBasicProduct(Long productId, UpdateBasicProductRequest request) {
         ProductEntity product = productRepo.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
@@ -237,6 +254,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "product", key = "#productId")
     public ProductVariantListResponse updateBasicProductVariant(Long productId, ProductVariantListRequest request) {
         ProductEntity product = productRepo.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
@@ -266,6 +284,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "product", key = "#productId")
     public CreateProductResponse updateAttribute(Long productId, UpdateAttributeRequest updateAttributeRequest) {
         ProductEntity product = productRepo.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
@@ -329,6 +348,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "product", key = "#productId")
     public void deleteProduct(Long productId) {
         ProductEntity product = productRepo.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
@@ -373,6 +393,24 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return getProductDetail(productId);
+    }
+
+    @Override
+    public List<Long> getProductCategoryIds(Long productId) {
+        ProductEntity product = productRepo.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+
+        UserEntity user = getCurrentUser();
+        if (!product.getShop().getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("This product does not belong to you");
+        }
+
+        return productRepo.getCategoryIdsByProductId(productId);
+    }
+
+    @Override
+    public List<Long> getCategoryIdsByShopId(Long shopId) {
+        return productRepo.getCategoryIdsByShopId(shopId);
     }
 
     private List<CreateProductResponse> attachPriceRange(List<ProductEntity> products) {
@@ -481,7 +519,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private void updateProductImages(ProductEntity product, ProductVariantEntity variant, List<ProductImageRequest> images) {
-        if (images == null || images.isEmpty()) {
+        if (images == null) {
             return;
         }
 
@@ -504,7 +542,6 @@ public class ProductServiceImpl implements ProductService {
                 productImageRepository.delete(image);
             }
         }
-
         for(ProductImageRequest imgReq : images){
             if(!currentImageUrls.contains(imgReq.getImageUrl())){
                 ProductImageEntity img = new ProductImageEntity();
@@ -677,16 +714,32 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private void attachVariantUpdateImages(List<UpdateProductVariantRequest> variants,
-                                           Map<String, List<MultipartFile>> variantImageMap) {
-        if (variants == null || variants.isEmpty() || variantImageMap == null) {
+                                           Map<String, List<MultipartFile>> variantImageMap,
+                                           Map<Integer, List<String>> existingVariantImageUrls) {
+        if (variants == null || variants.isEmpty()) {
             return;
         }
 
         for (int i = 0; i < variants.size(); i++) {
-            List<MultipartFile> files = variantImageMap.get("variantImages_" + i);
-            if (files != null && !files.isEmpty()) {
-                variants.get(i).setImages(uploadImages(files));
+            List<ProductImageRequest> images = new ArrayList<>();
+
+            if (existingVariantImageUrls != null) {
+                List<String> existingUrls = existingVariantImageUrls.get(i);
+                if (existingUrls != null) {
+                    for (String url : existingUrls) {
+                        if (url != null && !url.isBlank()) {
+                            images.add(new ProductImageRequest(url));
+                        }
+                    }
+                }
             }
+
+            List<MultipartFile> files = variantImageMap == null ? null : variantImageMap.get("variantImages_" + i);
+            if (files != null && !files.isEmpty()) {
+                images.addAll(uploadImages(files));
+            }
+
+            variants.get(i).setImages(images);
         }
     }
 
@@ -697,10 +750,14 @@ public class ProductServiceImpl implements ProductService {
         }
 
         for (int i = 0; i < variants.size(); i++) {
+            List<ProductImageRequest> images = variants.get(i).getImages() == null
+                    ? new ArrayList<>()
+                    : new ArrayList<>(variants.get(i).getImages());
             List<MultipartFile> files = variantImageMap.get("variantImages_" + i);
             if (files != null && !files.isEmpty()) {
-                variants.get(i).setImages(uploadImages(files));
+                images.addAll(uploadImages(files));
             }
+            variants.get(i).setImages(images);
         }
     }
 

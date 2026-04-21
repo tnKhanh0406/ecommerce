@@ -4,7 +4,9 @@ import com.prj.ecommerce.common.OrderStatus;
 import com.prj.ecommerce.dto.request.CreateOrderRequest;
 import com.prj.ecommerce.dto.response.CreateOrderListResponse;
 import com.prj.ecommerce.dto.response.CreateOrderResponse;
+import com.prj.ecommerce.dto.response.ShopSalesAnalyticsResponse;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface OrderService {
@@ -14,4 +16,5 @@ public interface OrderService {
     CreateOrderListResponse createOrder(CreateOrderRequest request);
     CreateOrderResponse cancelOrder(Long orderId);
     CreateOrderResponse updateOrderStatusBySeller(Long orderId, OrderStatus newStatus);
+    ShopSalesAnalyticsResponse getShopSalesAnalytics(Long shopId, LocalDate startDate, LocalDate endDate);
 }

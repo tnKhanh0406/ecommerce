@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
@@ -29,4 +30,7 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
     List<OrderEntity> findAllByUser_IdAndOrderStatusOrderByCreatedAtDesc(Long userId, OrderStatus orderStatus);
     List<OrderEntity> findAllByShopIdOrderByCreatedAtDesc(Long shopId);
     List<OrderEntity> findAllByShopIdAndOrderStatusOrderByCreatedAtDesc(Long shopId, OrderStatus orderStatus);
+    List<OrderEntity> findAllByShopIdAndCreatedAtBetweenOrderByCreatedAtDesc(Long shopId,
+                                                                              LocalDateTime start,
+                                                                              LocalDateTime end);
 }

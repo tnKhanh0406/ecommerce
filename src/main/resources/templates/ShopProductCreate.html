@@ -62,15 +62,15 @@
                             <label class="font-weight-bold">
                                 Danh Mục <span class="text-danger">*</span>
                             </label>
-                            <select name="categoryIds" class="form-control form-control-lg" required>
-                                <option value="">-- Chọn danh mục --</option>
-                                <th:block th:each="category : ${categories}">
+                            <select name="categoryIds" class="form-control form-control-lg" multiple size="10" required>
+                                <th:block th:each="category : ${categoryOptions}">
                                     <option th:value="${category.id}"
-                                            th:text="${category.name}">
+                                            th:text="${category.displayName}">
                                         Category
                                     </option>
                                 </th:block>
                             </select>
+                            <small class="form-text text-muted">Giữ Ctrl trên Windows để chọn nhiều danh mục. Nên chọn danh mục chi tiết nhất phù hợp với sản phẩm.</small>
                         </div>
                     </div>
                 </div>
@@ -224,8 +224,8 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="font-weight-bold">Giá <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control variant-price" name="variant_price_[INDEX]"
-                               placeholder="0" min="1000" step="1000" required>
+                           <input type="number" class="form-control variant-price" name="variant_price_[INDEX]"
+                               placeholder="0" min="0" step="1" required>
                     </div>
                 </div>
 

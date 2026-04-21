@@ -2,6 +2,8 @@ package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.dto.request.*;
 import com.prj.ecommerce.dto.response.CategoryResponse;
+import com.prj.ecommerce.dto.response.CategorySelectOptionResponse;
+import com.prj.ecommerce.dto.response.CategoryTreeResponse;
 import com.prj.ecommerce.dto.response.CreateProductResponse;
 import com.prj.ecommerce.dto.response.ProductDetailResponse;
 import com.prj.ecommerce.service.CategoryService;
@@ -12,6 +14,7 @@ import com.prj.ecommerce.service.ShopService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -21,6 +24,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.*;
 
 @Controller
@@ -153,10 +157,13 @@ public class ShopController {
     public String createProductPage(Model model,
                                     @PathVariable Long shopId) {
         try {
-            List<CategoryResponse> categories = categoryService.getTopLevelCategories();
+            List<CategorySelectOptionResponse> categoryOptions = new ArrayList<>();
+            for (CategoryTreeResponse tree : categoryService.getCategoriesTree()) {
+                flattenCategoryTree(tree, "", categoryOptions);
+            }
 
             model.addAttribute("shop", shopService.getShopById(shopId));
-            model.addAttribute("categories", categories);
+            model.addAttribute("categoryOptions", categoryOptions);
 
             return "ShopProductCreate";
 
@@ -174,6 +181,27 @@ public class ShopController {
             model.addAttribute("orders", orderService.getOrdersByShopId(shopId, status));
             model.addAttribute("currentStatus", status);
             return "shopOrders";
+        } catch (Exception e) {
+            return "redirect:/shop/dashboard";
+        }
+    }
+
+    @GetMapping("/{shopId}/analytics")
+    public String shopAnalyticsPage(Model model,
+                                    @PathVariable Long shopId,
+                                    @RequestParam(required = false)
+                                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                    @RequestParam(required = false)
+                                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        try {
+            LocalDate resolvedEndDate = endDate == null ? LocalDate.now() : endDate;
+            LocalDate resolvedStartDate = startDate == null ? resolvedEndDate.minusDays(29) : startDate;
+
+            model.addAttribute("shop", shopService.getShopById(shopId));
+            model.addAttribute("analytics", orderService.getShopSalesAnalytics(shopId, resolvedStartDate, resolvedEndDate));
+            model.addAttribute("startDate", resolvedStartDate);
+            model.addAttribute("endDate", resolvedEndDate);
+            return "shopAnalytics";
         } catch (Exception e) {
             return "redirect:/shop/dashboard";
         }
@@ -203,9 +231,15 @@ public class ShopController {
                                  @PathVariable Long productId) {
         try {
             ProductDetailResponse productDetail = productService.getProductForEdit(productId);
+            List<CategorySelectOptionResponse> categoryOptions = new ArrayList<>();
+            for (CategoryTreeResponse tree : categoryService.getCategoriesTree()) {
+                flattenCategoryTree(tree, "", categoryOptions);
+            }
+
             model.addAttribute("productDetail", productDetail);
-            model.addAttribute("categories", categoryService.getTopLevelCategories());
-            model.addAttribute("currentCategoryId", resolveCurrentCategoryId(productDetail));
+            model.addAttribute("categoryOptions", categoryOptions);
+            model.addAttribute("selectedCategoryIds", productService.getProductCategoryIds(productId));
+
             return "productEdit";
 
         } catch (Exception e) {
@@ -218,15 +252,22 @@ public class ShopController {
                                      @RequestParam String name,
                                      @RequestParam String description,
                                      @RequestParam List<Long> categoryIds,
-                                     @RequestParam(required = false) List<MultipartFile> productImages,
+                                     MultipartHttpServletRequest multipartRequest,
                                      RedirectAttributes redirectAttributes) {
         try {
             UpdateBasicProductRequest request = new UpdateBasicProductRequest();
             request.setName(name);
             request.setDescription(description);
             request.setCategoryIds(categoryIds);
+                List<String> existingProductImageUrls = parseExistingProductImageUrls(multipartRequest.getParameterMap());
+                List<MultipartFile> newProductImages = multipartRequest.getFiles("productImages");
 
-            productService.updateBasicProductWithImages(productId, request, productImages);
+            productService.updateBasicProductWithImages(
+                productId,
+                request,
+                newProductImages,
+                existingProductImageUrls
+            );
 
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin cơ bản thành công!");
             return String.format("redirect:/shop/products/%d/edit", productId);
@@ -242,8 +283,14 @@ public class ShopController {
                                              MultipartHttpServletRequest multipartRequest,
                                              RedirectAttributes redirectAttributes) {
         try {
-            ProductVariantListRequest request = parseVariantList(variantParams);
-            productService.updateBasicProductVariantWithImages(productId, request, multipartRequest.getMultiFileMap());
+            Map<Integer, List<String>> existingVariantImageUrls = parseExistingVariantImageUrls(variantParams);
+            ProductVariantListRequest request = parseVariantList(variantParams, existingVariantImageUrls);
+            productService.updateBasicProductVariantWithImages(
+                productId,
+                request,
+                multipartRequest.getMultiFileMap(),
+                existingVariantImageUrls
+            );
 
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật variant thành công!");
             return String.format("redirect:/shop/products/%d/edit", productId);
@@ -259,9 +306,10 @@ public class ShopController {
                                           MultipartHttpServletRequest multipartRequest,
                                           RedirectAttributes redirectAttributes) {
         try {
+            Map<Integer, List<String>> existingVariantImageUrls = parseExistingVariantImageUrls(variantParams);
             UpdateAttributeRequest request = new UpdateAttributeRequest();
             request.setAttributes(parseAttributes(variantParams));
-            request.setVariants(parseVariants(variantParams));
+            request.setVariants(parseVariants(variantParams, existingVariantImageUrls));
 
             productService.updateAttributeWithImages(productId, request, multipartRequest.getMultiFileMap());
 
@@ -286,7 +334,7 @@ public class ShopController {
         try {
             List<ProductAttributeRequest> attributes = parseAttributes(attributeParams);
 
-            List<ProductVariantRequest> variants = parseVariants(variantParams);
+            List<ProductVariantRequest> variants = parseVariants(variantParams, Collections.emptyMap());
 
             CreateProductRequest request = new CreateProductRequest();
             request.setShopId(shopId);
@@ -343,7 +391,23 @@ public class ShopController {
         return new ArrayList<>(attrMap.values());
     }
 
-    private List<ProductVariantRequest> parseVariants(Map<String, String> params) {
+    private void flattenCategoryTree(CategoryTreeResponse category,
+                                     String prefix,
+                                     List<CategorySelectOptionResponse> options) {
+        options.add(new CategorySelectOptionResponse(category.getId(), prefix + category.getName()));
+
+        if (category.getChildren() == null || category.getChildren().isEmpty()) {
+            return;
+        }
+
+        String childPrefix = prefix + "  └ ";
+        for (CategoryTreeResponse child : category.getChildren()) {
+            flattenCategoryTree(child, childPrefix, options);
+        }
+    }
+
+    private List<ProductVariantRequest> parseVariants(Map<String, String> params,
+                                                      Map<Integer, List<String>> existingVariantImageUrls) {
         Map<Integer, ProductVariantRequest> variantMap = new TreeMap<>();
 
         for (String key : params.keySet()) {
@@ -380,7 +444,19 @@ public class ShopController {
                         }
                         variant.setAttributes(attributes);
 
-                        variant.setImages(new ArrayList<>());
+                        List<ProductImageRequest> images = new ArrayList<>();
+                        if (existingVariantImageUrls != null) {
+                            List<String> existingUrls = existingVariantImageUrls.get(variantIndex);
+                            if (existingUrls != null) {
+                                for (String url : existingUrls) {
+                                    if (url != null && !url.isBlank()) {
+                                        images.add(new ProductImageRequest(url));
+                                    }
+                                }
+                            }
+                        }
+
+                        variant.setImages(images);
 
                         variantMap.put(variantIndex, variant);
                     }
@@ -393,7 +469,8 @@ public class ShopController {
         return new ArrayList<>(variantMap.values());
     }
 
-    private ProductVariantListRequest parseVariantList(Map<String, String> params) {
+    private ProductVariantListRequest parseVariantList(Map<String, String> params,
+                                                       Map<Integer, List<String>> existingVariantImageUrls) {
         Map<Integer, UpdateProductVariantRequest> variantMap = new TreeMap<>();
 
         for (String key : params.keySet()) {
@@ -412,6 +489,18 @@ public class ShopController {
                         variant.setSku(sku != null && !sku.isBlank() ? sku : null);
                         variant.setPrice(new BigDecimal(priceStr));
                         variant.setStock(Integer.parseInt(stockStr));
+                        List<ProductImageRequest> images = new ArrayList<>();
+                        if (existingVariantImageUrls != null) {
+                            List<String> existingUrls = existingVariantImageUrls.get(variantIndex);
+                            if (existingUrls != null) {
+                                for (String url : existingUrls) {
+                                    if (url != null && !url.isBlank()) {
+                                        images.add(new ProductImageRequest(url));
+                                    }
+                                }
+                            }
+                        }
+                        variant.setImages(images);
                         variantMap.put(variantIndex, variant);
                     }
                 } catch (NumberFormatException e) {
@@ -425,10 +514,53 @@ public class ShopController {
         return request;
     }
 
-    private Long resolveCurrentCategoryId(ProductDetailResponse productDetail) {
-        if (productDetail.getBreadcrumb() == null || productDetail.getBreadcrumb().isEmpty()) {
-            return null;
+    private List<String> parseExistingProductImageUrls(Map<String, String[]> params) {
+        List<Map.Entry<String, String[]>> entries = params.entrySet().stream()
+                .filter(entry -> entry.getKey().startsWith("product_existing_image_"))
+                .sorted(Map.Entry.comparingByKey())
+                .toList();
+
+        List<String> urls = new ArrayList<>();
+        for (Map.Entry<String, String[]> entry : entries) {
+            String[] values = entry.getValue();
+            if (values == null) {
+                continue;
+            }
+            for (String url : values) {
+                if (url != null && !url.isBlank()) {
+                    urls.add(url);
+                }
+            }
         }
-        return productDetail.getBreadcrumb().get(productDetail.getBreadcrumb().size() - 1).getId();
+        return urls;
     }
+
+    private Map<Integer, List<String>> parseExistingVariantImageUrls(Map<String, String> params) {
+        Map<Integer, List<String>> imageMap = new TreeMap<>();
+
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            String key = entry.getKey();
+            if (!key.startsWith("variant_existing_image_")) {
+                continue;
+            }
+
+            String[] parts = key.split("_");
+            if (parts.length < 5) {
+                continue;
+            }
+
+            try {
+                int variantIndex = Integer.parseInt(parts[3]);
+                String url = entry.getValue();
+                if (url != null && !url.isBlank()) {
+                    imageMap.computeIfAbsent(variantIndex, ignored -> new ArrayList<>()).add(url);
+                }
+            } catch (NumberFormatException ignored) {
+                // Skip malformed key
+            }
+        }
+
+        return imageMap;
+    }
+
 }

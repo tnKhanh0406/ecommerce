@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <title>Thống Kê Doanh Số - Seller</title>
+</head>
+<body class="bg-light">
+<div th:replace="~{fragments/header :: header}"></div>
+
+<div class="container my-4">
+    <div class="bg-white rounded p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h2 class="font-weight-bold text-danger mb-1">📊 Thống Kê Doanh Số</h2>
+                <p class="text-muted mb-0" th:text="${shop.shopName}">Shop name</p>
+            </div>
+            <a th:href="@{/shop/dashboard}" class="btn btn-outline-secondary mt-3 mt-md-0">← Về Dashboard</a>
+        </div>
+
+        <form method="get" class="mt-4 p-3 border rounded bg-light">
+            <div class="form-row align-items-end">
+                <div class="col-md-3 mb-2">
+                    <label class="font-weight-bold">Từ ngày</label>
+                    <input type="date" class="form-control" name="startDate" th:value="${startDate}">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="font-weight-bold">Đến ngày</label>
+                    <input type="date" class="form-control" name="endDate" th:value="${endDate}">
+                </div>
+                <div class="col-md-6 mb-2 d-flex flex-wrap">
+                    <button type="submit" class="btn btn-danger mr-2 mb-2">Lọc</button>
+                    <a th:href="@{'/shop/' + ${shop.id} + '/analytics'(startDate=${T(java.time.LocalDate).now().minusDays(6)}, endDate=${T(java.time.LocalDate).now()})}" class="btn btn-outline-danger mr-2 mb-2">7 ngày</a>
+                    <a th:href="@{'/shop/' + ${shop.id} + '/analytics'(startDate=${T(java.time.LocalDate).now().minusDays(29)}, endDate=${T(java.time.LocalDate).now()})}" class="btn btn-outline-danger mr-2 mb-2">30 ngày</a>
+                    <a th:href="@{'/shop/' + ${shop.id} + '/analytics'(startDate=${T(java.time.LocalDate).now().withDayOfMonth(1)}, endDate=${T(java.time.LocalDate).now()})}" class="btn btn-outline-danger mb-2">Tháng này</a>
+                </div>
+            </div>
+            <small class="text-muted" th:text="'Khoảng thời gian: ' + ${analytics.startDate} + ' đến ' + ${analytics.endDate}">Khoảng thời gian</small>
+        </form>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="bg-white rounded p-3 h-100 border-left border-danger" style="border-left-width:4px !important;">
+                <div class="text-muted small">Doanh thu thuần (COMPLETED)</div>
+                <div class="h4 font-weight-bold text-danger mb-0" th:text="'₫' + ${#numbers.formatDecimal(analytics.totalRevenue, 0, 'COMMA', 0, 'POINT')}">₫0</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="bg-white rounded p-3 h-100 border-left border-success" style="border-left-width:4px !important;">
+                <div class="text-muted small">Đơn hoàn tất</div>
+                <div class="h4 font-weight-bold mb-0" th:text="${analytics.completedOrders}">0</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="bg-white rounded p-3 h-100 border-left border-primary" style="border-left-width:4px !important;">
+                <div class="text-muted small">Giá trị đơn trung bình</div>
+                <div class="h4 font-weight-bold mb-0" th:text="'₫' + ${#numbers.formatDecimal(analytics.averageOrderValue, 0, 'COMMA', 2, 'POINT')}">₫0</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="bg-white rounded p-3 h-100 border-left border-warning" style="border-left-width:4px !important;">
+                <div class="text-muted small">Tỷ lệ hủy đơn</div>
+                <div class="h4 font-weight-bold mb-0" th:text="${#numbers.formatDecimal(analytics.cancelRate, 1, 'COMMA', 2, 'POINT')} + '%'">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded p-4 mb-4">
+        <h5 class="font-weight-bold mb-3">Tình trạng đơn hàng trong kỳ</h5>
+        <div class="row">
+            <div class="col-md-2 col-6 mb-2">
+                <div class="p-2 border rounded text-center">
+                    <div class="small text-muted">Tổng đơn</div>
+                    <div class="font-weight-bold" th:text="${analytics.totalOrders}">0</div>
+                </div>
+            </div>
+            <div class="col-md-2 col-6 mb-2">
+                <div class="p-2 border rounded text-center">
+                    <div class="small text-muted">Pending</div>
+                    <div class="font-weight-bold" th:text="${analytics.pendingOrders}">0</div>
+                </div>
+            </div>
+            <div class="col-md-2 col-6 mb-2">
+                <div class="p-2 border rounded text-center">
+                    <div class="small text-muted">Confirmed</div>
+                    <div class="font-weight-bold" th:text="${analytics.confirmedOrders}">0</div>
+                </div>
+            </div>
+            <div class="col-md-2 col-6 mb-2">
+                <div class="p-2 border rounded text-center">
+                    <div class="small text-muted">Shipping</div>
+                    <div class="font-weight-bold" th:text="${analytics.shippingOrders}">0</div>
+                </div>
+            </div>
+            <div class="col-md-2 col-6 mb-2">
+                <div class="p-2 border rounded text-center">
+                    <div class="small text-muted">Completed</div>
+                    <div class="font-weight-bold text-success" th:text="${analytics.completedOrders}">0</div>
+                </div>
+            </div>
+            <div class="col-md-2 col-6 mb-2">
+                <div class="p-2 border rounded text-center">
+                    <div class="small text-muted">Cancelled</div>
+                    <div class="font-weight-bold text-danger" th:text="${analytics.cancelledOrders}">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-2 text-muted small" th:text="'Tỷ lệ hoàn tất: ' + ${#numbers.formatDecimal(analytics.completionRate, 1, 'COMMA', 2, 'POINT')} + '%'">
+            Tỷ lệ hoàn tất
+        </div>
+    </div>
+
+    <div class="bg-white rounded p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="font-weight-bold mb-0">Top sản phẩm theo doanh thu</h5>
+            <small class="text-muted">Chỉ tính đơn COMPLETED</small>
+        </div>
+
+        <div th:if="${analytics.topProducts == null or #lists.isEmpty(analytics.topProducts)}" class="text-center text-muted py-4">
+            Chưa có dữ liệu sản phẩm trong khoảng thời gian này.
+        </div>
+
+        <div th:if="${analytics.topProducts != null and !#lists.isEmpty(analytics.topProducts)}" class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="thead-light">
+                <tr>
+                    <th>#</th>
+                    <th>Sản phẩm</th>
+                    <th class="text-right">Số lượng</th>
+                    <th class="text-right">Số đơn</th>
+                    <th class="text-right">Doanh thu</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item, stat : ${analytics.topProducts}">
+                    <td th:text="${stat.index + 1}">1</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <img th:src="${item.imageUrl}" alt="product"
+                                 style="width:44px;height:44px;object-fit:cover;border-radius:6px;"
+                                 class="mr-2">
+                            <div>
+                                <div class="font-weight-bold" th:text="${item.productName}">Product</div>
+                                <div class="small text-muted" th:text="'ID: ' + ${item.productId}">ID</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-right" th:text="${item.totalQuantity}">0</td>
+                    <td class="text-right" th:text="${item.orderCount}">0</td>
+                    <td class="text-right font-weight-bold" th:text="'₫' + ${#numbers.formatDecimal(item.totalRevenue, 0, 'COMMA', 0, 'POINT')}">₫0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
+</body>
+</html>

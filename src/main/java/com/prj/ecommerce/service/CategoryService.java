@@ -14,5 +14,7 @@ public interface CategoryService {
     CategoryResponse updateCategory(Long categoryId, CreateCategoryRequest request);
     void deleteCategory(Long categoryId);
     List<Long> getAllCategoryIds(Long rootCategoryId);
+    CategoryEntity findById(Long categoryId);
+    CategoryEntity findRootCategory(Long categoryId);
     CategoryEntity findBySlug(String slug);
 }
