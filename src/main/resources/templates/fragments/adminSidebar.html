@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+</head>
+<body>
+<nav th:fragment="adminSidebar(activeMenu)" class="navbar-vertical navbar navbar-expand-lg navbar-dark bg-dark" style="min-height: 100vh;">
+    <div class="container-fluid px-3">
+        <!-- Admin Branding -->
+        <a class="navbar-brand font-weight-bold text-white mb-4" href="/admin/users">
+            <i class="fas fa-tachometer-alt"></i> Admin Panel
+        </a>
+
+        <!-- Toggle Button for Mobile -->
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Navigation Menu -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav flex-column w-100">
+                <!-- Quản Lý Người Dùng -->
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" th:href="@{/admin/users}" th:classappend="${activeMenu == 'users' ? 'active bg-danger' : ''}">
+                        <i class="fas fa-users"></i> Quản Lý Người Dùng
+                    </a>
+                </li>
+
+                <!-- Quản Lý Shop -->
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" th:href="@{/admin/sellers}" th:classappend="${activeMenu == 'sellers' ? 'active bg-danger' : ''}">
+                        <i class="fas fa-store"></i> Quản Lý Shop
+                    </a>
+                </li>
+
+                <!-- Quản Lý Sản Phẩm (Future) -->
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" th:href="@{/admin/products}" th:classappend="${activeMenu == 'products' ? 'active bg-danger' : ''}">
+                        <i class="fas fa-box"></i> Quản Lý Sản Phẩm
+                    </a>
+                </li>
+
+                <!-- Quản Lý Đơn Hàng (Future) -->
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white disabled" href="#" title="Sắp có sẵn">
+                        <i class="fas fa-clipboard-list"></i> Quản Lý Đơn Hàng
+                    </a>
+                </li>
+
+                <hr class="my-3 bg-secondary">
+
+                <!-- Quay Lại Trang Chủ -->
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" th:href="@{/}">
+                        <i class="fas fa-home"></i> Trang Chủ
+                    </a>
+                </li>
+
+                <!-- Đăng Xuất -->
+                <li class="nav-item">
+                    <a class="nav-link text-danger font-weight-bold" th:href="@{/logout}">
+                        <i class="fas fa-sign-out-alt"></i> Đăng Xuất
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+</body>
+</html>

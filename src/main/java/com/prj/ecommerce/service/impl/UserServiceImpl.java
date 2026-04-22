@@ -134,4 +134,10 @@ public class UserServiceImpl implements UserService {
         user.setStatus(status);
         userRepository.save(user);
     }
+
+    @Override
+    public UserEntity getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    }
 }

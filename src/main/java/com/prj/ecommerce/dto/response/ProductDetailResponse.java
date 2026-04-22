@@ -15,6 +15,7 @@ public class ProductDetailResponse {
     private Long id;
     private String name;
     private String description;
+    private String status;
 
     // Price
     private BigDecimal minPrice;

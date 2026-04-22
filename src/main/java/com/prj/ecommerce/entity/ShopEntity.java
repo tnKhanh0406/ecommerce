@@ -53,7 +53,7 @@ public class ShopEntity {
             createdAt = LocalDateTime.now();
         }
         if (status == null) {
-            status = Status.ACTIVE;
+            status = Status.INACTIVE;
         }
     }
 }

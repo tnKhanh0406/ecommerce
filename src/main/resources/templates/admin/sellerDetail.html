@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/admin-sidebar.css">
+    <title>Chi Tiết Shop</title>
+</head>
+<body class="bg-light">
+<div th:replace="~{fragments/adminSidebar :: adminSidebar(activeMenu='sellers')}"></div>
+
+<div class="container-fluid my-4 admin-content">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="bg-white rounded shadow-sm p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="font-weight-bold mb-0">Chi Tiết Shop</h3>
+                    <a href="/admin/sellers" class="btn btn-secondary btn-sm">← Quay Lại</a>
+                </div>
+
+                <!-- Alert Messages -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <strong>Thành công!</strong> <span th:text="${successMessage}"></span>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Lỗi!</strong> <span th:text="${errorMessage}"></span>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <!-- Shop Information -->
+                <div class="row mb-5 pb-4 border-bottom">
+                    <div class="col-md-3 text-center mb-4 mb-md-0">
+                        <img th:src="${shop.logoUrl}" alt="Logo" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #ddd;"/>
+                        <h5 class="mt-3 font-weight-bold" th:text="${shop.shopName}">Shop Name</h5>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-weight-bold text-muted">ID</label>
+                                    <p class="form-control-plaintext" th:text="${shop.id}">1</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-weight-bold text-muted">Chủ Shop</label>
+                                    <p class="form-control-plaintext" th:text="${shop.ownerName}">Owner Name</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-weight-bold text-muted">Email Chủ Shop</label>
+                                    <p class="form-control-plaintext" th:text="${shop.ownerEmail}">owner@email.com</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-weight-bold text-muted">Đánh Giá</label>
+                                    <p class="form-control-plaintext">
+                                        <span class="badge badge-info" th:text="${shop.rating}">4.5</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="font-weight-bold text-muted">Mô Tả</label>
+                                    <p class="form-control-plaintext" th:text="${shop.description}">Description</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-weight-bold text-muted">Ngày Tạo</label>
+                                    <p class="form-control-plaintext" th:text="${#temporals.format(shop.createdAt, 'dd/MM/yyyy HH:mm:ss')}">01/01/2024</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="font-weight-bold text-muted">Trạng Thái</label>
+                                    <p class="form-control-plaintext">
+                                        <span th:if="${shop.status == T(com.prj.ecommerce.common.Status).ACTIVE}" class="badge badge-success">✅ Đã Phê Duyệt</span>
+                                        <span th:if="${shop.status == T(com.prj.ecommerce.common.Status).INACTIVE}" class="badge badge-warning">⏳ Chờ Phê Duyệt</span>
+                                        <span th:if="${shop.status == T(com.prj.ecommerce.common.Status).BLOCKED}" class="badge badge-danger">❌ Bị Từ Chối</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <h5 class="font-weight-bold mb-3">Thao Tác</h5>
+                        <div class="button-group">
+                            <form th:if="${shop.status != T(com.prj.ecommerce.common.Status).ACTIVE}" th:action="@{/admin/sellers/{id}/approve(id=${shop.id})}" method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-success btn-lg mr-2">
+                                    ✅ Phê Duyệt Shop
+                                </button>
+                            </form>
+
+                            <form th:if="${shop.status != T(com.prj.ecommerce.common.Status).BLOCKED}" th:action="@{/admin/sellers/{id}/reject(id=${shop.id})}" method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-danger btn-lg" onclick="return confirm('Bạn có chắc chắn muốn từ chối shop này không?')">
+                                    ❌ Từ Chối Shop
+                                </button>
+                            </form>
+
+                            <div th:if="${shop.status == T(com.prj.ecommerce.common.Status).ACTIVE}" class="alert alert-info mt-3">
+                                <strong>✅ Shop đã được phê duyệt và hoạt động</strong>
+                            </div>
+                            <div th:if="${shop.status == T(com.prj.ecommerce.common.Status).BLOCKED}" class="alert alert-danger mt-3">
+                                <strong>❌ Shop đã bị từ chối</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Info (Optional) -->
+                <div class="row mt-5 pt-4 border-top">
+                    <div class="col-md-12">
+                        <h6 class="font-weight-bold mb-3">Thông Tin Thêm</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <strong>Tổng Sản Phẩm:</strong>
+                                <span class="badge badge-primary" th:text="${shop.totalProducts}">0</span>
+                            </li>
+                            <li class="mb-2">
+                                <strong>URL Logo:</strong>
+                                <small class="text-muted" th:text="${shop.logoUrl}">URL</small>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

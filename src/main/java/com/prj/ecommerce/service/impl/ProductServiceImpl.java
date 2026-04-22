@@ -1,5 +1,6 @@
 package com.prj.ecommerce.service.impl;
 
+import com.prj.ecommerce.common.Status;
 import com.prj.ecommerce.common.ImageType;
 import com.prj.ecommerce.dto.request.*;
 import com.prj.ecommerce.dto.response.*;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import jakarta.persistence.criteria.Predicate;
 //product khong co attribute -> product image type dang la variant, dung ra phai la thumbnail
 @Service
 @RequiredArgsConstructor
@@ -114,6 +117,7 @@ public class ProductServiceImpl implements ProductService {
         detail.setId(product.getId());
         detail.setName(product.getName());
         detail.setDescription(product.getDescription());
+        detail.setStatus(product.getStatus() != null ? product.getStatus().toString() : null);
 
         detail.setMinPrice(priceRange.getMinPrice());
         detail.setMaxPrice(priceRange.getMaxPrice());
@@ -411,6 +415,86 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<Long> getCategoryIdsByShopId(Long shopId) {
         return productRepo.getCategoryIdsByShopId(shopId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AdminProductResponse> getProductsForAdmin(String search, Status status, Pageable pageable) {
+        Specification<ProductEntity> specification = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (search != null && !search.trim().isEmpty()) {
+                String keyword = "%" + search.trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("name")), keyword),
+                        cb.like(cb.lower(root.get("shop").get("shopName")), keyword),
+                        cb.like(cb.lower(root.get("shop").get("user").get("fullName")), keyword)
+                ));
+            }
+
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+
+            query.orderBy(cb.desc(root.get("createdAt")));
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<ProductEntity> productPage = productRepo.findAll(specification, pageable);
+
+        if (productPage.isEmpty()) {
+            return new PageImpl<>(Collections.emptyList(), pageable, 0);
+        }
+
+        List<Long> productIds = productPage.getContent().stream()
+                .map(ProductEntity::getId)
+                .toList();
+
+        Map<Long, ProductPriceRangeResponse> priceRangeMap = productVariantRepository
+                .findPriceRangeByProductIds(productIds)
+                .stream()
+                .collect(Collectors.toMap(ProductPriceRangeResponse::getProductId, Function.identity()));
+
+        List<AdminProductResponse> responses = productPage.getContent().stream()
+                .map(product -> {
+                    ProductPriceRangeResponse priceRange = priceRangeMap.get(product.getId());
+                    String imageUrl = resolvePrimaryImageUrl(product);
+                    return AdminProductResponse.fromEntity(
+                            product,
+                            imageUrl,
+                            priceRange != null ? priceRange.getMinPrice() : null,
+                            priceRange != null ? priceRange.getMaxPrice() : null
+                    );
+                })
+                .toList();
+
+        return new PageImpl<>(responses, pageable, productPage.getTotalElements());
+    }
+
+    @Override
+    public ProductDetailResponse getProductDetailForAdmin(Long productId) {
+        return getProductDetail(productId);
+    }
+
+    @Override
+    @Transactional
+    public void updateProductStatusForAdmin(Long productId, Status status) {
+        ProductEntity product = productRepo.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+        product.setStatus(status);
+        productRepo.save(product);
+    }
+
+    private String resolvePrimaryImageUrl(ProductEntity product) {
+        if (product.getImages() == null || product.getImages().isEmpty()) {
+            return "https://via.placeholder.com/300?text=No+Image";
+        }
+
+        return product.getImages().stream()
+                .filter(image -> image.getImageType() == ImageType.THUMBNAIL)
+                .findFirst()
+                .orElse(product.getImages().get(0))
+                .getImageUrl();
     }
 
     private List<CreateProductResponse> attachPriceRange(List<ProductEntity> products) {
