@@ -1,5 +1,6 @@
 package com.prj.ecommerce.service.impl;
 
+import com.prj.ecommerce.common.Status;
 import com.prj.ecommerce.dto.request.ChangePasswordRequest;
 import com.prj.ecommerce.dto.request.LoginRequest;
 import com.prj.ecommerce.dto.request.RegisterRequest;
@@ -14,6 +15,8 @@ import com.prj.ecommerce.service.JWTService;
 import com.prj.ecommerce.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -37,18 +40,8 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
-//    @Override
-//    public String verifyUser(LoginRequest loginRequest) {
-//        Authentication authentication = authenticationManager
-//                .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
-//        if (authentication.isAuthenticated()) {
-//            return jwtService.generateToken(loginRequest.getUsername());
-//        }
-//        return "fail";
-//    }
     @Override
     public String verifyUser(LoginRequest loginRequest) {
-
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getUsername(),
@@ -61,7 +54,6 @@ public class UserServiceImpl implements UserService {
 
         return jwtService.generateToken(userDetails);
     }
-
 
     @Override
     public UserResponse registerUser(RegisterRequest registerRequest) {
@@ -104,18 +96,48 @@ public class UserServiceImpl implements UserService {
         UserEntity userEntity = getCurrentUser();
         if (request.getEmail() != null &&
                 userRepository.existsByEmailAndIdNot(request.getEmail(), userEntity.getId())) {
-//            throw new ResourceAlreadyExistsException("Email already exists");
             throw new UpdateResourceExistException("Email already exists");
         }
 
         if (request.getPhoneNumber() != null &&
                 userRepository.existsByPhoneNumberAndIdNot(request.getPhoneNumber(), userEntity.getId())) {
-//            throw new ResourceAlreadyExistsException("Phone number already exists");
             throw new UpdateResourceExistException("Phone number already exists");
         }
         userEntity.setFullName(request.getFullName());
         userEntity.setPhoneNumber(request.getPhoneNumber());
         userEntity.setEmail(request.getEmail());
         return UserResponse.fromEntity(userRepository.save(userEntity));
+    }
+
+    @Override
+    public Page<UserResponse> getAllUsers(String search, Pageable pageable) {
+        Page<UserEntity> users;
+        if (search != null && !search.trim().isEmpty()) {
+            users = userRepository.searchUsers(search, pageable);
+        } else {
+            users = userRepository.findAll(pageable);
+        }
+        return users.map(UserResponse::fromEntity);
+    }
+
+    @Override
+    public UserResponse getUserById(Long id) {
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        return UserResponse.fromEntity(user);
+    }
+
+    @Override
+    public void updateUserStatus(Long userId, Status status) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        user.setStatus(status);
+        userRepository.save(user);
+    }
+
+    @Override
+    public UserEntity getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 }

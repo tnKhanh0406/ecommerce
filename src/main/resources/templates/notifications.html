@@ -25,14 +25,21 @@
         <div class="notification-list">
           <th:block th:if="${notifications != null && !notifications.isEmpty()}">
             <th:block th:each="notification :  ${notifications}">
-              <a th:href="@{${notification.referenceType.name() == 'ORDER' ? '/user/order/orderDetail/' + notification.referenceId : '#'}}"
+              <a th:href="@{${
+                    notification.referenceType.name() == 'ORDER' 
+                      ? '/user/order/orderDetail/' + notification.referenceId 
+                      : notification.referenceType.name() == 'REVIEW' && notification.productId != null
+                      ? '/products/' + notification.productId
+                      : '#'
+                  }}"
                  class="notification-item d-block text-decoration-none mb-3 p-3 border rounded"
                  th:classappend="${notification.isRead ? '' : 'unread'}">
                 <div class="d-flex">
                   <div class="notification-icon mr-3">
-                    <span th:if="${notification.referenceType. name() == 'ORDER'}" class="badge badge-primary">📦</span>
+                    <span th:if="${notification.referenceType.name() == 'ORDER'}" class="badge badge-primary">📦</span>
+                    <span th:if="${notification.referenceType.name() == 'REVIEW' || notification.referenceType.name() == 'REVIEW_REPLY'}" class="badge badge-info">💬</span>
                     <span th:if="${notification.referenceType.name() == 'PROMOTION'}" class="badge badge-danger">🎉</span>
-                    <span th:if="${notification. referenceType.name() != 'ORDER' && notification.referenceType.name() != 'PROMOTION'}" class="badge badge-secondary">📢</span>
+                    <span th:if="${notification.referenceType.name() != 'ORDER' && notification.referenceType.name() != 'PROMOTION' && notification.referenceType.name() != 'REVIEW' && notification.referenceType.name() != 'REVIEW_REPLY'}" class="badge badge-secondary">📢</span>
                   </div>
                   <div class="flex-grow-1">
                     <h6 class="mb-1 font-weight-bold" th:text="${notification.title}"></h6>

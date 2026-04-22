@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/admin-sidebar.css">
+    <title>Quản Lý Sản Phẩm</title>
+</head>
+<body class="bg-light">
+<div th:replace="~{fragments/adminSidebar :: adminSidebar(activeMenu='products')}"></div>
+
+<div class="container-fluid my-4 admin-content">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="bg-white rounded shadow-sm p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="font-weight-bold mb-0">Quản Lý Sản Phẩm</h3>
+                </div>
+
+                <form th:action="@{/admin/products}" method="get" class="mb-4">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <input type="text" class="form-control" name="search" placeholder="Tìm theo tên sản phẩm, shop hoặc chủ shop"
+                                   th:value="${search}">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="status" class="form-control">
+                                <option value="">-- Tất Cả Trạng Thái --</option>
+                                <option th:each="s : ${statuses}"
+                                        th:value="${s}"
+                                        th:text="${s.label}"
+                                        th:selected="${selectedStatus == s.toString()}">
+                                    Option
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-danger btn-block">🔍 Lọc & Tìm</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <strong>Thành công!</strong> <span th:text="${successMessage}"></span>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Lỗi!</strong> <span th:text="${errorMessage}"></span>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="bg-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Ảnh</th>
+                            <th>Tên Sản Phẩm</th>
+                            <th>Shop</th>
+                            <th>Giá</th>
+                            <th>Đã Bán</th>
+                            <th>Đánh Giá</th>
+                            <th>Trạng Thái</th>
+                            <th>Ngày Tạo</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="product : ${products}">
+                            <td th:text="${product.id}">1</td>
+                            <td>
+                                <img th:src="${product.imageUrl}" alt="Product Image"
+                                     class="rounded" style="width: 48px; height: 48px; object-fit: cover;"/>
+                            </td>
+                            <td>
+                                <div class="font-weight-bold" th:text="${product.name}">Product Name</div>
+                                <small class="text-muted" th:text="${product.ownerName}">Owner Name</small>
+                            </td>
+                            <td th:text="${product.shopName}">Shop Name</td>
+                            <td>
+                                <span th:if="${product.minPrice != null and product.maxPrice != null}"
+                                      th:text="${#numbers.formatDecimal(product.minPrice, 0, 'COMMA', 0, 'POINT') + ' - ' + #numbers.formatDecimal(product.maxPrice, 0, 'COMMA', 0, 'POINT')}">0 - 0</span>
+                                <span th:if="${product.minPrice == null or product.maxPrice == null}" class="text-muted">N/A</span>
+                            </td>
+                            <td th:text="${product.soldCount}">0</td>
+                            <td>
+                                <span class="badge badge-info" th:text="${product.rating + ' / ' + product.reviewCount + ' review'}">0 / 0 review</span>
+                            </td>
+                            <td>
+                                <span th:if="${product.status == 'ACTIVE'}" class="badge badge-success">Hoạt Động</span>
+                                <span th:if="${product.status == 'INACTIVE'}" class="badge badge-secondary">Không Hoạt Động</span>
+                                <span th:if="${product.status == 'BLOCKED'}" class="badge badge-danger">Bị Chặn</span>
+                            </td>
+                            <td th:text="${#temporals.format(product.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024</td>
+                            <td>
+                                <a th:href="@{/admin/products/{id}(id=${product.id})}" class="btn btn-sm btn-primary">👁️ Xem</a>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(products)}">
+                            <td colspan="10" class="text-center text-muted py-4">Không tìm thấy sản phẩm</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <nav aria-label="Page navigation" th:if="${totalPages > 1}">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
+                            <a class="page-link" th:href="@{/admin/products(page=0, search=${search}, status=${selectedStatus}, size=${pageSize})}">Đầu tiên</a>
+                        </li>
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
+                            <a class="page-link" th:href="@{/admin/products(page=${currentPage - 1}, search=${search}, status=${selectedStatus}, size=${pageSize})}">Trước</a>
+                        </li>
+
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                            th:classappend="${currentPage == i} ? 'active' : ''">
+                            <a class="page-link" th:href="@{/admin/products(page=${i}, search=${search}, status=${selectedStatus}, size=${pageSize})}" th:text="${i + 1}">1</a>
+                        </li>
+
+                        <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled' : ''">
+                            <a class="page-link" th:href="@{/admin/products(page=${currentPage + 1}, search=${search}, status=${selectedStatus}, size=${pageSize})}">Sau</a>
+                        </li>
+                        <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled' : ''">
+                            <a class="page-link" th:href="@{/admin/products(page=${totalPages - 1}, search=${search}, status=${selectedStatus}, size=${pageSize})}">Cuối cùng</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

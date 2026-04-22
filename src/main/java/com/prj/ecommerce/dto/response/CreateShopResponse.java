@@ -32,6 +32,8 @@ public class CreateShopResponse {
     private LocalDateTime createdAt;
 
     private Long ownerId;
+    private String ownerName;
+    private String ownerEmail;
 
     private long totalProducts = 0;
 
@@ -45,6 +47,8 @@ public class CreateShopResponse {
         response.setRating(shop.getRating());
         response.setCreatedAt(shop.getCreatedAt());
         response.setOwnerId(shop.getUser().getId());
+        response.setOwnerName(shop.getUser().getFullName());
+        response.setOwnerEmail(shop.getUser().getEmail());
         return response;
     }
 }

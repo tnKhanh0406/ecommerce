@@ -1,5 +1,6 @@
 package com.prj.ecommerce.service.impl;
 
+import com.prj.ecommerce.common.Status;
 import com.prj.ecommerce.common.UserRole;
 import com.prj.ecommerce.dto.request.CreateShopRequest;
 import com.prj.ecommerce.dto.request.UpdateShopRequest;
@@ -13,6 +14,8 @@ import com.prj.ecommerce.service.CloudinaryService;
 import com.prj.ecommerce.service.ShopService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -67,6 +70,7 @@ public class ShopServiceImpl implements ShopService {
         shopEntity.setShopName(createShopRequest.getShopName());
         shopEntity.setDescription(createShopRequest.getDescription());
         shopEntity.setLogoUrl(logoUrl);
+        // Note: Default status is INACTIVE (pending approval) from entity prePersist
         shopRepository.save(shopEntity);
         return CreateShopResponse.fromEntity(shopEntity);
     }
@@ -111,5 +115,47 @@ public class ShopServiceImpl implements ShopService {
         ShopEntity shopEntity = shopRepository.findById(shopId)
                 .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
         return new UpdateShopRequest(shopEntity.getShopName(), shopEntity.getDescription(), shopEntity.getLogoUrl());
+    }
+
+    @Override
+    public Page<CreateShopResponse> getAllShops(String search, Status status, Pageable pageable) {
+        Page<ShopEntity> shops;
+        if (search != null && !search.trim().isEmpty()) {
+            if (status != null) {
+                shops = shopRepository.searchShopsByStatus(status, search, pageable);
+            } else {
+                shops = shopRepository.searchShops(search, pageable);
+            }
+        } else {
+            if (status != null) {
+                shops = shopRepository.findByStatus(status, pageable);
+            } else {
+                shops = shopRepository.findAll(pageable);
+            }
+        }
+        return shops.map(CreateShopResponse::fromEntity);
+    }
+
+    @Override
+    public CreateShopResponse getShopDetailForAdmin(Long shopId) {
+        ShopEntity shop = shopRepository.findById(shopId)
+                .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
+        return CreateShopResponse.fromEntity(shop);
+    }
+
+    @Override
+    public void approveShop(Long shopId) {
+        ShopEntity shop = shopRepository.findById(shopId)
+                .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
+        shop.setStatus(Status.ACTIVE);
+        shopRepository.save(shop);
+    }
+
+    @Override
+    public void rejectShop(Long shopId) {
+        ShopEntity shop = shopRepository.findById(shopId)
+                .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
+        shop.setStatus(Status.BLOCKED);
+        shopRepository.save(shop);
     }
 }

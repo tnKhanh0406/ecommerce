@@ -68,6 +68,12 @@ public class UserController {
             cookie.setMaxAge(24 * 60 * 60);
             response.addCookie(cookie);
 
+            // Check if user is ADMIN and redirect to admin dashboard
+            UserEntity user = userService.getUserByUsername(username);
+            if (user != null && user.getRole().name().equals("ADMIN")) {
+                return "redirect:/admin/users";
+            }
+
             return "redirect:/";
         } catch (AuthenticationException e) {
             redirectAttributes.addFlashAttribute("error", "Sai tên đăng nhập hoặc mật khẩu");

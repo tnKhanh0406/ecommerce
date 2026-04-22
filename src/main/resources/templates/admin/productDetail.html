@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/admin-sidebar.css">
+    <title>Chi Tiết Sản Phẩm</title>
+</head>
+<body class="bg-light">
+<div th:replace="~{fragments/adminSidebar :: adminSidebar(activeMenu='products')}"></div>
+
+<div class="container-fluid my-4 admin-content">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="bg-white rounded shadow-sm p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="font-weight-bold mb-0">Chi Tiết Sản Phẩm</h3>
+                    <a href="/admin/products" class="btn btn-secondary btn-sm">← Quay Lại</a>
+                </div>
+
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <strong>Thành công!</strong> <span th:text="${successMessage}"></span>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Lỗi!</strong> <span th:text="${errorMessage}"></span>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="row mb-4 pb-4 border-bottom">
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <img th:if="${product.productImages != null and !#lists.isEmpty(product.productImages)}"
+                             th:src="${product.productImages[0].imageUrl}"
+                             alt="Product Image"
+                             class="rounded w-100" style="max-height: 260px; object-fit: cover;"/>
+                        <img th:if="${product.productImages == null or #lists.isEmpty(product.productImages)}"
+                             src="https://via.placeholder.com/600x400?text=No+Image"
+                             alt="No Image"
+                             class="rounded w-100" style="max-height: 260px; object-fit: cover;"/>
+                    </div>
+                    <div class="col-md-8">
+                        <h4 class="font-weight-bold" th:text="${product.name}">Product Name</h4>
+                        <p class="text-muted mb-2" th:text="${product.description}">Product Description</p>
+                        <p class="mb-2">
+                            <strong>Giá:</strong>
+                            <span th:text="${#numbers.formatDecimal(product.minPrice, 0, 'COMMA', 0, 'POINT') + ' - ' + #numbers.formatDecimal(product.maxPrice, 0, 'COMMA', 0, 'POINT')}">0 - 0</span>
+                        </p>
+                        <p class="mb-2">
+                            <strong>Đã bán:</strong>
+                            <span th:text="${product.soldCount}">0</span>
+                        </p>
+                        <p class="mb-0">
+                            <strong>Đánh giá:</strong>
+                            <span class="badge badge-info" th:text="${product.rating + ' / ' + product.reviewCount + ' review'}">0 / 0 review</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <p class="mb-0">
+                            <strong>Trạng thái hiện tại:</strong>
+                            <span th:if="${product.status == 'ACTIVE'}" class="badge badge-success">Hoạt Động</span>
+                            <span th:if="${product.status == 'INACTIVE'}" class="badge badge-secondary">Không Hoạt Động</span>
+                            <span th:if="${product.status == 'BLOCKED'}" class="badge badge-danger">Bị Chặn</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <h5 class="font-weight-bold mb-3">Cập Nhật Trạng Thái</h5>
+                        <form th:action="@{/admin/products/{id}/status(id=${product.id})}" method="post" class="row">
+                            <div class="col-md-8">
+                                <select name="status" class="form-control" required>
+                                    <option value="">-- Chọn Trạng Thái --</option>
+                                    <option th:each="status : ${statuses}"
+                                            th:value="${status}"
+                                            th:text="${status.label}"
+                                            th:selected="${product.status == status.toString()}">
+                                        Option
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-danger btn-block">💾 Lưu Trạng Thái</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="row" th:if="${product.productImages != null and !#lists.isEmpty(product.productImages)}">
+                    <div class="col-md-12">
+                        <h5 class="font-weight-bold mb-3">Hình Ảnh Sản Phẩm</h5>
+                        <div class="d-flex flex-wrap">
+                            <img th:each="img : ${product.productImages}"
+                                 th:src="${img.imageUrl}"
+                                 alt="Product Image"
+                                 class="rounded mr-2 mb-2"
+                                 style="width: 92px; height: 92px; object-fit: cover;"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

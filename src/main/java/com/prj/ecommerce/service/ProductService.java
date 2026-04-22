@@ -1,10 +1,13 @@
 package com.prj.ecommerce.service;
 
+import com.prj.ecommerce.common.Status;
 import com.prj.ecommerce.dto.request.*;
+import com.prj.ecommerce.dto.response.AdminProductResponse;
 import com.prj.ecommerce.dto.response.CreateProductResponse;
 import com.prj.ecommerce.dto.response.ProductDetailResponse;
 import com.prj.ecommerce.dto.response.ProductVariantListResponse;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -37,4 +40,9 @@ public interface ProductService {
     ProductDetailResponse getProductForEdit(Long productId);
     List<Long> getProductCategoryIds(Long productId);
     List<Long> getCategoryIdsByShopId(Long shopId);
+
+    // Admin methods
+    Page<AdminProductResponse> getProductsForAdmin(String search, Status status, Pageable pageable);
+    ProductDetailResponse getProductDetailForAdmin(Long productId);
+    void updateProductStatusForAdmin(Long productId, Status status);
 }

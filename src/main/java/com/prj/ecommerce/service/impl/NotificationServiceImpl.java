@@ -7,6 +7,7 @@ import com.prj.ecommerce.entity.NotificationEntity;
 import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.NotificationRepository;
+import com.prj.ecommerce.repository.ProductReviewRepository;
 import com.prj.ecommerce.repository.UserRepository;
 import com.prj.ecommerce.service.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final ProductReviewRepository productReviewRepository;
     private final UserRepository userRepository;
 
     private Long getCurrentUserId() {
@@ -31,18 +33,32 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<NotificationResponse> getTop5Notifications() {
-        return notificationRepository.findTop5ByUser_IdOrderByCreatedAtDesc(getCurrentUserId())
+        List<NotificationResponse> responses = notificationRepository.findTop5ByUser_IdOrderByCreatedAtDesc(getCurrentUserId())
                 .stream()
                 .map(NotificationResponse::fromEntity)
                 .collect(Collectors.toList());
+        return enrichProductIds(responses);
     }
 
     @Override
     public List<NotificationResponse> getAllNotifications(ReferenceType referenceType) {
-        List<NotificationEntity> notificationEntities = notificationRepository.findAllByUser_IdAndReferenceType(getCurrentUserId(), referenceType);
-        return notificationEntities.stream()
+        List<NotificationEntity> notificationEntities = referenceType != null
+                ? notificationRepository.findAllByUser_IdAndReferenceType(getCurrentUserId(), referenceType)
+                : notificationRepository.findAllByUser_IdAndReferenceType(getCurrentUserId(), referenceType);
+        List<NotificationResponse> responses = notificationEntities.stream()
                 .map(NotificationResponse::fromEntity)
                 .collect(Collectors.toList());
+        return enrichProductIds(responses);
+    }
+
+    private List<NotificationResponse> enrichProductIds(List<NotificationResponse> responses) {
+        for (NotificationResponse response : responses) {
+            if (response.getReferenceType() == ReferenceType.REVIEW) {
+                Long productId = productReviewRepository.findProductIdByReviewId(response.getReferenceId());
+                response.setProductId(productId);
+            }
+        }
+        return responses;
     }
 
     @Override
