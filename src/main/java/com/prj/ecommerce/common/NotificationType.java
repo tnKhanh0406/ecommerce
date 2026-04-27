@@ -6,5 +6,6 @@ public enum NotificationType {
     ORDER_COMPLETED,
     NEW_REVIEW,
     REVIEW_REPLY,
-    VOUCHER_GRANTED
+    VOUCHER_GRANTED,
+    SYSTEM
 }

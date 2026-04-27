@@ -31,4 +31,8 @@ public class ProductImageEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "review_id")
     private ProductReviewEntity review;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "report_id")
+    private ProductReportEntity report;
 }

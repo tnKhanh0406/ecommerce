@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết báo cáo sản phẩm</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .product-header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 0.5rem;
+            margin-bottom: 20px;
+        }
+        .product-image-main {
+            max-width: 200px;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 0.25rem;
+        }
+        .report-card {
+            border-left: 4px solid #ffc107;
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: #fffbf0;
+        }
+        .report-images-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .report-image-thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+        .report-image-thumbnail:hover {
+            border: 2px solid #0066cc;
+        }
+        .report-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        .report-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .badge-purchased {
+            background-color: #28a745;
+        }
+        .badge-not-purchased {
+            background-color: #dc3545;
+        }
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 0.5rem;
+            margin-bottom: 20px;
+        }
+        .filter-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-form label {
+            margin-bottom: 0;
+        }
+        .image-modal-img {
+            max-width: 100%;
+            max-height: 600px;
+        }
+        .admin-actions {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 0.5rem;
+            margin-top: 30px;
+        }
+        .action-button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        .btn-block-product {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+        }
+        .btn-block-product:hover {
+            background-color: #c82333;
+            color: white;
+        }
+        .btn-reject-reports {
+            background-color: #ffc107;
+            color: black;
+            border: none;
+        }
+        .btn-reject-reports:hover {
+            background-color: #e0a800;
+            color: black;
+        }
+        .variant-badge {
+            display: inline-block;
+            background-color: #e7f3ff;
+            padding: 5px 10px;
+            border-radius: 0.25rem;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-4">
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 rounded">
+            <div class="container-fluid">
+                <a href="/admin/reports" class="navbar-brand">
+                    <i class="fas fa-arrow-left"></i> Quay lại
+                </a>
+                <span class="ms-3">Chi tiết báo cáo sản phẩm</span>
+            </div>
+        </nav>
+
+        <!-- Error Message -->
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Lỗi!</strong> <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Product Header -->
+        <div class="product-header">
+            <div class="row">
+                <!-- Product Image -->
+                <div class="col-md-3">
+                    <img th:src="${reportDetail.productImageUrl}" 
+                         alt="Product" 
+                         class="product-image-main"
+                         onerror="this.src='https://via.placeholder.com/200?text=No+Image'">
+                </div>
+
+                <!-- Product Information -->
+                <div class="col-md-9">
+                    <h3 th:text="${reportDetail.productName}">Product Name</h3>
+                    
+                    <div class="row mt-3 mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Product ID:</strong> <span th:text="${reportDetail.productId}"></span></p>
+                            <p class="mb-1"><strong>Shop:</strong> <span th:text="${reportDetail.shopName}"></span></p>
+                            <p class="mb-1"><strong>Tổng báo cáo:</strong> <span class="badge bg-danger" th:text="${reportDetail.totalReportCount}">0</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Mô tả:</strong></p>
+                            <p class="text-muted" th:text="${#strings.abbreviate(reportDetail.productDescription, 100)}">Description</p>
+                        </div>
+                    </div>
+
+                    <!-- Product Variants -->
+                    <div th:if="${not reportDetail.variants.isEmpty()}">
+                        <p><strong>Các phiên bản:</strong></p>
+                        <div th:each="variant : ${reportDetail.variants}" class="variant-badge">
+                            <span th:text="${variant.variantName}">Variant</span>
+                            - <span th:text="${#numbers.formatDecimal(variant.price, 0, 'COMMA', 0, 'POINT')}">0</span> đ
+                            (Stock: <span th:text="${variant.stock}">0</span>)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <h6 class="mb-3"><i class="fas fa-filter"></i> Lọc báo cáo</h6>
+            <form method="get" class="filter-form">
+                <div>
+                    <label for="purchasedFilter" class="form-label">Trạng thái mua:</label>
+                    <select id="purchasedFilter" name="purchased" class="form-select form-select-sm">
+                        <option value="">-- Tất cả --</option>
+                        <option value="true" th:selected="${purchasedFilter == true}">Đã mua</option>
+                        <option value="false" th:selected="${purchasedFilter == false}">Chưa mua</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="reasonFilter" class="form-label">Lý do báo cáo:</label>
+                    <select id="reasonFilter" name="reason" class="form-select form-select-sm">
+                        <option value="">-- Tất cả --</option>
+                        <option th:each="reason : ${reasons}" 
+                                th:value="${reason}" 
+                                th:text="${reason.label}"
+                                th:selected="${reasonFilter == reason}">Reason</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-search"></i> Tìm kiếm
+                </button>
+            </form>
+        </div>
+
+        <!-- Reports List -->
+        <div class="row">
+            <div class="col-md-12">
+                <h5 class="mb-3">
+                    <i class="fas fa-list"></i> Danh sách báo cáo 
+                    <span class="badge bg-secondary" th:text="${reportDetail.reports.size()}">0</span>
+                </h5>
+
+                <div th:if="${reportDetail.reports.isEmpty()}" class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Không có báo cáo nào phù hợp với bộ lọc.
+                </div>
+
+                <div th:each="report : ${reportDetail.reports}" class="report-card">
+                    <div class="row">
+                        <!-- Reporter Info -->
+                        <div class="col-md-4">
+                            <h6 class="mb-1">Người báo cáo</h6>
+                            <p class="mb-1">
+                                <strong th:text="${report.userName}">User Name</strong><br>
+                                <small class="text-muted" th:text="${report.userPhone}">Phone</small>
+                            </p>
+                            
+                            <!-- Purchase Status Badge -->
+                            <div class="mt-2">
+                                <span th:if="${report.userHasPurchased}" class="badge badge-purchased">
+                                    <i class="fas fa-check-circle"></i> Đã mua
+                                </span>
+                                <span th:unless="${report.userHasPurchased}" class="badge badge-not-purchased">
+                                    <i class="fas fa-times-circle"></i> Chưa mua
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Report Details -->
+                        <div class="col-md-8">
+                            <h6 class="mb-1">Lý do báo cáo</h6>
+                            <p class="mb-2">
+                                <span class="badge bg-warning text-dark" th:text="${report.reasonCode.label}">Reason</span>
+                            </p>
+
+                            <h6 class="mb-1">Mô tả chi tiết</h6>
+                            <p class="text-muted mb-2" th:text="${report.description}">Description</p>
+
+                            <!-- Report Metadata -->
+                            <div class="report-meta">
+                                <div class="report-meta-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span th:text="${#temporals.format(report.createdAt, 'dd/MM/yyyy HH:mm')}">Date</span>
+                                </div>
+                                <div class="report-meta-item">
+                                    <i class="fas fa-image"></i>
+                                    <span th:text="${report.reportImageUrls.size()}">0</span> ảnh
+                                </div>
+                            </div>
+
+                            <!-- Report Images -->
+                            <div th:if="${not report.reportImageUrls.isEmpty()}" class="report-images-container">
+                                <img th:each="imageUrl : ${report.reportImageUrls}" 
+                                     th:src="${imageUrl}" 
+                                     alt="Report evidence" 
+                                     class="report-image-thumbnail"
+                                     data-bs-toggle="modal" 
+                                     data-bs-target="#imageModal"
+                                     th:onclick="'showImageInModal(this.src)'">
+                            </div>
+
+                            <!-- Admin Note (if exists) -->
+                            <div th:if="${report.adminNote}" class="alert alert-info mt-2 mb-0">
+                                <strong>Ghi chú Admin:</strong>
+                                <p class="mb-0" th:text="${report.adminNote}">Admin note</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Actions -->
+        <div class="admin-actions">
+            <h5 class="mb-3"><i class="fas fa-tools"></i> Hành động quản lý</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-block-product action-button" 
+                            data-bs-toggle="modal" data-bs-target="#blockProductModal">
+                        <i class="fas fa-ban"></i> Khóa sản phẩm
+                    </button>
+                    <small class="text-muted d-block">Sản phẩm sẽ bị khóa và không thể bán tiếp</small>
+                </div>
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-reject-reports action-button" 
+                            data-bs-toggle="modal" data-bs-target="#rejectReportsModal">
+                        <i class="fas fa-times-circle"></i> Từ chối báo cáo
+                    </button>
+                    <small class="text-muted d-block">Sản phẩm vẫn hoạt động bình thường</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal for Viewing Report Evidence -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Ảnh bằng chứng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" src="" alt="Report evidence" class="image-modal-img">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Block Product Modal -->
+    <div class="modal fade" id="blockProductModal" tabindex="-1" aria-labelledby="blockProductLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="blockProductLabel">
+                        <i class="fas fa-ban"></i> Khóa sản phẩm
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn khóa sản phẩm này không?</p>
+                    <p class="text-muted">Sản phẩm sẽ bị ẩn khỏi bán và các người báo cáo sẽ nhận được thông báo.</p>
+                    <div class="mb-3">
+                        <label for="blockAdminNote" class="form-label">Ghi chú (tùy chọn):</label>
+                        <textarea id="blockAdminNote" class="form-control" rows="3" placeholder="Nhập ghi chú cho người báo cáo..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-danger" onclick="blockProduct()">
+                        <i class="fas fa-ban"></i> Khóa sản phẩm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Reports Modal -->
+    <div class="modal fade" id="rejectReportsModal" tabindex="-1" aria-labelledby="rejectReportsLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title" id="rejectReportsLabel">
+                        <i class="fas fa-times-circle"></i> Từ chối báo cáo
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn từ chối tất cả báo cáo cho sản phẩm này không?</p>
+                    <p class="text-muted">Sản phẩm sẽ vẫn hoạt động bình thường và các người báo cáo sẽ nhận được thông báo.</p>
+                    <div class="mb-3">
+                        <label for="rejectAdminNote" class="form-label">Ghi chú (tùy chọn):</label>
+                        <textarea id="rejectAdminNote" class="form-control" rows="3" placeholder="Nhập ghi chú cho người báo cáo..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-warning text-dark" onclick="rejectReports()">
+                        <i class="fas fa-times-circle"></i> Từ chối báo cáo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const productId = [[${reportDetail.productId}]];
+
+        function showImageInModal(src) {
+            document.getElementById('modalImage').src = src;
+        }
+
+        function blockProduct() {
+            const adminNote = document.getElementById('blockAdminNote').value;
+            
+            fetch(`/admin/reports/${productId}/block`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    adminNote: adminNote
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Lỗi: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra. Vui lòng thử lại.');
+            });
+
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('blockProductModal')).hide();
+        }
+
+        function rejectReports() {
+            const adminNote = document.getElementById('rejectAdminNote').value;
+            
+            fetch(`/admin/reports/${productId}/reject`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    adminNote: adminNote
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Lỗi: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra. Vui lòng thử lại.');
+            });
+
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('rejectReportsModal')).hide();
+        }
+
+        function getCSRFToken() {
+            return document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '';
+        }
+    </script>
+</body>
+</html>
