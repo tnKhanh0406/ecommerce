@@ -1,3 +1,9 @@
+.admin-page,
+html,
+body {
+    max-width: 100%;
+}
+
 .navbar-vertical {
     position: fixed;
     top: 0;
@@ -61,6 +67,9 @@
 
 .admin-content {
     margin-left: 250px;
+    width: calc(100% - 250px);
+    max-width: calc(100% - 250px);
+    box-sizing: border-box;
 }
 
 @media (min-width: 992px) {
@@ -93,5 +102,7 @@
 
     .admin-content {
         margin-left: 0;
+        width: 100%;
+        max-width: 100%;
     }
 }

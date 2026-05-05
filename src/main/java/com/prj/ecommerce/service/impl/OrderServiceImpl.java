@@ -82,6 +82,35 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public CreateOrderListResponse getOrdersForAdmin(String keyword, OrderStatus status) {
+        List<OrderEntity> orderEntities;
+        boolean hasKeyword = keyword != null && !keyword.isBlank();
+        boolean hasStatus = status != null;
+
+        if (hasKeyword && !hasStatus) {
+            orderEntities = orderRepository.searchOrdersForAdmin(keyword.trim());
+        } else if (!hasKeyword && hasStatus) {
+            orderEntities = orderRepository.findAllByOrderStatusOrderByCreatedAtDesc(status);
+        } else if (hasKeyword) {
+            orderEntities = orderRepository.searchOrdersForAdmin(keyword.trim()).stream()
+                    .filter(order -> order.getOrderStatus() == status)
+                    .toList();
+        } else {
+            orderEntities = orderRepository.findAllByOrderByCreatedAtDesc();
+        }
+
+        List<CreateOrderResponse> responses = orderEntities.stream()
+                .map(order -> {
+                    CreateOrderResponse response = CreateOrderResponse.fromEntity(order);
+                    enrichOrderItemsWithReviewStatus(response, order);
+                    return response;
+                })
+                .toList();
+
+        return new CreateOrderListResponse(responses);
+    }
+
+    @Override
     public List<CreateOrderResponse> getOrdersByShopId(Long shopId, OrderStatus status) {
         UserEntity currentUser = getCurrentUser();
         ShopEntity shop = shopRepository.findById(shopId)
@@ -114,6 +143,15 @@ public class OrderServiceImpl implements OrderService {
         if (!order.getUser().getId().equals(getCurrentUserId())) {
             throw new AccessDeniedException("This order is not belong to the current user");
         }
+        CreateOrderResponse response = CreateOrderResponse.fromEntity(order);
+        enrichOrderItemsWithReviewStatus(response, order);
+        return response;
+    }
+
+    @Override
+    public CreateOrderResponse getOrderDetailForAdmin(Long orderId) {
+        OrderEntity order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
         CreateOrderResponse response = CreateOrderResponse.fromEntity(order);
         enrichOrderItemsWithReviewStatus(response, order);
         return response;
@@ -277,6 +315,67 @@ public class OrderServiceImpl implements OrderService {
                     "Đơn hàng đã hoàn tất",
                     "Đơn hàng #" + order.getId() + " đã được giao hoàn tất",
                     NotificationType.ORDER_COMPLETED,
+                    order.getId(),
+                    order.getUser().getId(),
+                    ReferenceType.ORDER
+            );
+            notificationService.sendNotification(notificationRequest);
+        }
+
+        return CreateOrderResponse.fromEntity(order);
+    }
+
+    @Override
+    @Transactional
+    public CreateOrderResponse updateOrderStatusByAdmin(Long orderId, OrderStatus newStatus) {
+        if (newStatus == null) {
+            throw new BadRequestException("Status is required");
+        }
+
+        OrderEntity order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
+
+        if (order.getOrderStatus() == OrderStatus.COMPLETED) {
+            throw new BadRequestException("Completed order cannot be changed");
+        }
+
+        if (order.getOrderStatus() == OrderStatus.CANCELLED) {
+            throw new BadRequestException("Cancelled order cannot be changed");
+        }
+
+        OrderStatus oldStatus = order.getOrderStatus();
+        if (oldStatus == newStatus) {
+            throw new BadRequestException("Order already has this status");
+        }
+
+        boolean validTransition = isAllowedSellerTransition(oldStatus, newStatus)
+                || newStatus == OrderStatus.CANCELLED;
+        if (!validTransition) {
+            throw new BadRequestException("Invalid order status transition");
+        }
+
+        UserEntity currentUser = getCurrentUser();
+        order.setOrderStatus(newStatus);
+        addInitialStatusHistory(order, oldStatus, newStatus, UserRole.ADMIN, currentUser.getId());
+        order = orderRepository.saveAndFlush(order);
+
+        if (newStatus == OrderStatus.COMPLETED) {
+            NotificationRequest notificationRequest = new NotificationRequest(
+                    "Đơn hàng đã hoàn tất",
+                    "Đơn hàng #" + order.getId() + " đã được giao hoàn tất",
+                    NotificationType.ORDER_COMPLETED,
+                    order.getId(),
+                    order.getUser().getId(),
+                    ReferenceType.ORDER
+            );
+            notificationService.sendNotification(notificationRequest);
+        }
+
+        if (newStatus == OrderStatus.CANCELLED) {
+            NotificationRequest notificationRequest = new NotificationRequest(
+                    "Đơn hàng đã bị hủy",
+                    "Đơn hàng #" + order.getId() + " đã bị hủy bởi quản trị viên",
+                    NotificationType.ORDER_CANCELLED,
                     order.getId(),
                     order.getUser().getId(),
                     ReferenceType.ORDER

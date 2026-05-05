@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -28,6 +29,22 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    public List<CategoryResponse> getAllCategories() {
+        return categoryRepository.findAll()
+                .stream()
+                .sorted(Comparator.comparing(CategoryEntity::getId))
+                .map(CategoryResponse::fromEntity)
+                .toList();
+    }
+
+    @Override
+    public CategoryResponse getCategoryById(Long categoryId) {
+        CategoryEntity categoryEntity = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+        return CategoryResponse.fromEntity(categoryEntity);
+    }
+
+    @Override
     public List<CategoryTreeResponse> getCategoriesTree() {
         return categoryRepository.findByParentIsNull()
                 .stream()
@@ -40,7 +57,11 @@ public class CategoryServiceImpl implements CategoryService {
         CategoryEntity categoryEntity = new CategoryEntity();
         categoryEntity.setName(request.getName());
         categoryEntity.setSlug(request.getSlug());
-        categoryEntity.setParent(categoryRepository.findById(request.getParentId()).orElse(null));
+        if (request.getParentId() != null) {
+            categoryEntity.setParent(categoryRepository.findById(request.getParentId()).orElse(null));
+        } else {
+            categoryEntity.setParent(null);
+        }
         return CategoryResponse.fromEntity(categoryRepository.save(categoryEntity));
     }
 
@@ -50,7 +71,16 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new EntityNotFoundException("Category not found"));
         categoryEntity.setName(request.getName());
         categoryEntity.setSlug(request.getSlug());
-        categoryEntity.setParent(categoryRepository.findById(request.getParentId()).orElse(null));
+
+        if (request.getParentId() != null) {
+            if (request.getParentId().equals(categoryId)) {
+                throw new IllegalArgumentException("Danh mục cha không hợp lệ");
+            }
+            categoryEntity.setParent(categoryRepository.findById(request.getParentId()).orElse(null));
+        } else {
+            categoryEntity.setParent(null);
+        }
+
         return CategoryResponse.fromEntity(categoryRepository.save(categoryEntity));
     }
 

@@ -1,0 +1,289 @@
+<!-- Modal for Product Report Form -->
+<!-- This is a Thymeleaf fragment to be included in product detail page -->
+
+<div class="modal fade" id="reportProductModal" tabindex="-1" aria-labelledby="reportProductLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="reportProductLabel">
+                    <i class="fas fa-flag"></i> Báo cáo sản phẩm
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reportForm">
+                    <!-- Alert Messages -->
+                    <div id="reportAlert" class="alert d-none" role="alert"></div>
+
+                    <!-- Product Info (Read-only) -->
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Sản phẩm:</strong></label>
+                        <p class="form-control-plaintext" id="reportProductName">-</p>
+                    </div>
+
+                    <!-- Report Reason -->
+                    <div class="mb-3">
+                        <label for="reportReason" class="form-label">
+                            <strong>Lý do báo cáo <span class="text-danger">*</span></strong>
+                        </label>
+                        <select id="reportReason" name="reasonCode" class="form-select" required>
+                            <option value="">-- Chọn lý do --</option>
+                            <option value="FAKE">Sản phẩm giả mạo</option>
+                            <option value="LOW_QUALITY">Chất lượng thấp</option>
+                            <option value="WRONG_DESCRIPTION">Mô tả không đúng</option>
+                            <option value="COUNTERFEIT">Hàng nhái</option>
+                            <option value="FRAUDULENT">Hàng lừa đảo</option>
+                            <option value="PROHIBITED_ITEM">Sản phẩm bị cấm</option>
+                            <option value="DUPLICATE_LISTING">Listing trùng lặp</option>
+                            <option value="OTHER">Khác</option>
+                        </select>
+                        <small class="form-text text-muted">Vui lòng chọn lý do chính xác nhất</small>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label for="reportDescription" class="form-label">
+                            <strong>Mô tả chi tiết <span class="text-danger">*</span></strong>
+                        </label>
+                        <textarea id="reportDescription" 
+                                  name="description" 
+                                  class="form-control" 
+                                  rows="4" 
+                                  placeholder="Vui lòng mô tả chi tiết vấn đề mà bạn gặp phải..."
+                                  required></textarea>
+                        <small class="form-text text-muted">Mô tả càng chi tiết càng tốt để chúng tôi xử lý nhanh</small>
+                    </div>
+
+                    <!-- Images Upload Section -->
+                    <div class="mb-3">
+                        <label for="reportImages" class="form-label">
+                            <strong>Hình ảnh bằng chứng</strong>
+                            <span class="badge bg-info">Tối đa 3 ảnh</span>
+                        </label>
+                        <div class="input-group mb-2">
+                            <input type="file" 
+                                   id="reportImages" 
+                                   name="reportImages" 
+                                   class="form-control" 
+                                   multiple
+                                   accept="image/*"
+                                   onchange="handleImageSelection(event)">
+                        </div>
+                        <small class="form-text text-muted">
+                            Định dạng: JPG, PNG. Dung lượng tối đa: 5MB/ảnh
+                        </small>
+
+                        <!-- Image Preview -->
+                        <div id="imagePreview" class="mt-3">
+                            <!-- Images will be added here dynamically -->
+                        </div>
+
+                        <!-- Image Count -->
+                        <div id="imageCount" class="mt-2 text-muted">
+                            <small>Số ảnh đã chọn: <span id="selectedImageCount">0</span>/3</small>
+                        </div>
+                    </div>
+
+                    <!-- Terms Checkbox -->
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="agreeTerms" required>
+                        <label class="form-check-label" for="agreeTerms">
+                            Tôi cam kết rằng thông tin báo cáo là chính xác và không được lạm dụng để tấn công đối thủ cạnh tranh
+                        </label>
+                    </div>
+
+                    <!-- Error Messages -->
+                    <div id="formErrors"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" onclick="submitReport()" id="submitReportBtn">
+                    <i class="fas fa-paper-plane"></i> Gửi báo cáo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedFiles = [];
+    const MAX_IMAGES = 3;
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+    function handleImageSelection(event) {
+        const files = Array.from(event.target.files);
+        let validFiles = [];
+        let errors = [];
+
+        // Validate each file
+        files.forEach((file, index) => {
+            if (!file.type.startsWith('image/')) {
+                errors.push(`File ${index + 1}: Không phải file ảnh`);
+                return;
+            }
+            if (file.size > MAX_FILE_SIZE) {
+                errors.push(`File ${index + 1}: Dung lượng vượt quá 5MB`);
+                return;
+            }
+            validFiles.push(file);
+        });
+
+        // Limit to MAX_IMAGES
+        if (validFiles.length > MAX_IMAGES) {
+            errors.push(`Tối đa chỉ được chọn ${MAX_IMAGES} ảnh`);
+            validFiles = validFiles.slice(0, MAX_IMAGES);
+        }
+
+        selectedFiles = validFiles;
+
+        // Show errors if any
+        const errorDiv = document.getElementById('formErrors');
+        if (errors.length > 0) {
+            errorDiv.innerHTML = errors.map(error => 
+                `<div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    ${error}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>`
+            ).join('');
+        } else {
+            errorDiv.innerHTML = '';
+        }
+
+        // Update image preview
+        displayImagePreviews();
+
+        // Update image count
+        document.getElementById('selectedImageCount').textContent = selectedFiles.length;
+    }
+
+    function displayImagePreviews() {
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = '';
+
+        if (selectedFiles.length === 0) {
+            return;
+        }
+
+        const previewContainer = document.createElement('div');
+        previewContainer.className = 'row';
+
+        selectedFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const col = document.createElement('div');
+                col.className = 'col-md-4 mb-2';
+                col.innerHTML = `
+                    <div class="card">
+                        <img src="${e.target.result}" class="card-img-top" alt="Preview ${index + 1}" style="height: 150px; object-fit: cover;">
+                        <div class="card-body p-2">
+                            <button type="button" class="btn btn-sm btn-danger w-100" onclick="removeImage(${index})">
+                                <i class="fas fa-trash"></i> Xóa
+                            </button>
+                        </div>
+                    </div>
+                `;
+                previewContainer.appendChild(col);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        preview.appendChild(previewContainer);
+    }
+
+    function removeImage(index) {
+        selectedFiles.splice(index, 1);
+        document.getElementById('reportImages').value = '';
+        displayImagePreviews();
+        document.getElementById('selectedImageCount').textContent = selectedFiles.length;
+    }
+
+    function setProductInfo(productId, productName) {
+        document.getElementById('reportProductName').textContent = productName;
+        document.getElementById('reportForm').dataset.productId = productId;
+    }
+
+    function submitReport() {
+        const form = document.getElementById('reportForm');
+        const productId = form.dataset.productId;
+        const reasonCode = document.getElementById('reportReason').value;
+        const description = document.getElementById('reportDescription').value;
+        const agreeTerms = document.getElementById('agreeTerms').checked;
+        const alertDiv = document.getElementById('reportAlert');
+
+        // Validation
+        const errors = [];
+        if (!reasonCode) errors.push('Vui lòng chọn lý do báo cáo');
+        if (!description || description.trim().length < 20) errors.push('Mô tả phải có ít nhất 20 ký tự');
+        if (!agreeTerms) errors.push('Vui lòng đồng ý với điều khoản');
+
+        if (errors.length > 0) {
+            alertDiv.classList.remove('d-none');
+            alertDiv.classList.add('alert-warning');
+            alertDiv.classList.remove('alert-success', 'alert-danger');
+            alertDiv.innerHTML = errors.map(e => `<li>${e}</li>`).join('') || errors.join(', ');
+            return;
+        }
+
+        // Prepare form data with images
+        const formData = new FormData();
+        formData.append('productId', productId);
+        formData.append('reasonCode', reasonCode);
+        formData.append('description', description);
+
+        // Add images
+        selectedFiles.forEach(file => {
+            formData.append('reportImages', file);
+        });
+
+        // Disable submit button
+        const submitBtn = document.getElementById('submitReportBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
+
+        // Submit
+        fetch('/api/reports', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': getCSRFToken()
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alertDiv.classList.remove('d-none', 'alert-warning', 'alert-danger');
+                alertDiv.classList.add('alert-success');
+                alertDiv.innerHTML = data.message;
+                
+                // Reset form
+                setTimeout(() => {
+                    form.reset();
+                    selectedFiles = [];
+                    document.getElementById('selectedImageCount').textContent = '0';
+                    document.getElementById('imagePreview').innerHTML = '';
+                    bootstrap.Modal.getInstance(document.getElementById('reportProductModal')).hide();
+                    location.reload();
+                }, 2000);
+            } else {
+                alertDiv.classList.remove('d-none', 'alert-success');
+                alertDiv.classList.add('alert-danger');
+                alertDiv.innerHTML = data.message;
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi báo cáo';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alertDiv.classList.remove('d-none', 'alert-success');
+            alertDiv.classList.add('alert-danger');
+            alertDiv.innerHTML = 'Có lỗi xảy ra. Vui lòng thử lại.';
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi báo cáo';
+        });
+    }
+
+    function getCSRFToken() {
+        return document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '';
+    }
+</script>

@@ -5,5 +5,6 @@ public enum ImageType {
     DETAIL,
     CERTIFICATE,
     VARIANT,
-    REVIEW
+    REVIEW,
+    REPORT
 }
