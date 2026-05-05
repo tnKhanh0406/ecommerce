@@ -11,10 +11,13 @@ import java.util.List;
 
 public interface OrderService {
     CreateOrderListResponse getOrders(String keyword, OrderStatus status);
+    CreateOrderListResponse getOrdersForAdmin(String keyword, OrderStatus status);
     List<CreateOrderResponse> getOrdersByShopId(Long shopId, OrderStatus status);
     CreateOrderResponse getOrderItems(Long orderId);
+    CreateOrderResponse getOrderDetailForAdmin(Long orderId);
     CreateOrderListResponse createOrder(CreateOrderRequest request);
     CreateOrderResponse cancelOrder(Long orderId);
     CreateOrderResponse updateOrderStatusBySeller(Long orderId, OrderStatus newStatus);
+    CreateOrderResponse updateOrderStatusByAdmin(Long orderId, OrderStatus newStatus);
     ShopSalesAnalyticsResponse getShopSalesAnalytics(Long shopId, LocalDate startDate, LocalDate endDate);
 }

@@ -1,13 +1,16 @@
 package com.prj.ecommerce.controller;
 
+import com.prj.ecommerce.common.OrderStatus;
 import com.prj.ecommerce.common.Status;
 import com.prj.ecommerce.dto.request.CreateCategoryRequest;
 import com.prj.ecommerce.dto.response.AdminProductResponse;
 import com.prj.ecommerce.dto.response.CategoryResponse;
+import com.prj.ecommerce.dto.response.CreateOrderResponse;
 import com.prj.ecommerce.dto.response.CreateShopResponse;
 import com.prj.ecommerce.dto.response.ProductDetailResponse;
 import com.prj.ecommerce.dto.response.UserResponse;
 import com.prj.ecommerce.service.CategoryService;
+import com.prj.ecommerce.service.OrderService;
 import com.prj.ecommerce.service.ProductService;
 import com.prj.ecommerce.service.ShopService;
 import com.prj.ecommerce.service.UserService;
@@ -35,6 +38,7 @@ public class AdminController {
     private final ShopService shopService;
     private final ProductService productService;
     private final CategoryService categoryService;
+    private final OrderService orderService;
 
     // ==================== USER MANAGEMENT ====================
 
@@ -168,6 +172,47 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
         }
         return "redirect:/admin/products/" + productId;
+    }
+
+    // ==================== ORDER MANAGEMENT ====================
+
+    @GetMapping("/orders")
+    public String ordersListPage(@RequestParam(required = false) String search,
+                                 @RequestParam(required = false) OrderStatus status,
+                                 Model model) {
+        model.addAttribute("orders", orderService.getOrdersForAdmin(search, status).getOrders());
+        model.addAttribute("search", search != null ? search : "");
+        model.addAttribute("currentStatus", status);
+        model.addAttribute("statuses", OrderStatus.values());
+        return "admin/orders";
+    }
+
+    @GetMapping("/orders/{orderId}")
+    public String orderDetailPage(@PathVariable Long orderId,
+                                  Model model,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            CreateOrderResponse order = orderService.getOrderDetailForAdmin(orderId);
+            model.addAttribute("order", order);
+            model.addAttribute("statuses", OrderStatus.values());
+            return "admin/orderDetail";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy đơn hàng: " + e.getMessage());
+            return "redirect:/admin/orders";
+        }
+    }
+
+    @PostMapping("/orders/{orderId}/status")
+    public String updateOrderStatusByAdmin(@PathVariable Long orderId,
+                                           @RequestParam("status") OrderStatus status,
+                                           RedirectAttributes redirectAttributes) {
+        try {
+            orderService.updateOrderStatusByAdmin(orderId, status);
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái đơn hàng thành công");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể cập nhật đơn hàng: " + e.getMessage());
+        }
+        return "redirect:/admin/orders/" + orderId;
     }
 
     // ==================== CATEGORY MANAGEMENT ====================

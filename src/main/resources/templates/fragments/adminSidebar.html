@@ -56,9 +56,8 @@
 
                 </li>
 
-                <!-- Quản Lý Đơn Hàng (Future) -->
                 <li class="nav-item mb-2">
-                    <a class="nav-link text-white disabled" href="#" title="Sắp có sẵn">
+                    <a class="nav-link text-white" th:href="@{/admin/orders}" th:classappend="${activeMenu == 'orders' ? 'active bg-danger' : ''}">
                         <i class="fas fa-clipboard-list"></i> Quản Lý Đơn Hàng
                     </a>
                 </li>

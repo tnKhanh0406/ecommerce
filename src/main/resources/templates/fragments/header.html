@@ -185,6 +185,9 @@
                                     <a th:href="@{/user/order}" class="dropdown-item">
                                         <span>📦</span> Đơn mua
                                     </a>
+                                    <a th:if="${currentUser.role.toString() == 'ADMIN'}" th:href="@{/admin/users}" class="dropdown-item">
+                                        Bảng điều khiển Admin
+                                    </a>
                                     <div class="dropdown-divider"></div>
                                     <a th:href="@{/logout}" class="dropdown-item text-danger">
                                         <span>🚪</span> Đăng xuất
