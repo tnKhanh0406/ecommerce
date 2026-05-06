@@ -1,7 +1,7 @@
 package com.prj.ecommerce.service;
 
-import com.prj.ecommerce.dto.request.CreateVoucherRequest;
-import com.prj.ecommerce.dto.response.VoucherResponse;
+import com.prj.ecommerce.dto.request.voucher.CreateVoucherRequest;
+import com.prj.ecommerce.dto.response.voucher.VoucherResponse;
 
 import java.util.List;
 

@@ -1,5 +1,6 @@
 package com.prj.ecommerce.repository;
 
+import com.prj.ecommerce.dto.response.report.AdminProductReportListItemResponse;
 import com.prj.ecommerce.entity.ProductReportEntity;
 import com.prj.ecommerce.common.ReportStatus;
 import org.springframework.data.domain.Page;
@@ -101,5 +102,5 @@ public interface ProductReportRepository extends JpaRepository<ProductReportEnti
                 GROUP BY p.id, p.name
                 ORDER BY COUNT(pr) DESC, MAX(pr.createdAt) DESC
             """)
-    Page<com.prj.ecommerce.dto.response.AdminProductReportListItemResponse> findReportedProductsSummary(Pageable pageable);
+    Page<AdminProductReportListItemResponse> findReportedProductsSummary(Pageable pageable);
 }

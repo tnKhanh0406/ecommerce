@@ -1,11 +1,11 @@
 package com.prj.ecommerce.api;
 
-import com.prj.ecommerce.dto.request.ProductReviewRequest;
-import com.prj.ecommerce.dto.request.ReviewReplyRequest;
-import com.prj.ecommerce.dto.request.UpdateReplyRequest;
-import com.prj.ecommerce.dto.request.UpdateReviewRequest;
-import com.prj.ecommerce.dto.response.ProductReviewResponse;
-import com.prj.ecommerce.dto.response.ReviewReplyResponse;
+import com.prj.ecommerce.dto.request.review.ProductReviewRequest;
+import com.prj.ecommerce.dto.request.review.ReviewReplyRequest;
+import com.prj.ecommerce.dto.request.review.UpdateReplyRequest;
+import com.prj.ecommerce.dto.request.review.UpdateReviewRequest;
+import com.prj.ecommerce.dto.response.review.ProductReviewResponse;
+import com.prj.ecommerce.dto.response.review.ReviewReplyResponse;
 import com.prj.ecommerce.service.ProductReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

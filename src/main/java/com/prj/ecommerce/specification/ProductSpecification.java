@@ -1,7 +1,7 @@
 package com.prj.ecommerce.specification;
 
 import com.prj.ecommerce.common.ProductSortType;
-import com.prj.ecommerce.dto.request.ProductFilterRequest;
+import com.prj.ecommerce.dto.request.product.ProductFilterRequest;
 import com.prj.ecommerce.entity.CategoryEntity;
 import com.prj.ecommerce.entity.ProductCategoryEntity;
 import com.prj.ecommerce.entity.ProductEntity;

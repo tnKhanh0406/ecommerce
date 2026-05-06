@@ -1,6 +1,6 @@
 package com.prj.ecommerce.controller;
 
-import com.prj.ecommerce.dto.response.CategoryResponse;
+import com.prj.ecommerce.dto.response.category.CategoryResponse;
 import com.prj.ecommerce.service.CategoryService;
 import com.prj.ecommerce.service.ProductService;
 import lombok.RequiredArgsConstructor;

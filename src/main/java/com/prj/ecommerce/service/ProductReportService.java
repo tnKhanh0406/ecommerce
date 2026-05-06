@@ -1,8 +1,8 @@
 package com.prj.ecommerce.service;
 
-import com.prj.ecommerce.dto.request.ProductReportRequest;
-import com.prj.ecommerce.dto.response.AdminProductReportDetailResponse;
-import com.prj.ecommerce.dto.response.AdminProductReportListItemResponse;
+import com.prj.ecommerce.dto.request.report.ProductReportRequest;
+import com.prj.ecommerce.dto.response.report.AdminProductReportDetailResponse;
+import com.prj.ecommerce.dto.response.report.AdminProductReportListItemResponse;
 import com.prj.ecommerce.common.ReportReason;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

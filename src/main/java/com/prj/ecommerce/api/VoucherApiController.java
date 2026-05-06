@@ -1,7 +1,7 @@
 package com.prj.ecommerce.api;
 
-import com.prj.ecommerce.dto.request.CreateVoucherRequest;
-import com.prj.ecommerce.dto.response.VoucherResponse;
+import com.prj.ecommerce.dto.request.voucher.CreateVoucherRequest;
+import com.prj.ecommerce.dto.response.voucher.VoucherResponse;
 import com.prj.ecommerce.service.VoucherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

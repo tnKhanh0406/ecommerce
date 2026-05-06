@@ -1,11 +1,11 @@
 package com.prj.ecommerce.service.impl;
 
 import com.prj.ecommerce.common.Status;
-import com.prj.ecommerce.dto.request.ChangePasswordRequest;
-import com.prj.ecommerce.dto.request.LoginRequest;
-import com.prj.ecommerce.dto.request.RegisterRequest;
-import com.prj.ecommerce.dto.request.UpdateProfileRequest;
-import com.prj.ecommerce.dto.response.UserResponse;
+import com.prj.ecommerce.dto.request.user.ChangePasswordRequest;
+import com.prj.ecommerce.dto.request.user.LoginRequest;
+import com.prj.ecommerce.dto.request.user.RegisterRequest;
+import com.prj.ecommerce.dto.request.user.UpdateProfileRequest;
+import com.prj.ecommerce.dto.response.user.UserResponse;
 import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.exception.BadRequestException;
 import com.prj.ecommerce.exception.ResourceAlreadyExistsException;

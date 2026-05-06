@@ -1,10 +1,10 @@
 package com.prj.ecommerce.controller;
 
-import com.prj.ecommerce.dto.request.ProductFilterRequest;
-import com.prj.ecommerce.dto.response.CategorySidebarItemResponse;
-import com.prj.ecommerce.dto.response.CategoryTreeResponse;
-import com.prj.ecommerce.dto.response.CreateProductResponse;
-import com.prj.ecommerce.dto.response.CreateShopResponse;
+import com.prj.ecommerce.dto.request.product.ProductFilterRequest;
+import com.prj.ecommerce.dto.response.category.CategorySidebarItemResponse;
+import com.prj.ecommerce.dto.response.category.CategoryTreeResponse;
+import com.prj.ecommerce.dto.response.product.CreateProductResponse;
+import com.prj.ecommerce.dto.response.shop.CreateShopResponse;
 import com.prj.ecommerce.entity.CategoryEntity;
 import com.prj.ecommerce.service.CategoryService;
 import com.prj.ecommerce.service.ProductService;

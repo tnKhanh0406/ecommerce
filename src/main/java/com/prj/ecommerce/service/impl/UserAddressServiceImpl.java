@@ -1,7 +1,7 @@
 package com.prj.ecommerce.service.impl;
 
-import com.prj.ecommerce.dto.request.CreateAddressRequest;
-import com.prj.ecommerce.dto.response.CreateAddressResponse;
+import com.prj.ecommerce.dto.request.user.CreateAddressRequest;
+import com.prj.ecommerce.dto.response.user.CreateAddressResponse;
 import com.prj.ecommerce.entity.UserAddressEntity;
 import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.repository.UserAddressRepository;

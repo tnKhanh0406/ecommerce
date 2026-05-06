@@ -1,9 +1,9 @@
 package com.prj.ecommerce.service;
 
 import com.prj.ecommerce.common.Status;
-import com.prj.ecommerce.dto.request.CreateShopRequest;
-import com.prj.ecommerce.dto.request.UpdateShopRequest;
-import com.prj.ecommerce.dto.response.CreateShopResponse;
+import com.prj.ecommerce.dto.request.shop.CreateShopRequest;
+import com.prj.ecommerce.dto.request.shop.UpdateShopRequest;
+import com.prj.ecommerce.dto.response.shop.CreateShopResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;

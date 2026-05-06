@@ -1,8 +1,12 @@
 package com.prj.ecommerce.api;
 
-import com.prj.ecommerce.dto.request.*;
-import com.prj.ecommerce.dto.response.CreateProductResponse;
-import com.prj.ecommerce.dto.response.ProductVariantListResponse;
+import com.prj.ecommerce.dto.request.attribute.UpdateAttributeRequest;
+import com.prj.ecommerce.dto.request.product.CreateProductRequest;
+import com.prj.ecommerce.dto.request.product.ProductFilterRequest;
+import com.prj.ecommerce.dto.request.product.UpdateBasicProductRequest;
+import com.prj.ecommerce.dto.request.variant.ProductVariantListRequest;
+import com.prj.ecommerce.dto.response.product.CreateProductResponse;
+import com.prj.ecommerce.dto.response.variant.ProductVariantListResponse;
 import com.prj.ecommerce.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

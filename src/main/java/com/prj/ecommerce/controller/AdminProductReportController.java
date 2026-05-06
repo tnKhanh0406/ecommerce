@@ -1,8 +1,8 @@
 package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.common.ReportReason;
-import com.prj.ecommerce.dto.response.AdminProductReportDetailResponse;
-import com.prj.ecommerce.dto.response.AdminProductReportListItemResponse;
+import com.prj.ecommerce.dto.response.report.AdminProductReportDetailResponse;
+import com.prj.ecommerce.dto.response.report.AdminProductReportListItemResponse;
 import com.prj.ecommerce.service.ProductReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

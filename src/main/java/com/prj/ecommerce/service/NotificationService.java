@@ -1,8 +1,8 @@
 package com.prj.ecommerce.service;
 
 import com.prj.ecommerce.common.ReferenceType;
-import com.prj.ecommerce.dto.request.NotificationRequest;
-import com.prj.ecommerce.dto.response.NotificationResponse;
+import com.prj.ecommerce.dto.request.notification.NotificationRequest;
+import com.prj.ecommerce.dto.response.notification.NotificationResponse;
 
 import java.util.List;
 

@@ -1,6 +1,6 @@
 package com.prj.ecommerce.repository;
 
-import com.prj.ecommerce.dto.response.ProductPriceRangeResponse;
+import com.prj.ecommerce.dto.response.product.ProductPriceRangeResponse;
 import com.prj.ecommerce.entity.ProductVariantEntity;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;

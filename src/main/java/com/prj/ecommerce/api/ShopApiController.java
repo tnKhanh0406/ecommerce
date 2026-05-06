@@ -1,8 +1,8 @@
 package com.prj.ecommerce.api;
 
-import com.prj.ecommerce.dto.request.CreateShopRequest;
-import com.prj.ecommerce.dto.request.UpdateShopRequest;
-import com.prj.ecommerce.dto.response.CreateShopResponse;
+import com.prj.ecommerce.dto.request.shop.CreateShopRequest;
+import com.prj.ecommerce.dto.request.shop.UpdateShopRequest;
+import com.prj.ecommerce.dto.response.shop.CreateShopResponse;
 import com.prj.ecommerce.service.ShopService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

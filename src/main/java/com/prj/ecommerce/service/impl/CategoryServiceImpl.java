@@ -1,8 +1,8 @@
 package com.prj.ecommerce.service.impl;
 
-import com.prj.ecommerce.dto.request.CreateCategoryRequest;
-import com.prj.ecommerce.dto.response.CategoryResponse;
-import com.prj.ecommerce.dto.response.CategoryTreeResponse;
+import com.prj.ecommerce.dto.request.category.CreateCategoryRequest;
+import com.prj.ecommerce.dto.response.category.CategoryResponse;
+import com.prj.ecommerce.dto.response.category.CategoryTreeResponse;
 import com.prj.ecommerce.entity.CategoryEntity;
 import com.prj.ecommerce.repository.CategoryRepository;
 import com.prj.ecommerce.service.CategoryService;

@@ -1,8 +1,8 @@
 package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.common.DiscountType;
-import com.prj.ecommerce.dto.request.CreateVoucherRequest;
-import com.prj.ecommerce.dto.response.CreateShopResponse;
+import com.prj.ecommerce.dto.request.voucher.CreateVoucherRequest;
+import com.prj.ecommerce.dto.response.shop.CreateShopResponse;
 import com.prj.ecommerce.service.ShopService;
 import com.prj.ecommerce.service.VoucherService;
 import jakarta.validation.Valid;

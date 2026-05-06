@@ -1,7 +1,7 @@
 package com.prj.ecommerce.controller;
 
-import com.prj.ecommerce.dto.request.ProductReviewRequest;
-import com.prj.ecommerce.dto.request.UpdateReviewRequest;
+import com.prj.ecommerce.dto.request.review.ProductReviewRequest;
+import com.prj.ecommerce.dto.request.review.UpdateReviewRequest;
 import com.prj.ecommerce.service.ProductReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

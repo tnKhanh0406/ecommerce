@@ -1,7 +1,7 @@
 package com.prj.ecommerce.controller;
 
-import com.prj.ecommerce.dto.request.AddCartItemRequest;
-import com.prj.ecommerce.dto.response.AddCartItemResponse;
+import com.prj.ecommerce.dto.request.cart.AddCartItemRequest;
+import com.prj.ecommerce.dto.response.cart.AddCartItemResponse;
 import com.prj.ecommerce.service.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

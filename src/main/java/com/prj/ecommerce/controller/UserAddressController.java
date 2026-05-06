@@ -1,6 +1,6 @@
 package com.prj.ecommerce.controller;
 
-import com.prj.ecommerce.dto.request.CreateAddressRequest;
+import com.prj.ecommerce.dto.request.user.CreateAddressRequest;
 import com.prj.ecommerce.service.UserAddressService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

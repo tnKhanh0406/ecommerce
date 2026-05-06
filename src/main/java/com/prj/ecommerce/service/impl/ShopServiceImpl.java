@@ -2,9 +2,9 @@ package com.prj.ecommerce.service.impl;
 
 import com.prj.ecommerce.common.Status;
 import com.prj.ecommerce.common.UserRole;
-import com.prj.ecommerce.dto.request.CreateShopRequest;
-import com.prj.ecommerce.dto.request.UpdateShopRequest;
-import com.prj.ecommerce.dto.response.CreateShopResponse;
+import com.prj.ecommerce.dto.request.shop.CreateShopRequest;
+import com.prj.ecommerce.dto.request.shop.UpdateShopRequest;
+import com.prj.ecommerce.dto.response.shop.CreateShopResponse;
 import com.prj.ecommerce.entity.ShopEntity;
 import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.exception.UserAlreadyHasShopException;

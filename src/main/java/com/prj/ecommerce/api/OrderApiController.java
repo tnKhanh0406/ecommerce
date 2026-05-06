@@ -1,9 +1,9 @@
 package com.prj.ecommerce.api;
 
 import com.prj.ecommerce.common.OrderStatus;
-import com.prj.ecommerce.dto.request.CreateOrderRequest;
-import com.prj.ecommerce.dto.response.CreateOrderListResponse;
-import com.prj.ecommerce.dto.response.CreateOrderResponse;
+import com.prj.ecommerce.dto.request.order.CreateOrderRequest;
+import com.prj.ecommerce.dto.response.order.CreateOrderListResponse;
+import com.prj.ecommerce.dto.response.order.CreateOrderResponse;
 import com.prj.ecommerce.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

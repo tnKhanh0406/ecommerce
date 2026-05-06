@@ -1,8 +1,8 @@
 package com.prj.ecommerce.service;
 
-import com.prj.ecommerce.dto.request.AddCartItemRequest;
-import com.prj.ecommerce.dto.request.UpdateCartItemRequest;
-import com.prj.ecommerce.dto.response.AddCartItemResponse;
+import com.prj.ecommerce.dto.request.cart.AddCartItemRequest;
+import com.prj.ecommerce.dto.request.cart.UpdateCartItemRequest;
+import com.prj.ecommerce.dto.response.cart.AddCartItemResponse;
 
 import java.util.List;
 

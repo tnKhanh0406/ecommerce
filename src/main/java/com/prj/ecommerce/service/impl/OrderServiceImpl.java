@@ -1,15 +1,15 @@
 package com.prj.ecommerce.service.impl;
 
 import com.prj.ecommerce.common.*;
-import com.prj.ecommerce.dto.request.CreateOrderRequest;
-import com.prj.ecommerce.dto.request.NotificationRequest;
-import com.prj.ecommerce.dto.response.CreateOrderItemResponse;
-import com.prj.ecommerce.dto.response.CreateOrderListResponse;
-import com.prj.ecommerce.dto.response.CreateOrderResponse;
-import com.prj.ecommerce.dto.response.OrderHistoryResponse;
-import com.prj.ecommerce.dto.response.ProductReviewResponse;
-import com.prj.ecommerce.dto.response.ShopSalesAnalyticsResponse;
-import com.prj.ecommerce.dto.response.ShopTopProductResponse;
+import com.prj.ecommerce.dto.request.order.CreateOrderRequest;
+import com.prj.ecommerce.dto.request.notification.NotificationRequest;
+import com.prj.ecommerce.dto.response.order.CreateOrderItemResponse;
+import com.prj.ecommerce.dto.response.order.CreateOrderListResponse;
+import com.prj.ecommerce.dto.response.order.CreateOrderResponse;
+import com.prj.ecommerce.dto.response.order.OrderHistoryResponse;
+import com.prj.ecommerce.dto.response.review.ProductReviewResponse;
+import com.prj.ecommerce.dto.response.shop.ShopSalesAnalyticsResponse;
+import com.prj.ecommerce.dto.response.shop.ShopTopProductResponse;
 import com.prj.ecommerce.entity.*;
 import com.prj.ecommerce.exception.BadRequestException;
 import com.prj.ecommerce.model.UserPrincipal;
