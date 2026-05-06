@@ -18,17 +18,17 @@
             <div class="bg-white rounded shadow-sm p-4 mb-4">
                 <h3 class="font-weight-bold mb-4">Tạo Danh Mục Mới</h3>
 
-                <form th:action="@{/admin/categories}" method="post">
+                <form th:action="@{/admin/categories}" method="post" enctype="multipart/form-data">
                     <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="font-weight-bold">Tên Danh Mục</label>
                             <input type="text" name="name" class="form-control" placeholder="Ví dụ: Điện thoại" required>
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="font-weight-bold">Slug (tuỳ chọn)</label>
                             <input type="text" name="slug" class="form-control" placeholder="dien-thoai">
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label class="font-weight-bold">Danh Mục Cha</label>
                             <select name="parentId" class="form-control">
                                 <option value="">-- Danh mục gốc --</option>
@@ -38,6 +38,10 @@
                                     Parent
                                 </option>
                             </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="font-weight-bold">Ảnh Danh Mục</label>
+                            <input type="file" name="image" class="form-control-file" accept="image/*">
                         </div>
                     </div>
                     <button type="submit" class="btn btn-danger">➕ Tạo Danh Mục</button>
@@ -51,11 +55,22 @@
 
                 <form th:action="@{/admin/categories}" method="get" class="mb-4">
                     <div class="row">
-                        <div class="col-md-10">
+                        <div class="col-md-4 mb-2">
                             <input type="text" class="form-control" name="search" placeholder="Tìm theo tên hoặc slug"
                                    th:value="${search}">
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-4 mb-2">
+                            <select name="parentId" class="form-control">
+                                <option value="">-- Tất cả parent id --</option>
+                                <option value="-1" th:selected="${selectedParentId != null and selectedParentId == -1}">-- Danh mục gốc --</option>
+                                <option th:each="parent : ${parentCategories}"
+                                        th:value="${parent.id}"
+                                        th:text="${parent.id + ' - ' + parent.name}"
+                                        th:selected="${selectedParentId != null and selectedParentId == parent.id}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-2">
                             <button type="submit" class="btn btn-outline-danger btn-block">🔍 Tìm</button>
                         </div>
                     </div>
@@ -79,6 +94,7 @@
                         <thead class="bg-light">
                         <tr>
                             <th>ID</th>
+                            <th>Ảnh</th>
                             <th>Tên Danh Mục</th>
                             <th>Slug</th>
                             <th>Parent ID</th>
@@ -88,6 +104,13 @@
                         <tbody>
                         <tr th:each="category : ${categories}">
                             <td th:text="${category.id}">1</td>
+                            <td>
+                                <img th:if="${category.imageUrl != null and !#strings.isEmpty(category.imageUrl)}"
+                                     th:src="${category.imageUrl}"
+                                     alt="Category image"
+                                     style="width: 64px; height: 64px; object-fit: cover; border-radius: 8px;">
+                                <span th:if="${category.imageUrl == null or #strings.isEmpty(category.imageUrl)}" class="text-muted">Không có</span>
+                            </td>
                             <td class="font-weight-bold" th:text="${category.name}">Điện thoại</td>
                             <td><code th:text="${category.slug}">dien-thoai</code></td>
                             <td>
@@ -102,7 +125,7 @@
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(categories)}">
-                            <td colspan="5" class="text-center text-muted py-4">Không có danh mục</td>
+                            <td colspan="6" class="text-center text-muted py-4">Không có danh mục</td>
                         </tr>
                         </tbody>
                     </table>

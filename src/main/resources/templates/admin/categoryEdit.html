@@ -34,7 +34,7 @@
                     </button>
                 </div>
 
-                <form th:action="@{/admin/categories/{id}/edit(id=${category.id})}" method="post">
+                <form th:action="@{/admin/categories/{id}/edit(id=${category.id})}" method="post" enctype="multipart/form-data">
                     <div class="form-group">
                         <label class="font-weight-bold">Tên Danh Mục</label>
                         <input type="text" name="name" class="form-control" th:value="${category.name}" required>
@@ -42,6 +42,15 @@
                     <div class="form-group">
                         <label class="font-weight-bold">Slug</label>
                         <input type="text" name="slug" class="form-control" th:value="${category.slug}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Ảnh Danh Mục</label>
+                        <div class="mb-2" th:if="${category.imageUrl != null and !#strings.isEmpty(category.imageUrl)}">
+                            <img th:src="${category.imageUrl}" alt="Category image"
+                                 style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid #dee2e6;">
+                        </div>
+                        <input type="file" name="image" class="form-control-file" accept="image/*">
+                        <small class="form-text text-muted">Để trống nếu không muốn thay đổi ảnh hiện tại.</small>
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Danh Mục Cha</label>

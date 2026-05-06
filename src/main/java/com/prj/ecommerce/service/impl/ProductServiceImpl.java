@@ -85,7 +85,7 @@ public class ProductServiceImpl implements ProductService {
     @Cacheable(value = "trending")
     public List<CreateProductResponse> getRecommendProducts() {
         List<ProductEntity> products = productRepo.findRandomProducts(PageRequest.of(0, 30));
-
+        Collections.shuffle(products);
         return attachPriceRange(products);
     }
 
@@ -516,8 +516,19 @@ public class ProductServiceImpl implements ProductService {
                                 Function.identity()
                         ));
 
+        List<ProductImageEntity> images = productImageRepository.findByProductIds(productIds);                
+        Map<Long, List<ProductImageEntity>> imageMap =
+            images.stream().collect(Collectors.groupingBy(
+                img -> img.getProduct().getId()
+            ));                    
         return products.stream().map(p -> {
             CreateProductResponse r = CreateProductResponse.fromEntity(p);
+            List<ProductImageEntity> productImages = imageMap.get(p.getId());
+            if (productImages != null && !productImages.isEmpty()) {
+                r.setImageUrl(productImages.get(0).getImageUrl());
+            } else {
+                r.setImageUrl("https://via.placeholder.com/300?text=No+Image");
+            }
             ProductPriceRangeResponse price = priceMap.get(p.getId());
             if (price != null) {
                 r.setMinPrice(price.getMinPrice());

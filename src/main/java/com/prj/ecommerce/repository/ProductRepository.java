@@ -17,7 +17,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long>, J
         SELECT p
         FROM ProductEntity p
         WHERE p.status = 'ACTIVE'
-        ORDER BY function('RAND')
     """)
     List<ProductEntity> findRandomProducts(Pageable pageable);
 

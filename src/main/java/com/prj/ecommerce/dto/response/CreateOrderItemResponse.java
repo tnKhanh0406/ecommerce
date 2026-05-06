@@ -2,6 +2,7 @@ package com.prj.ecommerce.dto.response;
 
 import com.prj.ecommerce.entity.OrderItemEntity;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class CreateOrderItemResponse {
     private Long orderItemId;
     private Long productId;

@@ -6,6 +6,7 @@ import com.prj.ecommerce.dto.response.CategoryTreeResponse;
 import com.prj.ecommerce.entity.CategoryEntity;
 import com.prj.ecommerce.repository.CategoryRepository;
 import com.prj.ecommerce.service.CategoryService;
+import com.prj.ecommerce.service.CloudinaryService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,12 +14,16 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.function.Function;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final CloudinaryService cloudinaryService;
 
     @Override
     public List<CategoryResponse> getTopLevelCategories() {
@@ -57,6 +62,9 @@ public class CategoryServiceImpl implements CategoryService {
         CategoryEntity categoryEntity = new CategoryEntity();
         categoryEntity.setName(request.getName());
         categoryEntity.setSlug(request.getSlug());
+        if (request.getImage() != null && !request.getImage().isEmpty()) {
+            categoryEntity.setImageUrl(cloudinaryService.uploadImage(request.getImage()));
+        }
         if (request.getParentId() != null) {
             categoryEntity.setParent(categoryRepository.findById(request.getParentId()).orElse(null));
         } else {
@@ -71,6 +79,9 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new EntityNotFoundException("Category not found"));
         categoryEntity.setName(request.getName());
         categoryEntity.setSlug(request.getSlug());
+        if (request.getImage() != null && !request.getImage().isEmpty()) {
+            categoryEntity.setImageUrl(cloudinaryService.uploadImage(request.getImage()));
+        }
 
         if (request.getParentId() != null) {
             if (request.getParentId().equals(categoryId)) {
@@ -104,9 +115,13 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryEntity findRootCategory(Long categoryId) {
-        CategoryEntity category = findById(categoryId);
+        List<CategoryEntity> allCategories = categoryRepository.findAll();
+        Map<Long, CategoryEntity> map = allCategories.stream()
+                .collect(Collectors.toMap(CategoryEntity::getId, Function.identity()));
+        CategoryEntity category = map.get(categoryId);
+
         while (category.getParent() != null) {
-            category = findById(category.getParent().getId());
+            category = map.get(category.getParent().getId());
         }
         return category;
     }

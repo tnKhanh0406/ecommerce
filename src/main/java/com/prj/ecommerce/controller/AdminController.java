@@ -23,6 +23,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.text.Normalizer;
 import java.util.List;
@@ -219,8 +220,21 @@ public class AdminController {
 
     @GetMapping("/categories")
     public String categoriesListPage(@RequestParam(required = false) String search,
+                                     @RequestParam(required = false) Long parentId,
                                      Model model) {
         List<CategoryResponse> categories = categoryService.getAllCategories();
+
+        if (parentId != null) {
+            if (parentId == -1L) {
+            categories = categories.stream()
+                .filter(category -> category.getParentId() == null)
+                .toList();
+            } else {
+            categories = categories.stream()
+                    .filter(category -> parentId.equals(category.getParentId()))
+                    .toList();
+            }
+        }
 
         if (search != null && !search.trim().isEmpty()) {
             String keyword = search.trim().toLowerCase(Locale.ROOT);
@@ -233,6 +247,7 @@ public class AdminController {
         model.addAttribute("categories", categories);
         model.addAttribute("parentCategories", categoryService.getAllCategories());
         model.addAttribute("search", search != null ? search : "");
+        model.addAttribute("selectedParentId", parentId);
 
         return "admin/categories";
     }
@@ -241,12 +256,14 @@ public class AdminController {
     public String createCategory(@RequestParam String name,
                                  @RequestParam(required = false) String slug,
                                  @RequestParam(required = false) Long parentId,
+                                 @RequestParam(required = false) MultipartFile image,
                                  RedirectAttributes redirectAttributes) {
         try {
             CreateCategoryRequest request = new CreateCategoryRequest();
             request.setName(name.trim());
             request.setSlug(buildSlug(slug, name));
             request.setParentId(parentId);
+            request.setImage(image);
             categoryService.createCategory(request);
             redirectAttributes.addFlashAttribute("successMessage", "Tạo danh mục thành công");
         } catch (Exception e) {
@@ -273,12 +290,14 @@ public class AdminController {
                                  @RequestParam String name,
                                  @RequestParam(required = false) String slug,
                                  @RequestParam(required = false) Long parentId,
+                                 @RequestParam(required = false) MultipartFile image,
                                  RedirectAttributes redirectAttributes) {
         try {
             CreateCategoryRequest request = new CreateCategoryRequest();
             request.setName(name.trim());
             request.setSlug(buildSlug(slug, name));
             request.setParentId(parentId);
+            request.setImage(image);
             categoryService.updateCategory(categoryId, request);
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật danh mục thành công");
             return "redirect:/admin/categories";
