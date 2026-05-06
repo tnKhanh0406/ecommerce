@@ -1,7 +1,7 @@
 package com.prj.ecommerce.api;
 
-import com.prj.ecommerce.dto.request.user.CreateAddressRequest;
-import com.prj.ecommerce.dto.response.user.CreateAddressResponse;
+import com.prj.ecommerce.dto.request.user.AddressRequest;
+import com.prj.ecommerce.dto.response.user.AddressResponse;
 import com.prj.ecommerce.service.UserAddressService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,23 +18,23 @@ public class UserAddressApiController {
     private final UserAddressService userAddressService;
 
     @GetMapping
-    public List<CreateAddressResponse> getAllAddresses() {
+    public List<AddressResponse> getAllAddresses() {
         return userAddressService.getAllAddresses();
     }
 
     @PostMapping
-    public ResponseEntity<CreateAddressResponse> createAddress(@Valid @RequestBody CreateAddressRequest request) {
-        CreateAddressResponse createAddressResponse = userAddressService.createAddress(request);
+    public ResponseEntity<AddressResponse> createAddress(@Valid @RequestBody AddressRequest request) {
+        AddressResponse addressResponse = userAddressService.createAddress(request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(createAddressResponse);
+                .body(addressResponse);
     }
 
     @PutMapping("/{addressId}")
-    public ResponseEntity<CreateAddressResponse> updateAddress(@PathVariable Long addressId,
-                                                               @Valid @RequestBody CreateAddressRequest request) {
-        CreateAddressResponse createAddressResponse = userAddressService.updateAddress(addressId, request);
-        return ResponseEntity.ok(createAddressResponse);
+    public ResponseEntity<AddressResponse> updateAddress(@PathVariable Long addressId,
+                                                         @Valid @RequestBody AddressRequest request) {
+        AddressResponse addressResponse = userAddressService.updateAddress(addressId, request);
+        return ResponseEntity.ok(addressResponse);
     }
 
     @DeleteMapping("/{addressId}")

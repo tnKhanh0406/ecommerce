@@ -69,8 +69,8 @@ public class UserController {
             response.addCookie(cookie);
 
             // Check if user is ADMIN and redirect to admin dashboard
-            UserEntity user = userService.getUserByUsername(username);
-            if (user != null && user.getRole().name().equals("ADMIN")) {
+            UserResponse user = userService.getUserByUsername(username);
+            if (user != null && user.getRole().equals("ADMIN")) {
                 return "redirect:/admin/users";
             }
 

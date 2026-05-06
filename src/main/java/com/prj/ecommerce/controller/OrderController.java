@@ -3,7 +3,7 @@ package com.prj.ecommerce.controller;
 import com.prj.ecommerce.common.OrderStatus;
 import com.prj.ecommerce.dto.request.order.CreateOrderRequest;
 import com.prj.ecommerce.dto.response.cart.AddCartItemResponse;
-import com.prj.ecommerce.dto.response.user.CreateAddressResponse;
+import com.prj.ecommerce.dto.response.user.AddressResponse;
 import com.prj.ecommerce.dto.response.voucher.VoucherResponse;
 import com.prj.ecommerce.entity.CartItemEntity;
 import com.prj.ecommerce.model.UserPrincipal;
@@ -70,7 +70,7 @@ public class OrderController {
                     ));
 
             // Get user addresses
-            List<CreateAddressResponse> userAddresses = userAddressService.getAllAddresses();
+            List<AddressResponse> userAddresses = userAddressService.getAllAddresses();
 
             if (userAddresses.isEmpty()) {
                 model.addAttribute("errorMessage", "Vui lòng thêm địa chỉ giao hàng trước khi thanh toán");

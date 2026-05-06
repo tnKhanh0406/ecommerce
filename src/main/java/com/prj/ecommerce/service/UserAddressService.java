@@ -1,14 +1,14 @@
 package com.prj.ecommerce.service;
 
-import com.prj.ecommerce.dto.request.user.CreateAddressRequest;
-import com.prj.ecommerce.dto.response.user.CreateAddressResponse;
+import com.prj.ecommerce.dto.request.user.AddressRequest;
+import com.prj.ecommerce.dto.response.user.AddressResponse;
 
 import java.util.List;
 
 public interface UserAddressService {
-    CreateAddressResponse createAddress(CreateAddressRequest request);
-    CreateAddressResponse updateAddress(Long addressId, CreateAddressRequest request);
+    AddressResponse createAddress(AddressRequest request);
+    AddressResponse updateAddress(Long addressId, AddressRequest request);
     void deleteAddress(Long addressId);
-    List<CreateAddressResponse> getAllAddresses();
+    List<AddressResponse> getAllAddresses();
     void setDefaultAddress(Long addressId);
 }

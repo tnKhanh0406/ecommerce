@@ -1,6 +1,6 @@
 package com.prj.ecommerce.controller;
 
-import com.prj.ecommerce.dto.request.user.CreateAddressRequest;
+import com.prj.ecommerce.dto.request.user.AddressRequest;
 import com.prj.ecommerce.service.UserAddressService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,12 +18,12 @@ public class UserAddressController {
     @GetMapping("/user/account/address")
     public String userAddress(Model model) {
         model.addAttribute("addresses", userAddressService.getAllAddresses());
-        model.addAttribute("addressForm", new CreateAddressRequest());
+        model.addAttribute("addressForm", new AddressRequest());
         return "address";
     }
 
     @PostMapping("/user/account/address/create")
-    public String createAddress(@Valid @ModelAttribute("addressForm") CreateAddressRequest request,
+    public String createAddress(@Valid @ModelAttribute("addressForm") AddressRequest request,
                                 BindingResult result,
                                 RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
@@ -39,7 +39,7 @@ public class UserAddressController {
     }
 
     @PostMapping("/user/account/address/update")
-    public String updateAddress(@ModelAttribute CreateAddressRequest request,
+    public String updateAddress(@ModelAttribute AddressRequest request,
                                 @RequestParam Long addressId,
                                 RedirectAttributes redirectAttributes) {
         userAddressService.updateAddress(addressId, request);

@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateAddressRequest {
+public class AddressRequest {
     @NotBlank
     private String receiverName;
 
