@@ -4,7 +4,7 @@ import com.prj.ecommerce.dto.request.product.ProductFilterRequest;
 import com.prj.ecommerce.dto.response.category.CategorySidebarItemResponse;
 import com.prj.ecommerce.dto.response.category.CategoryTreeResponse;
 import com.prj.ecommerce.dto.response.product.CreateProductResponse;
-import com.prj.ecommerce.dto.response.shop.CreateShopResponse;
+import com.prj.ecommerce.dto.response.shop.ShopResponse;
 import com.prj.ecommerce.entity.CategoryEntity;
 import com.prj.ecommerce.service.CategoryService;
 import com.prj.ecommerce.service.ProductService;
@@ -49,7 +49,7 @@ public class ProductController {
         populateProductListModel(model, request, responses, selectedCategory, rootCategory);
 
         if (request.getShopId() != null) {
-            CreateShopResponse shop = shopService.getShopById(request.getShopId());
+            ShopResponse shop = shopService.getShopById(request.getShopId());
             model.addAttribute("shop", shop);
         }
 

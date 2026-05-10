@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CreateOrderItemResponse {
+public class OrderItemResponse {
     private Long orderItemId;
     private Long productId;
     private String imageUrl;
@@ -30,12 +30,12 @@ public class CreateOrderItemResponse {
     private Boolean canUpdate;
     private ProductReviewResponse reviewResponse;
 
-    public static CreateOrderItemResponse fromEntity(OrderItemEntity entity) {
+    public static OrderItemResponse fromEntity(OrderItemEntity entity) {
         ProductReviewResponse review =
                 entity.getReview() != null
                         ? ProductReviewResponse.fromEntity(entity.getReview())
                         : null;
-        return new CreateOrderItemResponse(
+        return new OrderItemResponse(
                 entity.getId(),
                 entity.getProductId(),
                 entity.getImageUrl(),

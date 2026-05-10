@@ -1,6 +1,6 @@
 package com.prj.ecommerce.service.impl;
 
-import com.prj.ecommerce.dto.request.voucher.CreateVoucherRequest;
+import com.prj.ecommerce.dto.request.voucher.VoucherRequest;
 import com.prj.ecommerce.dto.response.voucher.VoucherResponse;
 import com.prj.ecommerce.entity.ShopEntity;
 import com.prj.ecommerce.entity.VoucherEntity;
@@ -30,6 +30,10 @@ public class VoucherServiceImpl implements VoucherService {
                 .getUserEntity().getId();
     }
 
+    private boolean checkShopOwnership(Long voucherId) {
+        return voucherRepository.existsByIdAndUser(voucherId, getCurrentUserId());
+    }
+
     @Override
     public List<VoucherResponse> getVoucherByShopId(Long shopId) {
         List<VoucherEntity> voucherEntities = voucherRepository.findAllByShopId(shopId);
@@ -43,7 +47,7 @@ public class VoucherServiceImpl implements VoucherService {
     }
 
     @Override
-    public VoucherResponse createVoucher(CreateVoucherRequest request) {
+    public VoucherResponse createVoucher(VoucherRequest request) {
         ShopEntity shop = shopRepository.findByUser_Id(getCurrentUserId())
                 .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
 
@@ -63,10 +67,10 @@ public class VoucherServiceImpl implements VoucherService {
     }
 
     @Override
-    public VoucherResponse updateVoucher(Long voucherId, CreateVoucherRequest request) {
+    public VoucherResponse updateVoucher(Long voucherId, VoucherRequest request) {
         VoucherEntity voucher = voucherRepository.findById(voucherId)
                 .orElseThrow(() -> new EntityNotFoundException("Voucher not found"));
-        if (!voucher.getShop().getUser().getId().equals(getCurrentUserId())) {
+        if (!checkShopOwnership(voucherId)) {
             throw new AccessDeniedException("You do not have permission to update this voucher");
         }
         voucher.setCode(request.getCode());
@@ -84,7 +88,7 @@ public class VoucherServiceImpl implements VoucherService {
     public void deleteVoucher(Long voucherId) {
         VoucherEntity voucher = voucherRepository.findById(voucherId)
                 .orElseThrow(() -> new EntityNotFoundException("Voucher not found"));
-        if (!voucher.getShop().getUser().getId().equals(getCurrentUserId())) {
+        if (!checkShopOwnership(voucherId)) {
             throw new AccessDeniedException("You do not have permission to delete this voucher");
         }
         voucherRepository.delete(voucher);

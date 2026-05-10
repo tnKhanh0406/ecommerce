@@ -42,9 +42,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<NotificationResponse> getAllNotifications(ReferenceType referenceType) {
-        List<NotificationEntity> notificationEntities = referenceType != null
-                ? notificationRepository.findAllByUser_IdAndReferenceType(getCurrentUserId(), referenceType)
-                : notificationRepository.findAllByUser_IdAndReferenceType(getCurrentUserId(), referenceType);
+        List<NotificationEntity> notificationEntities = notificationRepository.findAllByUser_IdAndReferenceType(getCurrentUserId(), referenceType);
         List<NotificationResponse> responses = notificationEntities.stream()
                 .map(NotificationResponse::fromEntity)
                 .collect(Collectors.toList());

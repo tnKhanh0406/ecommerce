@@ -5,7 +5,7 @@ import com.prj.ecommerce.dto.response.review.ProductReviewResponse;
 import com.prj.ecommerce.dto.response.variant.ProductVariantResponse;
 import com.prj.ecommerce.dto.response.attribute.ProductAttributeResponse;
 import com.prj.ecommerce.dto.response.category.CategoryResponse;
-import com.prj.ecommerce.dto.response.shop.CreateShopResponse;
+import com.prj.ecommerce.dto.response.shop.ShopResponse;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -46,7 +46,7 @@ public class ProductDetailResponse {
     private Integer reviewCount;
 
     //Shop
-    private CreateShopResponse shop;
+    private ShopResponse shop;
 
     //Review
     private List<ProductReviewResponse> reviews;

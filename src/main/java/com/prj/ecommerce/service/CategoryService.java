@@ -1,6 +1,6 @@
 package com.prj.ecommerce.service;
 
-import com.prj.ecommerce.dto.request.category.CreateCategoryRequest;
+import com.prj.ecommerce.dto.request.category.CategoryRequest;
 import com.prj.ecommerce.dto.response.category.CategoryResponse;
 import com.prj.ecommerce.dto.response.category.CategoryTreeResponse;
 import com.prj.ecommerce.entity.CategoryEntity;
@@ -12,8 +12,8 @@ public interface CategoryService {
     List<CategoryResponse> getAllCategories();
     CategoryResponse getCategoryById(Long categoryId);
     List<CategoryTreeResponse> getCategoriesTree();
-    CategoryResponse createCategory(CreateCategoryRequest request);
-    CategoryResponse updateCategory(Long categoryId, CreateCategoryRequest request);
+    CategoryResponse createCategory(CategoryRequest request);
+    CategoryResponse updateCategory(Long categoryId, CategoryRequest request);
     void deleteCategory(Long categoryId);
     List<Long> getAllCategoryIds(Long rootCategoryId);
     CategoryEntity findById(Long categoryId);

@@ -2,7 +2,7 @@ package com.prj.ecommerce.api;
 
 import com.prj.ecommerce.dto.request.cart.AddCartItemRequest;
 import com.prj.ecommerce.dto.request.cart.UpdateCartItemRequest;
-import com.prj.ecommerce.dto.response.cart.AddCartItemResponse;
+import com.prj.ecommerce.dto.response.cart.CartItemResponse;
 import com.prj.ecommerce.service.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,20 +19,20 @@ public class CartApiController {
     private final CartService cartService;
 
     @GetMapping
-    public List<AddCartItemResponse> findAll() {
+    public List<CartItemResponse> findAll() {
         return cartService.getCartItems();
     }
 
 
     @PostMapping
-    public ResponseEntity<AddCartItemResponse> addCartItem(@Valid @RequestBody AddCartItemRequest addCartItemRequest) {
+    public ResponseEntity<CartItemResponse> addCartItem(@Valid @RequestBody AddCartItemRequest addCartItemRequest) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(cartService.addCartItem(addCartItemRequest));
     }
 
     @PutMapping
-    public ResponseEntity<AddCartItemResponse> updateCartItem(@Valid @RequestBody UpdateCartItemRequest updateCartItemRequest) {
+    public ResponseEntity<CartItemResponse> updateCartItem(@Valid @RequestBody UpdateCartItemRequest updateCartItemRequest) {
         return ResponseEntity.ok(cartService.updateCartItem(updateCartItemRequest));
     }
 

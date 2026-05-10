@@ -2,7 +2,7 @@ package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.common.OrderStatus;
 import com.prj.ecommerce.dto.request.order.CreateOrderRequest;
-import com.prj.ecommerce.dto.response.cart.AddCartItemResponse;
+import com.prj.ecommerce.dto.response.cart.CartItemResponse;
 import com.prj.ecommerce.dto.response.user.AddressResponse;
 import com.prj.ecommerce.dto.response.voucher.VoucherResponse;
 import com.prj.ecommerce.entity.CartItemEntity;
@@ -55,11 +55,11 @@ public class OrderController {
             }
 
             // Convert to AddCartItemResponse và group by shop
-            List<AddCartItemResponse> selectedItems = cartItems.stream()
-                    .map(AddCartItemResponse::fromEntity)
+            List<CartItemResponse> selectedItems = cartItems.stream()
+                    .map(CartItemResponse::fromEntity)
                     .collect(Collectors.toList());
 
-            Map<Long, List<AddCartItemResponse>> itemsByShop = selectedItems.stream()
+            Map<Long, List<CartItemResponse>> itemsByShop = selectedItems.stream()
                     .collect(Collectors.groupingBy(item -> item.getProduct().getShopId()));
 
             // Get vouchers for each shop

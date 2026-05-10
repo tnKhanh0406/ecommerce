@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateCategoryRequest {
+public class CategoryRequest {
     private String name;
     private String slug;
     private Long parentId;

@@ -1,6 +1,6 @@
 package com.prj.ecommerce.api;
 
-import com.prj.ecommerce.dto.request.voucher.CreateVoucherRequest;
+import com.prj.ecommerce.dto.request.voucher.VoucherRequest;
 import com.prj.ecommerce.dto.response.voucher.VoucherResponse;
 import com.prj.ecommerce.service.VoucherService;
 import jakarta.validation.Valid;
@@ -25,14 +25,14 @@ public class VoucherApiController {
 
     @PreAuthorize("hasRole('SELLER')")
     @PostMapping
-    public ResponseEntity<VoucherResponse> createVoucher(@Valid @RequestBody CreateVoucherRequest request) {
+    public ResponseEntity<VoucherResponse> createVoucher(@Valid @RequestBody VoucherRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(voucherService.createVoucher(request));
     }
 
     @PreAuthorize("hasRole('SELLER')")
     @PutMapping("/{voucherId}")
-    public ResponseEntity<VoucherResponse> updateVoucher(@PathVariable Long voucherId, @Valid @RequestBody CreateVoucherRequest request) {
+    public ResponseEntity<VoucherResponse> updateVoucher(@PathVariable Long voucherId, @Valid @RequestBody VoucherRequest request) {
         return ResponseEntity.ok(voucherService.updateVoucher(voucherId, request));
     }
 

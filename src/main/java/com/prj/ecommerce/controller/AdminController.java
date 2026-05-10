@@ -2,11 +2,11 @@ package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.common.OrderStatus;
 import com.prj.ecommerce.common.Status;
-import com.prj.ecommerce.dto.request.category.CreateCategoryRequest;
+import com.prj.ecommerce.dto.request.category.CategoryRequest;
 import com.prj.ecommerce.dto.response.product.AdminProductResponse;
 import com.prj.ecommerce.dto.response.category.CategoryResponse;
-import com.prj.ecommerce.dto.response.order.CreateOrderResponse;
-import com.prj.ecommerce.dto.response.shop.CreateShopResponse;
+import com.prj.ecommerce.dto.response.order.OrderResponse;
+import com.prj.ecommerce.dto.response.shop.ShopResponse;
 import com.prj.ecommerce.dto.response.product.ProductDetailResponse;
 import com.prj.ecommerce.dto.response.user.UserResponse;
 import com.prj.ecommerce.service.CategoryService;
@@ -90,7 +90,7 @@ public class AdminController {
                                   @RequestParam(required = false) Status status,
                                   Model model) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<CreateShopResponse> shops = shopService.getAllShops(search, status, pageable);
+        Page<ShopResponse> shops = shopService.getAllShops(search, status, pageable);
         
         model.addAttribute("shops", shops.getContent());
         model.addAttribute("currentPage", page);
@@ -105,7 +105,7 @@ public class AdminController {
 
     @GetMapping("/sellers/{shopId}")
     public String sellerDetailPage(@PathVariable Long shopId, Model model) {
-        CreateShopResponse shop = shopService.getShopDetailForAdmin(shopId);
+        ShopResponse shop = shopService.getShopById(shopId);
         model.addAttribute("shop", shop);
         return "admin/sellerDetail";
     }
@@ -193,7 +193,7 @@ public class AdminController {
                                   Model model,
                                   RedirectAttributes redirectAttributes) {
         try {
-            CreateOrderResponse order = orderService.getOrderDetailForAdmin(orderId);
+            OrderResponse order = orderService.getOrderDetailForAdmin(orderId);
             model.addAttribute("order", order);
             model.addAttribute("statuses", OrderStatus.values());
             return "admin/orderDetail";
@@ -259,7 +259,7 @@ public class AdminController {
                                  @RequestParam(required = false) MultipartFile image,
                                  RedirectAttributes redirectAttributes) {
         try {
-            CreateCategoryRequest request = new CreateCategoryRequest();
+            CategoryRequest request = new CategoryRequest();
             request.setName(name.trim());
             request.setSlug(buildSlug(slug, name));
             request.setParentId(parentId);
@@ -293,7 +293,7 @@ public class AdminController {
                                  @RequestParam(required = false) MultipartFile image,
                                  RedirectAttributes redirectAttributes) {
         try {
-            CreateCategoryRequest request = new CreateCategoryRequest();
+            CategoryRequest request = new CategoryRequest();
             request.setName(name.trim());
             request.setSlug(buildSlug(slug, name));
             request.setParentId(parentId);

@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateShopResponse {
+public class ShopResponse {
 
     private Long id;
     private String shopName;
@@ -37,8 +37,8 @@ public class CreateShopResponse {
 
     private long totalProducts = 0;
 
-    public static CreateShopResponse fromEntity(ShopEntity shop) {
-        CreateShopResponse response = new CreateShopResponse();
+    public static ShopResponse fromEntity(ShopEntity shop) {
+        ShopResponse response = new ShopResponse();
         response.setId(shop.getId());
         response.setShopName(shop.getShopName());
         response.setDescription(shop.getDescription());
@@ -46,9 +46,6 @@ public class CreateShopResponse {
         response.setStatus(shop.getStatus().toString());
         response.setRating(shop.getRating());
         response.setCreatedAt(shop.getCreatedAt());
-        response.setOwnerId(shop.getUser().getId());
-        response.setOwnerName(shop.getUser().getFullName());
-        response.setOwnerEmail(shop.getUser().getEmail());
         return response;
     }
 }

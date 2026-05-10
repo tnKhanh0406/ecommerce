@@ -2,7 +2,7 @@ package com.prj.ecommerce.api;
 
 import com.prj.ecommerce.dto.request.shop.CreateShopRequest;
 import com.prj.ecommerce.dto.request.shop.UpdateShopRequest;
-import com.prj.ecommerce.dto.response.shop.CreateShopResponse;
+import com.prj.ecommerce.dto.response.shop.ShopResponse;
 import com.prj.ecommerce.service.ShopService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +19,9 @@ public class ShopApiController {
     private final ShopService shopService;
 
     @PostMapping
-    public ResponseEntity<CreateShopResponse> createShop(@Valid @RequestBody CreateShopRequest shop,
-                                                         @RequestParam(value = "image", required = false) MultipartFile image) {
-        CreateShopResponse createShopResponse = shopService.createShop(shop, image);
+    public ResponseEntity<ShopResponse> createShop(@Valid @RequestBody CreateShopRequest shop,
+                                                   @RequestParam(value = "image", required = false) MultipartFile image) {
+        ShopResponse createShopResponse = shopService.createShop(shop, image);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(createShopResponse);
@@ -29,9 +29,9 @@ public class ShopApiController {
 
     @PreAuthorize("hasRole('SELLER')")
     @PutMapping("/{shopId}")
-    public ResponseEntity<CreateShopResponse> updateShop(@PathVariable Long shopId, @Valid @RequestBody UpdateShopRequest updateShopRequest,
-                                                         @RequestParam(value = "image", required = false) MultipartFile image) {
-        CreateShopResponse createShopResponse = shopService.updateShop(shopId, updateShopRequest, image);
+    public ResponseEntity<ShopResponse> updateShop(@PathVariable Long shopId, @Valid @RequestBody UpdateShopRequest updateShopRequest,
+                                                   @RequestParam(value = "image", required = false) MultipartFile image) {
+        ShopResponse createShopResponse = shopService.updateShop(shopId, updateShopRequest, image);
         return ResponseEntity.ok(createShopResponse);
     }
 

@@ -87,7 +87,7 @@ public interface ProductReportRepository extends JpaRepository<ProductReportEnti
      * Get summary data for admin dashboard (products with most reports)
      */
     @Query("""
-            SELECT new com.prj.ecommerce.dto.response.AdminProductReportListItemResponse(
+            SELECT new com.prj.ecommerce.dto.response.report.AdminProductReportListItemResponse(
                 p.id,
                 p.name,
                 COALESCE(MIN(pi.imageUrl), ''),

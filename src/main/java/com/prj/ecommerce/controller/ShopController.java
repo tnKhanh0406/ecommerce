@@ -18,6 +18,7 @@ import com.prj.ecommerce.dto.response.category.CategorySelectOptionResponse;
 import com.prj.ecommerce.dto.response.category.CategoryTreeResponse;
 import com.prj.ecommerce.dto.response.product.CreateProductResponse;
 import com.prj.ecommerce.dto.response.product.ProductDetailResponse;
+import com.prj.ecommerce.dto.response.shop.ShopResponse;
 import com.prj.ecommerce.service.CategoryService;
 import com.prj.ecommerce.common.OrderStatus;
 import com.prj.ecommerce.service.OrderService;
@@ -104,7 +105,8 @@ public class ShopController {
     @GetMapping("/edit/{shopId}")
     public String editShopPage(Model model, @PathVariable Long shopId) {
         try {
-            UpdateShopRequest shopRequest = shopService.getUpdateShopRequest(shopId);
+            ShopResponse shop = shopService.getShopById(shopId);
+            UpdateShopRequest shopRequest = new UpdateShopRequest(shop.getShopName(), shop.getDescription(), shop.getLogoUrl());
             model.addAttribute("updateShopRequest", shopRequest);
             model.addAttribute("shopId", shopId);
             return "shopEdit";

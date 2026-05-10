@@ -14,7 +14,7 @@ import java.util.List;
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateOrderResponse {
+public class OrderResponse {
     private Long id;
     private LocalDateTime createdAt;
     private String note;
@@ -34,11 +34,11 @@ public class CreateOrderResponse {
     private DiscountType discountType;
     private BigDecimal discountValue;
     private BigDecimal voucherMaxDiscount;
-    private List<CreateOrderItemResponse> items;
+    private List<OrderItemResponse> items;
     private List<OrderHistoryResponse> histories;
 
-    public static CreateOrderResponse fromEntity(OrderEntity entity) {
-        CreateOrderResponse res = new CreateOrderResponse();
+    public static OrderResponse fromEntity(OrderEntity entity) {
+        OrderResponse res = new OrderResponse();
 
         res.setId(entity.getId());
         res.setCreatedAt(entity.getCreatedAt());

@@ -3,9 +3,9 @@ package com.prj.ecommerce.service.impl;
 import com.prj.ecommerce.common.*;
 import com.prj.ecommerce.dto.request.order.CreateOrderRequest;
 import com.prj.ecommerce.dto.request.notification.NotificationRequest;
-import com.prj.ecommerce.dto.response.order.CreateOrderItemResponse;
-import com.prj.ecommerce.dto.response.order.CreateOrderListResponse;
-import com.prj.ecommerce.dto.response.order.CreateOrderResponse;
+import com.prj.ecommerce.dto.response.order.OrderItemResponse;
+import com.prj.ecommerce.dto.response.order.OrderListResponse;
+import com.prj.ecommerce.dto.response.order.OrderResponse;
 import com.prj.ecommerce.dto.response.order.OrderHistoryResponse;
 import com.prj.ecommerce.dto.response.review.ProductReviewResponse;
 import com.prj.ecommerce.dto.response.shop.ShopSalesAnalyticsResponse;
@@ -87,7 +87,7 @@ public class OrderServiceImpl implements OrderService {
     // }
 
     @Override
-    public CreateOrderListResponse getOrders(String keyword, OrderStatus status) {
+    public OrderListResponse getOrders(String keyword, OrderStatus status) {
 
         Long userId = getCurrentUserId();
 
@@ -95,7 +95,7 @@ public class OrderServiceImpl implements OrderService {
         List<OrderEntity> orders = getOrdersByCondition(keyword, status, userId);
 
         if (orders.isEmpty()) {
-            return new CreateOrderListResponse(List.of());
+            return new OrderListResponse(List.of());
         }
 
         List<Long> orderIds = orders.stream()
@@ -134,15 +134,15 @@ public class OrderServiceImpl implements OrderService {
                         .collect(Collectors.groupingBy(img -> img.getReview().getId()));
 
         // 4. Build response
-        List<CreateOrderResponse> responses = orders.stream().map(order -> {
+        List<OrderResponse> responses = orders.stream().map(order -> {
 
-            CreateOrderResponse res = CreateOrderResponse.fromEntity(order);
+            OrderResponse res = OrderResponse.fromEntity(order);
 
             List<OrderItemEntity> orderItems = itemMap.getOrDefault(order.getId(), List.of());
 
             boolean canReviewOrder = reviewPolicyService.canReview(order, 10);
 
-            List<CreateOrderItemResponse> itemResponses = orderItems.stream().map(item -> {
+            List<OrderItemResponse> itemResponses = orderItems.stream().map(item -> {
 
                 ProductReviewEntity review = reviewMap.get(item.getId());
 
@@ -160,7 +160,7 @@ public class OrderServiceImpl implements OrderService {
                     review.setImages(images);
                 }
 
-                return CreateOrderItemResponse.builder()
+                return OrderItemResponse.builder()
                         .orderItemId(item.getId())
                         .productId(item.getProductId())
                         .imageUrl(item.getImageUrl())
@@ -192,11 +192,11 @@ public class OrderServiceImpl implements OrderService {
 
         }).toList();
 
-        return new CreateOrderListResponse(responses);
+        return new OrderListResponse(responses);
     }
 
     @Override
-    public CreateOrderListResponse getOrdersForAdmin(String keyword, OrderStatus status) {
+    public OrderListResponse getOrdersForAdmin(String keyword, OrderStatus status) {
         List<OrderEntity> orderEntities;
         boolean hasKeyword = keyword != null && !keyword.isBlank();
         boolean hasStatus = status != null;
@@ -213,19 +213,19 @@ public class OrderServiceImpl implements OrderService {
             orderEntities = orderRepository.findAllByOrderByCreatedAtDesc();
         }
 
-        List<CreateOrderResponse> responses = orderEntities.stream()
+        List<OrderResponse> responses = orderEntities.stream()
                 .map(order -> {
-                    CreateOrderResponse response = CreateOrderResponse.fromEntity(order);
+                    OrderResponse response = OrderResponse.fromEntity(order);
                     enrichOrderItemsWithReviewStatus(response, order);
                     return response;
                 })
                 .toList();
 
-        return new CreateOrderListResponse(responses);
+        return new OrderListResponse(responses);
     }
 
     @Override
-    public List<CreateOrderResponse> getOrdersByShopId(Long shopId, OrderStatus status) {
+    public List<OrderResponse> getOrdersByShopId(Long shopId, OrderStatus status) {
         UserEntity currentUser = getCurrentUser();
         ShopEntity shop = shopRepository.findById(shopId)
                 .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
@@ -243,7 +243,7 @@ public class OrderServiceImpl implements OrderService {
 
         return orderEntities.stream()
                 .map(order -> {
-                    CreateOrderResponse response = CreateOrderResponse.fromEntity(order);
+                    OrderResponse response = OrderResponse.fromEntity(order);
                     enrichOrderItemsWithReviewStatus(response, order);
                     return response;
                 })
@@ -251,29 +251,29 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public CreateOrderResponse getOrderItems(Long orderId) {
+    public OrderResponse getOrderItems(Long orderId) {
         OrderEntity order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found"));
         if (!order.getUser().getId().equals(getCurrentUserId())) {
             throw new AccessDeniedException("This order is not belong to the current user");
         }
-        CreateOrderResponse response = CreateOrderResponse.fromEntity(order);
+        OrderResponse response = OrderResponse.fromEntity(order);
         enrichOrderItemsWithReviewStatus(response, order);
         return response;
     }
 
     @Override
-    public CreateOrderResponse getOrderDetailForAdmin(Long orderId) {
+    public OrderResponse getOrderDetailForAdmin(Long orderId) {
         OrderEntity order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found"));
-        CreateOrderResponse response = CreateOrderResponse.fromEntity(order);
+        OrderResponse response = OrderResponse.fromEntity(order);
         enrichOrderItemsWithReviewStatus(response, order);
         return response;
     }
 
     @Override
     @Transactional
-    public CreateOrderListResponse createOrder(CreateOrderRequest request) {
+    public OrderListResponse createOrder(CreateOrderRequest request) {
 
         Long userId = getCurrentUserId();
         // 1. Lấy cart items
@@ -293,18 +293,18 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new EntityNotFoundException("UserAddress not found"));
 
         // 4. Xử lý từng shop để tạo nhiều order
-        List<CreateOrderResponse> orderResponses = createOrdersForShops(itemsByShop, address, request, userId);
+        List<OrderResponse> orderResponses = createOrdersForShops(itemsByShop, address, request, userId);
 
         // 5. Xóa cart items sau khi đã xử lý
         cartItemRepository.deleteAll(cartItems);
 
         // 6. Trả response tổng
-        return new CreateOrderListResponse(orderResponses);
+        return new OrderListResponse(orderResponses);
     }
 
     @Override
     @Transactional
-    public CreateOrderResponse cancelOrder(Long orderId) {
+    public OrderResponse cancelOrder(Long orderId) {
         OrderEntity order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found"));
         Long currentUserId = getCurrentUserId();
@@ -375,12 +375,12 @@ public class OrderServiceImpl implements OrderService {
 
         notificationService.sendNotification(notificationRequest);
 
-        return CreateOrderResponse.fromEntity(order);
+        return OrderResponse.fromEntity(order);
     }
 
     @Override
     @Transactional
-    public CreateOrderResponse updateOrderStatusBySeller(Long orderId, OrderStatus newStatus) {
+    public void updateOrderStatusBySeller(Long orderId, OrderStatus newStatus) {
         OrderEntity order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found"));
 
@@ -435,13 +435,11 @@ public class OrderServiceImpl implements OrderService {
             );
             notificationService.sendNotification(notificationRequest);
         }
-
-        return CreateOrderResponse.fromEntity(order);
     }
 
     @Override
     @Transactional
-    public CreateOrderResponse updateOrderStatusByAdmin(Long orderId, OrderStatus newStatus) {
+    public void updateOrderStatusByAdmin(Long orderId, OrderStatus newStatus) {
         if (newStatus == null) {
             throw new BadRequestException("Status is required");
         }
@@ -496,8 +494,6 @@ public class OrderServiceImpl implements OrderService {
             );
             notificationService.sendNotification(notificationRequest);
         }
-
-        return CreateOrderResponse.fromEntity(order);
     }
 
     @Override
@@ -654,15 +650,15 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private void enrichOrderItemsWithReviewStatus(CreateOrderResponse response, OrderEntity order) {
+    private void enrichOrderItemsWithReviewStatus(OrderResponse response, OrderEntity order) {
         Set<Long> reviewedItemIds = new HashSet<>(productReviewRepository
                 .findReviewedOrderItemIds(order.getId()));
         boolean canReviewOrder = reviewPolicyService.canReview(order, 10);
 
-        List<CreateOrderItemResponse> orderItemResponses =
+        List<OrderItemResponse> orderItemResponses =
                 order.getOrderItems().stream().map(item -> {
 
-                    CreateOrderItemResponse dto = CreateOrderItemResponse.fromEntity(item);
+                    OrderItemResponse dto = OrderItemResponse.fromEntity(item);
                     boolean reviewed = reviewedItemIds.contains(item.getId());
                     boolean canReview = !reviewed && canReviewOrder;
 
@@ -683,16 +679,16 @@ public class OrderServiceImpl implements OrderService {
 
 
     @Transactional
-    protected List<CreateOrderResponse> createOrdersForShops(
+    protected List<OrderResponse> createOrdersForShops(
             Map<Long, List<CartItemEntity>> itemsByShop,
             UserAddressEntity address,
             CreateOrderRequest request,
             Long userId) {
-        List<CreateOrderResponse> orderResponses = new ArrayList<>();
+        List<OrderResponse> orderResponses = new ArrayList<>();
         for (Map. Entry<Long, List<CartItemEntity>> entry : itemsByShop.entrySet()) {
             Long shopId = entry.getKey();
             List<CartItemEntity> items = entry.getValue();
-            CreateOrderResponse orderResponse = createOrderForShop(shopId, items, address, request, userId);
+            OrderResponse orderResponse = createOrderForShop(shopId, items, address, request, userId);
             orderResponses.add(orderResponse);
         }
 
@@ -700,7 +696,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
-    protected CreateOrderResponse createOrderForShop(
+    protected OrderResponse createOrderForShop(
             Long shopId,
             List<CartItemEntity> items,
             UserAddressEntity address,
@@ -726,7 +722,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // Tạo và save order items
-        List<CreateOrderItemResponse> itemResponses = createOrderItems(order, items);
+        List<OrderItemResponse> itemResponses = createOrderItems(order, items);
 
         //Gui thong bao
         NotificationRequest notificationRequest = new NotificationRequest(
@@ -741,7 +737,7 @@ public class OrderServiceImpl implements OrderService {
         notificationService.sendNotification(notificationRequest);
 
         // Build response
-        CreateOrderResponse orderResponse = CreateOrderResponse.fromEntity(order);
+        OrderResponse orderResponse = OrderResponse.fromEntity(order);
         orderResponse.setItems(itemResponses);
 
         return orderResponse;
@@ -870,13 +866,13 @@ public class OrderServiceImpl implements OrderService {
         voucherUsageRepository.save(voucherUsage);
     }
 
-    private List<CreateOrderItemResponse> createOrderItems(
+    private List<OrderItemResponse> createOrderItems(
             OrderEntity order,
             List<CartItemEntity> items) {
 
         List<OrderItemEntity> orderItems = new ArrayList<>();
         List<ProductVariantEntity> updatedVariants = new ArrayList<>();
-        List<CreateOrderItemResponse> itemResponses = new ArrayList<>();
+        List<OrderItemResponse> itemResponses = new ArrayList<>();
 
         for (CartItemEntity cartItem : items) {
             OrderItemEntity orderItem = createOrderItem(order, cartItem);
@@ -887,7 +883,7 @@ public class OrderServiceImpl implements OrderService {
             updatedVariants.add(variant);
 
             // Build response
-            itemResponses.add(CreateOrderItemResponse.fromEntity(orderItem));
+            itemResponses.add(OrderItemResponse.fromEntity(orderItem));
         }
 
         // Batch save

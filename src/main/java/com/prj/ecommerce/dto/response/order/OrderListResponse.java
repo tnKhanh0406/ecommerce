@@ -13,12 +13,12 @@ import java.util.stream.Collectors;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateOrderListResponse {
-    private List<CreateOrderResponse> orders;
+public class OrderListResponse {
+    private List<OrderResponse> orders;
 
-    public static CreateOrderListResponse fromEntity(List<OrderEntity> orders) {
-        return new CreateOrderListResponse(
-                orders.stream().map(CreateOrderResponse::fromEntity).collect(Collectors.toList())
+    public static OrderListResponse fromEntity(List<OrderEntity> orders) {
+        return new OrderListResponse(
+                orders.stream().map(OrderResponse::fromEntity).collect(Collectors.toList())
         );
     }
 }

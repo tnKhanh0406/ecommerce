@@ -22,7 +22,7 @@ import com.prj.ecommerce.dto.response.product.CreateProductResponse;
 import com.prj.ecommerce.dto.response.product.ProductDetailResponse;
 import com.prj.ecommerce.dto.response.product.ProductPriceRangeResponse;
 import com.prj.ecommerce.dto.response.review.ProductReviewResponse;
-import com.prj.ecommerce.dto.response.shop.CreateShopResponse;
+import com.prj.ecommerce.dto.response.shop.ShopResponse;
 import com.prj.ecommerce.dto.response.variant.ProductVariantListResponse;
 import com.prj.ecommerce.dto.response.variant.ProductVariantResponse;
 import com.prj.ecommerce.entity.*;
@@ -131,7 +131,7 @@ public class ProductServiceImpl implements ProductService {
                     .toList();
         }
 
-        CreateShopResponse shop = CreateShopResponse.fromEntity(product.getShop());
+        ShopResponse shop = ShopResponse.fromEntity(product.getShop());
         shop.setTotalProducts(productRepo.countByShop_Id(shop.getId()));
 
         ProductDetailResponse detail = new ProductDetailResponse();

@@ -1,6 +1,6 @@
 package com.prj.ecommerce.service.impl;
 
-import com.prj.ecommerce.dto.request.category.CreateCategoryRequest;
+import com.prj.ecommerce.dto.request.category.CategoryRequest;
 import com.prj.ecommerce.dto.response.category.CategoryResponse;
 import com.prj.ecommerce.dto.response.category.CategoryTreeResponse;
 import com.prj.ecommerce.entity.CategoryEntity;
@@ -35,18 +35,12 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryResponse> getAllCategories() {
-        return categoryRepository.findAll()
-                .stream()
-                .sorted(Comparator.comparing(CategoryEntity::getId))
-                .map(CategoryResponse::fromEntity)
-                .toList();
+        return categoryRepository.findAllCategoryResponse();
     }
 
     @Override
     public CategoryResponse getCategoryById(Long categoryId) {
-        CategoryEntity categoryEntity = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
-        return CategoryResponse.fromEntity(categoryEntity);
+        return categoryRepository.findCategoryResponseById(categoryId);
     }
 
     @Override
@@ -58,7 +52,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public CategoryResponse createCategory(CreateCategoryRequest request) {
+    public CategoryResponse createCategory(CategoryRequest request) {
         CategoryEntity categoryEntity = new CategoryEntity();
         categoryEntity.setName(request.getName());
         categoryEntity.setSlug(request.getSlug());
@@ -74,7 +68,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public CategoryResponse updateCategory(Long categoryId, CreateCategoryRequest request) {
+    public CategoryResponse updateCategory(Long categoryId, CategoryRequest request) {
         CategoryEntity categoryEntity = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new EntityNotFoundException("Category not found"));
         categoryEntity.setName(request.getName());

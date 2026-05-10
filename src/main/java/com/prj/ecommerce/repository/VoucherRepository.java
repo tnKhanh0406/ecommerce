@@ -14,4 +14,11 @@ public interface VoucherRepository extends JpaRepository<VoucherEntity, Long> {
     @Query("SELECT v FROM VoucherEntity v WHERE v.id = :id")
     Optional<VoucherEntity> findByIdForUpdate(Long id);
     List<VoucherEntity> findAllByShopId(Long shopId);
+    @Query("""
+        SELECT COUNT(v)
+        FROM VoucherEntity v
+        WHERE v.id = :voucherId
+          AND v.shop.user.id = :userId
+    """)
+    boolean existsByIdAndUser(Long voucherId, Long userId);
 }

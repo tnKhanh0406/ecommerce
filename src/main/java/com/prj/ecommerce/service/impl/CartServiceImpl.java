@@ -2,7 +2,7 @@ package com.prj.ecommerce.service.impl;
 
 import com.prj.ecommerce.dto.request.cart.AddCartItemRequest;
 import com.prj.ecommerce.dto.request.cart.UpdateCartItemRequest;
-import com.prj.ecommerce.dto.response.cart.AddCartItemResponse;
+import com.prj.ecommerce.dto.response.cart.CartItemResponse;
 import com.prj.ecommerce.entity.CartEntity;
 import com.prj.ecommerce.entity.CartItemEntity;
 import com.prj.ecommerce.entity.ProductVariantEntity;
@@ -43,33 +43,37 @@ public class CartServiceImpl implements CartService {
                 .getUserEntity().getId();
     }
 
+    private boolean checkUserOwnsCartItem(Long cartItemId) {
+        return !cartItemRepository.existsByIdAndUser(cartItemId, getCurrentUserId());
+    }
+
     @Override
-    public List<AddCartItemResponse> getTop5CartItems() {
+    public List<CartItemResponse> getTop5CartItems() {
         List<CartItemEntity> items = cartItemRepository.findTop5ByCart_User_IdOrderByIdDesc(getCurrentUserId());
         if (items == null || items.isEmpty()) {
             return null;
         }
         return items.stream()
-                .map(AddCartItemResponse::fromEntity)
+                .map(CartItemResponse::fromEntity)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<AddCartItemResponse> getCartItems() {
+    public List<CartItemResponse> getCartItems() {
         Long userId = getCurrentUserId();
         List<CartItemEntity> items = cartItemRepository.findAllByCart_User_Id(userId);
         if (items == null || items.isEmpty()) {
             return null;
         }
         return items.stream()
-                .map(AddCartItemResponse::fromEntity)
+                .map(CartItemResponse::fromEntity)
                 .collect(Collectors.toList());
     }
 
 
     @Override
     @Transactional
-    public AddCartItemResponse addCartItem(AddCartItemRequest addCartItemRequest) {
+    public CartItemResponse addCartItem(AddCartItemRequest addCartItemRequest) {
         UserEntity currentUser = getCurrentUser();
         if (addCartItemRequest.getQuantity() < 1) {
             throw new IllegalArgumentException("Quantity must be >= 1");
@@ -91,7 +95,7 @@ public class CartServiceImpl implements CartService {
         ProductVariantEntity variant = productVariantRepository.findById(addCartItemRequest.getVariantId())
                         .orElseThrow(() -> new EntityNotFoundException("Product variant not found"));
 
-        if (variant.getProduct().getShop().getUser().getId().equals(currentUser.getId())) {
+        if (productVariantRepository.existsByIdAndProductShopUserId(variant.getId(), currentUser.getId())) {
             throw new BadRequestException("Seller can not buy their own product");
         }
         if (cartItemEntity == null) {
@@ -114,14 +118,14 @@ public class CartServiceImpl implements CartService {
         }
 
         cartItemRepository.save(cartItemEntity);
-        return AddCartItemResponse.fromEntity(cartItemEntity);
+        return CartItemResponse.fromEntity(cartItemEntity);
     }
 
     @Override
-    public AddCartItemResponse updateCartItem(UpdateCartItemRequest updateCartItemRequest) {
+    public CartItemResponse updateCartItem(UpdateCartItemRequest updateCartItemRequest) {
         CartItemEntity cartItemEntity = cartItemRepository.findById(updateCartItemRequest.getCartItemId())
                 .orElseThrow(() -> new EntityNotFoundException("Cart Item not found"));
-        if (!cartItemEntity.getCart().getUser().getId().equals(getCurrentUserId())) {
+        if (checkUserOwnsCartItem(updateCartItemRequest.getCartItemId())) {
             throw new AccessDeniedException("This cart item does not belong to user");
         }
         cartItemEntity.setQuantity(updateCartItemRequest.getQuantity());
@@ -141,14 +145,14 @@ public class CartServiceImpl implements CartService {
         cartItemEntity.setProductVariant(newVariant);
 
         cartItemRepository.save(cartItemEntity);
-        return AddCartItemResponse.fromEntity(cartItemEntity);
+        return CartItemResponse.fromEntity(cartItemEntity);
     }
 
     @Override
     public void deleteCartItem(Long cartItemId) {
         CartItemEntity cartItemEntity = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new EntityNotFoundException("Cart Item not found"));
-        if (!cartItemEntity.getCart().getUser().getId().equals(getCurrentUserId())) {
+        if (checkUserOwnsCartItem(cartItemId)) {
             throw new AccessDeniedException("This cart item does not belong to user");
         }
         cartItemRepository.delete(cartItemEntity);

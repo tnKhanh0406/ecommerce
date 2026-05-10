@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-public class CreateVoucherRequest {
+public class VoucherRequest {
     @NotBlank
     private String code;
 
