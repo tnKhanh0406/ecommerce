@@ -1,11 +1,15 @@
 package com.prj.ecommerce.service;
 
 import com.prj.ecommerce.common.Status;
-import com.prj.ecommerce.dto.request.*;
-import com.prj.ecommerce.dto.response.AdminProductResponse;
-import com.prj.ecommerce.dto.response.CreateProductResponse;
-import com.prj.ecommerce.dto.response.ProductDetailResponse;
-import com.prj.ecommerce.dto.response.ProductVariantListResponse;
+import com.prj.ecommerce.dto.request.attribute.UpdateAttributeRequest;
+import com.prj.ecommerce.dto.request.product.CreateProductRequest;
+import com.prj.ecommerce.dto.request.product.ProductFilterRequest;
+import com.prj.ecommerce.dto.request.product.UpdateBasicProductRequest;
+import com.prj.ecommerce.dto.request.variant.ProductVariantListRequest;
+import com.prj.ecommerce.dto.response.product.AdminProductResponse;
+import com.prj.ecommerce.dto.response.product.CreateProductResponse;
+import com.prj.ecommerce.dto.response.product.ProductDetailResponse;
+import com.prj.ecommerce.dto.response.variant.ProductVariantListResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;

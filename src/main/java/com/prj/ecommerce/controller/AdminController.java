@@ -2,13 +2,13 @@ package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.common.OrderStatus;
 import com.prj.ecommerce.common.Status;
-import com.prj.ecommerce.dto.request.CreateCategoryRequest;
-import com.prj.ecommerce.dto.response.AdminProductResponse;
-import com.prj.ecommerce.dto.response.CategoryResponse;
-import com.prj.ecommerce.dto.response.CreateOrderResponse;
-import com.prj.ecommerce.dto.response.CreateShopResponse;
-import com.prj.ecommerce.dto.response.ProductDetailResponse;
-import com.prj.ecommerce.dto.response.UserResponse;
+import com.prj.ecommerce.dto.request.category.CategoryRequest;
+import com.prj.ecommerce.dto.response.product.AdminProductResponse;
+import com.prj.ecommerce.dto.response.category.CategoryResponse;
+import com.prj.ecommerce.dto.response.order.OrderResponse;
+import com.prj.ecommerce.dto.response.shop.ShopResponse;
+import com.prj.ecommerce.dto.response.product.ProductDetailResponse;
+import com.prj.ecommerce.dto.response.user.UserResponse;
 import com.prj.ecommerce.service.CategoryService;
 import com.prj.ecommerce.service.OrderService;
 import com.prj.ecommerce.service.ProductService;
@@ -23,6 +23,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.text.Normalizer;
 import java.util.List;
@@ -89,7 +90,7 @@ public class AdminController {
                                   @RequestParam(required = false) Status status,
                                   Model model) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<CreateShopResponse> shops = shopService.getAllShops(search, status, pageable);
+        Page<ShopResponse> shops = shopService.getAllShops(search, status, pageable);
         
         model.addAttribute("shops", shops.getContent());
         model.addAttribute("currentPage", page);
@@ -104,7 +105,7 @@ public class AdminController {
 
     @GetMapping("/sellers/{shopId}")
     public String sellerDetailPage(@PathVariable Long shopId, Model model) {
-        CreateShopResponse shop = shopService.getShopDetailForAdmin(shopId);
+        ShopResponse shop = shopService.getShopById(shopId);
         model.addAttribute("shop", shop);
         return "admin/sellerDetail";
     }
@@ -192,7 +193,7 @@ public class AdminController {
                                   Model model,
                                   RedirectAttributes redirectAttributes) {
         try {
-            CreateOrderResponse order = orderService.getOrderDetailForAdmin(orderId);
+            OrderResponse order = orderService.getOrderDetailForAdmin(orderId);
             model.addAttribute("order", order);
             model.addAttribute("statuses", OrderStatus.values());
             return "admin/orderDetail";
@@ -219,8 +220,21 @@ public class AdminController {
 
     @GetMapping("/categories")
     public String categoriesListPage(@RequestParam(required = false) String search,
+                                     @RequestParam(required = false) Long parentId,
                                      Model model) {
         List<CategoryResponse> categories = categoryService.getAllCategories();
+
+        if (parentId != null) {
+            if (parentId == -1L) {
+            categories = categories.stream()
+                .filter(category -> category.getParentId() == null)
+                .toList();
+            } else {
+            categories = categories.stream()
+                    .filter(category -> parentId.equals(category.getParentId()))
+                    .toList();
+            }
+        }
 
         if (search != null && !search.trim().isEmpty()) {
             String keyword = search.trim().toLowerCase(Locale.ROOT);
@@ -233,6 +247,7 @@ public class AdminController {
         model.addAttribute("categories", categories);
         model.addAttribute("parentCategories", categoryService.getAllCategories());
         model.addAttribute("search", search != null ? search : "");
+        model.addAttribute("selectedParentId", parentId);
 
         return "admin/categories";
     }
@@ -241,12 +256,14 @@ public class AdminController {
     public String createCategory(@RequestParam String name,
                                  @RequestParam(required = false) String slug,
                                  @RequestParam(required = false) Long parentId,
+                                 @RequestParam(required = false) MultipartFile image,
                                  RedirectAttributes redirectAttributes) {
         try {
-            CreateCategoryRequest request = new CreateCategoryRequest();
+            CategoryRequest request = new CategoryRequest();
             request.setName(name.trim());
             request.setSlug(buildSlug(slug, name));
             request.setParentId(parentId);
+            request.setImage(image);
             categoryService.createCategory(request);
             redirectAttributes.addFlashAttribute("successMessage", "Tạo danh mục thành công");
         } catch (Exception e) {
@@ -273,12 +290,14 @@ public class AdminController {
                                  @RequestParam String name,
                                  @RequestParam(required = false) String slug,
                                  @RequestParam(required = false) Long parentId,
+                                 @RequestParam(required = false) MultipartFile image,
                                  RedirectAttributes redirectAttributes) {
         try {
-            CreateCategoryRequest request = new CreateCategoryRequest();
+            CategoryRequest request = new CategoryRequest();
             request.setName(name.trim());
             request.setSlug(buildSlug(slug, name));
             request.setParentId(parentId);
+            request.setImage(image);
             categoryService.updateCategory(categoryId, request);
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật danh mục thành công");
             return "redirect:/admin/categories";

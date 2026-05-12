@@ -1,9 +1,9 @@
 package com.prj.ecommerce.api;
 
 import com.prj.ecommerce.common.OrderStatus;
-import com.prj.ecommerce.dto.request.CreateOrderRequest;
-import com.prj.ecommerce.dto.response.CreateOrderListResponse;
-import com.prj.ecommerce.dto.response.CreateOrderResponse;
+import com.prj.ecommerce.dto.request.order.CreateOrderRequest;
+import com.prj.ecommerce.dto.response.order.OrderListResponse;
+import com.prj.ecommerce.dto.response.order.OrderResponse;
 import com.prj.ecommerce.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,23 +18,23 @@ public class OrderApiController {
     private final OrderService orderService;
 
     @GetMapping
-    public CreateOrderListResponse getOrders(@RequestParam(required = false) String keyword,
-                                             @RequestParam(required = false) OrderStatus status) {
+    public OrderListResponse getOrders(@RequestParam(required = false) String keyword,
+                                       @RequestParam(required = false) OrderStatus status) {
         return orderService.getOrders(keyword, status);
     }
 
     @GetMapping("/{orderId}")
-    public CreateOrderResponse getOrder(@PathVariable Long orderId) {
+    public OrderResponse getOrder(@PathVariable Long orderId) {
         return orderService.getOrderItems(orderId);
     }
 
     @PostMapping
-    public ResponseEntity<CreateOrderListResponse> createOrderList(@Valid @RequestBody CreateOrderRequest request) {
+    public ResponseEntity<OrderListResponse> createOrderList(@Valid @RequestBody CreateOrderRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(orderService.createOrder(request));
     }
 
     @PutMapping("/{orderId}")
-    public ResponseEntity<CreateOrderResponse> updateOrder(@PathVariable Long orderId) {
+    public ResponseEntity<OrderResponse> updateOrder(@PathVariable Long orderId) {
         return ResponseEntity.ok(orderService.cancelOrder(orderId));
     }
 }

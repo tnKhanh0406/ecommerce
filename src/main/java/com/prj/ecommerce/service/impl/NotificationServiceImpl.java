@@ -1,8 +1,8 @@
 package com.prj.ecommerce.service.impl;
 
 import com.prj.ecommerce.common.ReferenceType;
-import com.prj.ecommerce.dto.request.NotificationRequest;
-import com.prj.ecommerce.dto.response.NotificationResponse;
+import com.prj.ecommerce.dto.request.notification.NotificationRequest;
+import com.prj.ecommerce.dto.response.notification.NotificationResponse;
 import com.prj.ecommerce.entity.NotificationEntity;
 import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.model.UserPrincipal;
@@ -42,9 +42,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<NotificationResponse> getAllNotifications(ReferenceType referenceType) {
-        List<NotificationEntity> notificationEntities = referenceType != null
-                ? notificationRepository.findAllByUser_IdAndReferenceType(getCurrentUserId(), referenceType)
-                : notificationRepository.findAllByUser_IdAndReferenceType(getCurrentUserId(), referenceType);
+        List<NotificationEntity> notificationEntities = notificationRepository.findAllByUser_IdAndReferenceType(getCurrentUserId(), referenceType);
         List<NotificationResponse> responses = notificationEntities.stream()
                 .map(NotificationResponse::fromEntity)
                 .collect(Collectors.toList());

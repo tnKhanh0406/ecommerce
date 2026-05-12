@@ -1,37 +1,88 @@
-# ecommerce
-1. User Management (Quan Trọng)
-Xem danh sách users (phân trang, tìm kiếm)
-Xem chi tiết user, ban user, enable/disable account
-Xem hoạt động của user
-2. Seller Management (Quan Trọng)
-Xem danh sách shops yêu cầu xác minh
-Approve/Reject shop registration
-Suspend/Unsuspend shops
-Xem tất cả sản phẩm của shops
-Xem doanh thu shops
-3. Product Management (Quan Trọng)
-Xem tất cả sản phẩm
-Xóa sản phẩm không phù hợp
-Xem báo cáo sản phẩm (nếu có chức năng report)
-Block sản phẩm
-4. Review Management (Trung Bình)
-Xem tất cả reviews
-Xóa reviews không phù hợp
-Xem sản phẩm có review thấp
-5. Order Management (Trung Bình)
-Xem tất cả orders
-Hỗ trợ dispute/refund giữa buyer & seller
-Xem tình trạng orders
-Xuất báo cáo đơn hàng
-6. Category Management (Đã Có ✅)
-Create/Edit/Delete categories (đã có API)
-7. Notifications/Announcements (Thấp)
-Gửi system announcements cho users
-Gửi thông báo promote
-8. Dashboard/Analytics (Thấp)
-Tổng doanh thu, đơn hàng, users
-Top products, top sellers
-Charts/graphs
-9. Reports (Thấp)
-Report users/sellers lừa đảo
-Xem danh sách users bị report
+# E-Commerce System
+
+A full-stack e-commerce web application built using Spring MVC and Thymeleaf, 
+supporting product management, shopping cart, order processing, voucher system, 
+product reviews, and user authentication.
+
+## Tech Stack
+- Java 21
+- Spring MVC
+- Spring Security
+- MySQL
+- JPA / Hibernate
+- Thymeleaf (for frontend)
+
+## Features
+### User Features
+- User registration and login
+- Product browsing and searching
+- View product details and variants
+- Shopping cart management
+- Voucher application during checkout
+- Order history and tracking
+- Product reviews and ratings
+- Manage user profile and shipping addresses
+### Seller Features
+- Manage shop information
+- Create, edit, and delete products and variants
+- Process orders and update order status
+- View sales reports and analytics
+### Admin Features
+- Manage users and sellers
+- Manage products and categories
+- Handle product reports and moderation
+### System Features
+- Secure authentication and authorization using Spring Security
+- Responsive design with Thymeleaf templates
+- Relational database management with MySQL and JPA/Hibernate
+## Application Architecture
+The application follows the MVC (Model-View-Controller) architecture.
+
+- Controller layer handles HTTP requests and page navigation
+- Service layer contains business logic
+- Repository layer manages database operations
+- Thymeleaf templates render dynamic UI pages
+## Folder Structure
+```
+src/main/java/com/prj/ecommerce
+├── controller     # Handle web requests
+├── service        # Business logic
+├── repository     # Data access layer
+├── entity         # Database entities
+├── dto            # Data transfer objects
+├── config         # Spring configurations
+├── exception      # Exception handling
+└── common         # Shared utilities
+
+src/main/resources/templates
+├── admin
+├── user
+└── fragments
+```
+## Database Design
+![ERD](screenshots/ERD.jpg)
+
+## Running the Application
+1. Clone the repository
+```git clone https://github.com/tnKhanh0406/ecommerce.git```
+2. Configure the database connection, cloudinary, redis in `application.properties`
+3. Run application using your IDE or command line
+```docker compose up -d```
+
+## Screenshots
+### Home Page
+![User Registration](screenshots/HomePage.png)
+### Product browsing and searching
+![Product searching](screenshots/ProductSearching.png)
+### View product details
+![Product details](screenshots/ProductDetails.png)
+### Cart Management
+![Cart Management](screenshots/CartManagement.png)
+### Order 
+![Order](screenshots/Order.png)
+### Rating
+![Rating](screenshots/Rating.png)
+### Seller Dashboard
+![ShopDashboard](screenshots/ShopDashboard.png)
+### Admin Dashboard
+![AdminDashboard](screenshots/AdminDashboard.png)

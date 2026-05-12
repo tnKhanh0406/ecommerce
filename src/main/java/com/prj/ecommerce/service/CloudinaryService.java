@@ -22,7 +22,7 @@ public class CloudinaryService {
             Map uploadResult = cloudinary.uploader().upload(
                     file.getBytes(),
                     ObjectUtils.asMap(
-                            "folder", "product-reviews",
+                            "folder", "ecommerce",
                             "resource_type", "image"
                     )
             );

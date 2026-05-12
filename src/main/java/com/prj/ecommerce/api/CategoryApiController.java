@@ -1,8 +1,8 @@
 package com.prj.ecommerce.api;
 
-import com.prj.ecommerce.dto.request.CreateCategoryRequest;
-import com.prj.ecommerce.dto.response.CategoryResponse;
-import com.prj.ecommerce.dto.response.CategoryTreeResponse;
+import com.prj.ecommerce.dto.request.category.CategoryRequest;
+import com.prj.ecommerce.dto.response.category.CategoryResponse;
+import com.prj.ecommerce.dto.response.category.CategoryTreeResponse;
 import com.prj.ecommerce.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,7 +30,7 @@ public class CategoryApiController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<CategoryResponse> createCategory(@RequestBody CreateCategoryRequest category) {
+    public ResponseEntity<CategoryResponse> createCategory(@RequestBody CategoryRequest category) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(categoryService.createCategory(category));
@@ -39,7 +39,7 @@ public class CategoryApiController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{categoryId}")
     public ResponseEntity<CategoryResponse> updateCategory(@PathVariable Long categoryId,
-                                                           @RequestBody CreateCategoryRequest category) {
+                                                           @RequestBody CategoryRequest category) {
         return ResponseEntity.ok(categoryService.updateCategory(categoryId, category));
     }
 

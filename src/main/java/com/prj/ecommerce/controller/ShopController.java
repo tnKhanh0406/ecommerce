@@ -1,11 +1,24 @@
 package com.prj.ecommerce.controller;
 
-import com.prj.ecommerce.dto.request.*;
-import com.prj.ecommerce.dto.response.CategoryResponse;
-import com.prj.ecommerce.dto.response.CategorySelectOptionResponse;
-import com.prj.ecommerce.dto.response.CategoryTreeResponse;
-import com.prj.ecommerce.dto.response.CreateProductResponse;
-import com.prj.ecommerce.dto.response.ProductDetailResponse;
+import com.prj.ecommerce.dto.request.attribute.ProductAttributeRequest;
+import com.prj.ecommerce.dto.request.attribute.ProductAttributeValueRequest;
+import com.prj.ecommerce.dto.request.attribute.UpdateAttributeRequest;
+import com.prj.ecommerce.dto.request.image.ProductImageRequest;
+import com.prj.ecommerce.dto.request.product.CreateProductRequest;
+import com.prj.ecommerce.dto.request.product.UpdateBasicProductRequest;
+import com.prj.ecommerce.dto.request.review.ReviewReplyRequest;
+import com.prj.ecommerce.dto.request.review.UpdateReplyRequest;
+import com.prj.ecommerce.dto.request.shop.CreateShopRequest;
+import com.prj.ecommerce.dto.request.shop.UpdateShopRequest;
+import com.prj.ecommerce.dto.request.variant.ProductVariantAttributeValueRequest;
+import com.prj.ecommerce.dto.request.variant.ProductVariantListRequest;
+import com.prj.ecommerce.dto.request.variant.ProductVariantRequest;
+import com.prj.ecommerce.dto.request.variant.UpdateProductVariantRequest;
+import com.prj.ecommerce.dto.response.category.CategorySelectOptionResponse;
+import com.prj.ecommerce.dto.response.category.CategoryTreeResponse;
+import com.prj.ecommerce.dto.response.product.CreateProductResponse;
+import com.prj.ecommerce.dto.response.product.ProductDetailResponse;
+import com.prj.ecommerce.dto.response.shop.ShopResponse;
 import com.prj.ecommerce.service.CategoryService;
 import com.prj.ecommerce.common.OrderStatus;
 import com.prj.ecommerce.service.OrderService;
@@ -92,7 +105,8 @@ public class ShopController {
     @GetMapping("/edit/{shopId}")
     public String editShopPage(Model model, @PathVariable Long shopId) {
         try {
-            UpdateShopRequest shopRequest = shopService.getUpdateShopRequest(shopId);
+            ShopResponse shop = shopService.getShopById(shopId);
+            UpdateShopRequest shopRequest = new UpdateShopRequest(shop.getShopName(), shop.getDescription(), shop.getLogoUrl());
             model.addAttribute("updateShopRequest", shopRequest);
             model.addAttribute("shopId", shopId);
             return "shopEdit";

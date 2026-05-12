@@ -138,10 +138,12 @@
                                         <th:block th:each="item : ${cartItems}">
                                             <div class="dropdown-item cart-item">
                                                 <div class="d-flex">
-                                                    <img th:src="${item.product.images.get(0).imageUrl}"
+                                                    <img th:src="${!#lists.isEmpty(item.product.images)
+                                                        ? item.product.images.get(0).imageUrl
+                                                        : '/images/default-product.png'}"
                                                          alt="Product"
                                                          class="cart-item-img mr-2"
-                                                        style="width: 65px"/>
+                                                         style="width: 65px"/>
                                                     <div class="flex-grow-1">
                                                         <p class="mb-1 small" th:text="${item.product.productName}"></p>
                                                         <p class="mb-0 text-danger small font-weight-bold">

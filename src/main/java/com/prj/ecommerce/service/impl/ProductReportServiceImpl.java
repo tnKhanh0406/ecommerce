@@ -1,11 +1,11 @@
 package com.prj.ecommerce.service.impl;
 
 import com.prj.ecommerce.common.*;
-import com.prj.ecommerce.dto.request.NotificationRequest;
-import com.prj.ecommerce.dto.request.ProductReportRequest;
-import com.prj.ecommerce.dto.response.AdminProductReportDetailResponse;
-import com.prj.ecommerce.dto.response.AdminProductReportListItemResponse;
-import com.prj.ecommerce.dto.response.ProductReportResponse;
+import com.prj.ecommerce.dto.request.notification.NotificationRequest;
+import com.prj.ecommerce.dto.request.report.ProductReportRequest;
+import com.prj.ecommerce.dto.response.report.AdminProductReportDetailResponse;
+import com.prj.ecommerce.dto.response.report.AdminProductReportListItemResponse;
+import com.prj.ecommerce.dto.response.report.ProductReportResponse;
 import com.prj.ecommerce.entity.*;
 import com.prj.ecommerce.exception.BadRequestException;
 import com.prj.ecommerce.repository.*;

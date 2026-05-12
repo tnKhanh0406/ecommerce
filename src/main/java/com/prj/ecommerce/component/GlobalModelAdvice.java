@@ -1,6 +1,6 @@
 package com.prj.ecommerce.component;
 
-import com.prj.ecommerce.dto.response.UserResponse;
+import com.prj.ecommerce.dto.response.user.UserResponse;
 import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.service.CartService;
 import com.prj.ecommerce.service.NotificationService;

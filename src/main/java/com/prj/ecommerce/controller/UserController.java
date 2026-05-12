@@ -1,9 +1,9 @@
 package com.prj.ecommerce.controller;
 
-import com.prj.ecommerce.dto.request.ChangePasswordRequest;
-import com.prj.ecommerce.dto.request.RegisterRequest;
-import com.prj.ecommerce.dto.request.UpdateProfileRequest;
-import com.prj.ecommerce.dto.response.UserResponse;
+import com.prj.ecommerce.dto.request.user.ChangePasswordRequest;
+import com.prj.ecommerce.dto.request.user.RegisterRequest;
+import com.prj.ecommerce.dto.request.user.UpdateProfileRequest;
+import com.prj.ecommerce.dto.response.user.UserResponse;
 import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.exception.BadRequestException;
 import com.prj.ecommerce.exception.UpdateResourceExistException;
@@ -69,8 +69,8 @@ public class UserController {
             response.addCookie(cookie);
 
             // Check if user is ADMIN and redirect to admin dashboard
-            UserEntity user = userService.getUserByUsername(username);
-            if (user != null && user.getRole().name().equals("ADMIN")) {
+            UserResponse user = userService.getUserByUsername(username);
+            if (user != null && user.getRole().equals("ADMIN")) {
                 return "redirect:/admin/users";
             }
 

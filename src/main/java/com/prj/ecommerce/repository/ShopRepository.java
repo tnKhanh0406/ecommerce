@@ -26,4 +26,6 @@ public interface ShopRepository extends JpaRepository<ShopEntity, Long> {
             "LOWER(s.user.fullName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             "LOWER(s.user.email) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<ShopEntity> searchShopsByStatus(@Param("status") Status status, @Param("search") String search, Pageable pageable);
+
+    boolean existsByIdAndUser_Id(Long id, Long userId);
 }

@@ -1,6 +1,6 @@
 package com.prj.ecommerce.controller;
 
-import com.prj.ecommerce.dto.request.ProductReportRequest;
+import com.prj.ecommerce.dto.request.report.ProductReportRequest;
 import com.prj.ecommerce.service.ProductReportService;
 import com.prj.ecommerce.utils.SecurityUtil;
 import lombok.RequiredArgsConstructor;

@@ -1,7 +1,7 @@
 package com.prj.ecommerce.controller;
 
-import com.prj.ecommerce.dto.request.AddCartItemRequest;
-import com.prj.ecommerce.dto.response.AddCartItemResponse;
+import com.prj.ecommerce.dto.request.cart.AddCartItemRequest;
+import com.prj.ecommerce.dto.response.cart.CartItemResponse;
 import com.prj.ecommerce.service.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +23,11 @@ public class CartController {
 
     @GetMapping
     public String viewCart(Model model) {
-        List<AddCartItemResponse> cartItems = cartService.getCartItems();
+        List<CartItemResponse> cartItems = cartService.getCartItems();
 
         if (cartItems != null && !cartItems.isEmpty()) {
             // Group by shop
-            Map<Long, List<AddCartItemResponse>> itemsByShop = cartItems.stream()
+            Map<Long, List<CartItemResponse>> itemsByShop = cartItems.stream()
                     .collect(Collectors.groupingBy(item -> {
                         return item.getProduct().getShopId();
                     }));

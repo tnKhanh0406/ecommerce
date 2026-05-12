@@ -1,8 +1,8 @@
 package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.common.DiscountType;
-import com.prj.ecommerce.dto.request.CreateVoucherRequest;
-import com.prj.ecommerce.dto.response.CreateShopResponse;
+import com.prj.ecommerce.dto.request.voucher.VoucherRequest;
+import com.prj.ecommerce.dto.response.shop.ShopResponse;
 import com.prj.ecommerce.service.ShopService;
 import com.prj.ecommerce.service.VoucherService;
 import jakarta.validation.Valid;
@@ -26,7 +26,7 @@ public class VoucherController {
     public String voucherManagementPage(@PathVariable Long shopId,
                                         Model model) {
         try {
-            CreateShopResponse shop = ensureCurrentSellerShop(shopId);
+            ShopResponse shop = ensureCurrentSellerShop(shopId);
             model.addAttribute("shop", shop);
             model.addAttribute("vouchers", voucherService.getVoucherByShopId(shopId));
             model.addAttribute("discountTypes", DiscountType.values());
@@ -38,7 +38,7 @@ public class VoucherController {
 
     @PostMapping("/create")
     public String createVoucher(@PathVariable Long shopId,
-                                @Valid @ModelAttribute CreateVoucherRequest request,
+                                @Valid @ModelAttribute VoucherRequest request,
                                 BindingResult result,
                                 RedirectAttributes redirectAttributes) {
         try {
@@ -60,7 +60,7 @@ public class VoucherController {
     @PostMapping("/{voucherId}/update")
     public String updateVoucher(@PathVariable Long shopId,
                                 @PathVariable Long voucherId,
-                                @Valid @ModelAttribute CreateVoucherRequest request,
+                                @Valid @ModelAttribute VoucherRequest request,
                                 BindingResult result,
                                 RedirectAttributes redirectAttributes) {
         try {
@@ -94,8 +94,8 @@ public class VoucherController {
         return "redirect:/shop/" + shopId + "/vouchers";
     }
 
-    private CreateShopResponse ensureCurrentSellerShop(Long shopId) {
-        CreateShopResponse currentShop = shopService.getCurrentUserShop();
+    private ShopResponse ensureCurrentSellerShop(Long shopId) {
+        ShopResponse currentShop = shopService.getCurrentUserShop();
         if (!currentShop.getId().equals(shopId)) {
             throw new AccessDeniedException("You do not have permission to access this shop");
         }

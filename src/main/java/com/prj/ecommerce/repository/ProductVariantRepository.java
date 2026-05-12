@@ -1,6 +1,6 @@
 package com.prj.ecommerce.repository;
 
-import com.prj.ecommerce.dto.response.ProductPriceRangeResponse;
+import com.prj.ecommerce.dto.response.product.ProductPriceRangeResponse;
 import com.prj.ecommerce.entity.ProductVariantEntity;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,7 +17,7 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariantEn
     Optional<ProductVariantEntity> findByIdForUpdate(@Param("id") Long id);
     List<ProductVariantEntity> findByProductId(Long productId);
     @Query("""
-        SELECT new com.prj.ecommerce.dto.response.ProductPriceRangeResponse(
+        SELECT new com.prj.ecommerce.dto.response.product.ProductPriceRangeResponse(
             p.id,
             MIN(v.price),
             MAX(v.price)
@@ -32,7 +32,7 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariantEn
     );
 
     @Query("""
-    SELECT new com.prj.ecommerce.dto.response.ProductPriceRangeResponse(
+    SELECT new com.prj.ecommerce.dto.response.product.ProductPriceRangeResponse(
             pv.product.id,
             MIN(pv.price),
             MAX(pv.price)
@@ -42,4 +42,5 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariantEn
         GROUP BY pv.product.id
     """)
     Optional<ProductPriceRangeResponse> findPriceRangeByProductId(@Param("productId") Long productId);
+    boolean existsByIdAndProductShopUserId(Long id, Long userId);
 }

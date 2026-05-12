@@ -2,8 +2,29 @@ package com.prj.ecommerce.service.impl;
 
 import com.prj.ecommerce.common.Status;
 import com.prj.ecommerce.common.ImageType;
-import com.prj.ecommerce.dto.request.*;
-import com.prj.ecommerce.dto.response.*;
+import com.prj.ecommerce.dto.request.attribute.ProductAttributeRequest;
+import com.prj.ecommerce.dto.request.attribute.ProductAttributeValueRequest;
+import com.prj.ecommerce.dto.request.attribute.UpdateAttributeRequest;
+import com.prj.ecommerce.dto.request.image.ProductImageRequest;
+import com.prj.ecommerce.dto.request.product.CreateProductRequest;
+import com.prj.ecommerce.dto.request.product.ProductFilterRequest;
+import com.prj.ecommerce.dto.request.product.UpdateBasicProductRequest;
+import com.prj.ecommerce.dto.request.variant.ProductVariantAttributeValueRequest;
+import com.prj.ecommerce.dto.request.variant.ProductVariantListRequest;
+import com.prj.ecommerce.dto.request.variant.ProductVariantRequest;
+import com.prj.ecommerce.dto.request.variant.UpdateProductVariantRequest;
+import com.prj.ecommerce.dto.response.attribute.ProductAttributeResponse;
+import com.prj.ecommerce.dto.response.attribute.ProductAttributeValueResponse;
+import com.prj.ecommerce.dto.response.category.CategoryResponse;
+import com.prj.ecommerce.dto.response.image.ProductImageResponse;
+import com.prj.ecommerce.dto.response.product.AdminProductResponse;
+import com.prj.ecommerce.dto.response.product.CreateProductResponse;
+import com.prj.ecommerce.dto.response.product.ProductDetailResponse;
+import com.prj.ecommerce.dto.response.product.ProductPriceRangeResponse;
+import com.prj.ecommerce.dto.response.review.ProductReviewResponse;
+import com.prj.ecommerce.dto.response.shop.ShopResponse;
+import com.prj.ecommerce.dto.response.variant.ProductVariantListResponse;
+import com.prj.ecommerce.dto.response.variant.ProductVariantResponse;
 import com.prj.ecommerce.entity.*;
 import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.CategoryService;
@@ -85,7 +106,7 @@ public class ProductServiceImpl implements ProductService {
     @Cacheable(value = "trending")
     public List<CreateProductResponse> getRecommendProducts() {
         List<ProductEntity> products = productRepo.findRandomProducts(PageRequest.of(0, 30));
-
+        Collections.shuffle(products);
         return attachPriceRange(products);
     }
 
@@ -110,7 +131,7 @@ public class ProductServiceImpl implements ProductService {
                     .toList();
         }
 
-        CreateShopResponse shop = CreateShopResponse.fromEntity(product.getShop());
+        ShopResponse shop = ShopResponse.fromEntity(product.getShop());
         shop.setTotalProducts(productRepo.countByShop_Id(shop.getId()));
 
         ProductDetailResponse detail = new ProductDetailResponse();
@@ -218,9 +239,9 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     @CacheEvict(value = "product", key = "#productId")
     public ProductVariantListResponse updateBasicProductVariantWithImages(Long productId,
-                                                                           ProductVariantListRequest request,
-                                                                           Map<String, List<MultipartFile>> variantImageMap,
-                                                                           Map<Integer, List<String>> existingVariantImageUrls) {
+                                                                          ProductVariantListRequest request,
+                                                                          Map<String, List<MultipartFile>> variantImageMap,
+                                                                          Map<Integer, List<String>> existingVariantImageUrls) {
         attachVariantUpdateImages(request.getProductVariants(), variantImageMap, existingVariantImageUrls);
         return updateBasicProductVariant(productId, request);
     }
@@ -516,8 +537,19 @@ public class ProductServiceImpl implements ProductService {
                                 Function.identity()
                         ));
 
+        List<ProductImageEntity> images = productImageRepository.findByProductIds(productIds);                
+        Map<Long, List<ProductImageEntity>> imageMap =
+            images.stream().collect(Collectors.groupingBy(
+                img -> img.getProduct().getId()
+            ));                    
         return products.stream().map(p -> {
             CreateProductResponse r = CreateProductResponse.fromEntity(p);
+            List<ProductImageEntity> productImages = imageMap.get(p.getId());
+            if (productImages != null && !productImages.isEmpty()) {
+                r.setImageUrl(productImages.get(0).getImageUrl());
+            } else {
+                r.setImageUrl("https://via.placeholder.com/300?text=No+Image");
+            }
             ProductPriceRangeResponse price = priceMap.get(p.getId());
             if (price != null) {
                 r.setMinPrice(price.getMinPrice());

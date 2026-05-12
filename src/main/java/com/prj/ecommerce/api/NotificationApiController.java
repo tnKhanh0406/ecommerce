@@ -1,7 +1,7 @@
 package com.prj.ecommerce.api;
 
 import com.prj.ecommerce.common.ReferenceType;
-import com.prj.ecommerce.dto.response.NotificationResponse;
+import com.prj.ecommerce.dto.response.notification.NotificationResponse;
 import com.prj.ecommerce.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

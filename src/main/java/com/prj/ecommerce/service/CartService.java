@@ -1,15 +1,15 @@
 package com.prj.ecommerce.service;
 
-import com.prj.ecommerce.dto.request.AddCartItemRequest;
-import com.prj.ecommerce.dto.request.UpdateCartItemRequest;
-import com.prj.ecommerce.dto.response.AddCartItemResponse;
+import com.prj.ecommerce.dto.request.cart.AddCartItemRequest;
+import com.prj.ecommerce.dto.request.cart.UpdateCartItemRequest;
+import com.prj.ecommerce.dto.response.cart.CartItemResponse;
 
 import java.util.List;
 
 public interface CartService {
-    List<AddCartItemResponse> getTop5CartItems();
-    List<AddCartItemResponse> getCartItems();
-    AddCartItemResponse addCartItem(AddCartItemRequest addCartItemRequest);
-    AddCartItemResponse updateCartItem(UpdateCartItemRequest updateCartItemRequest);
+    List<CartItemResponse> getTop5CartItems();
+    List<CartItemResponse> getCartItems();
+    CartItemResponse addCartItem(AddCartItemRequest addCartItemRequest);
+    CartItemResponse updateCartItem(UpdateCartItemRequest updateCartItemRequest);
     void deleteCartItem(Long cartItemId);
 }
