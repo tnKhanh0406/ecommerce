@@ -259,6 +259,14 @@ public class OrderServiceImpl implements OrderService {
         }
         OrderResponse response = OrderResponse.fromEntity(order);
         enrichOrderItemsWithReviewStatus(response, order);
+        
+        // Load and set order status histories
+        List<OrderStatusHistoryEntity> histories = orderStatusHistoryRepository.findByOrderIds(List.of(orderId));
+        List<OrderHistoryResponse> historyResponses = histories.stream()
+                .map(OrderHistoryResponse::fromEntity)
+                .toList();
+        response.setHistories(historyResponses);
+        
         return response;
     }
 
@@ -268,6 +276,14 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new EntityNotFoundException("Order not found"));
         OrderResponse response = OrderResponse.fromEntity(order);
         enrichOrderItemsWithReviewStatus(response, order);
+        
+        // Load and set order status histories
+        List<OrderStatusHistoryEntity> histories = orderStatusHistoryRepository.findByOrderIds(List.of(orderId));
+        List<OrderHistoryResponse> historyResponses = histories.stream()
+                .map(OrderHistoryResponse::fromEntity)
+                .toList();
+        response.setHistories(historyResponses);
+        
         return response;
     }
 
