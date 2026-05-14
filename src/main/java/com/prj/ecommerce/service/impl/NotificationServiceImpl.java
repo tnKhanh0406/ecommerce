@@ -37,7 +37,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .stream()
                 .map(NotificationResponse::fromEntity)
                 .collect(Collectors.toList());
-        return enrichProductIds(responses);
+        return responses;
     }
 
     @Override
@@ -46,18 +46,18 @@ public class NotificationServiceImpl implements NotificationService {
         List<NotificationResponse> responses = notificationEntities.stream()
                 .map(NotificationResponse::fromEntity)
                 .collect(Collectors.toList());
-        return enrichProductIds(responses);
-    }
-
-    private List<NotificationResponse> enrichProductIds(List<NotificationResponse> responses) {
-        for (NotificationResponse response : responses) {
-            if (response.getReferenceType() == ReferenceType.REVIEW) {
-                Long productId = productReviewRepository.findProductIdByReviewId(response.getReferenceId());
-                response.setProductId(productId);
-            }
-        }
         return responses;
     }
+
+//    private List<NotificationResponse> enrichProductIds(List<NotificationResponse> responses) {
+//        for (NotificationResponse response : responses) {
+//            if (response.getReferenceType() == ReferenceType.REVIEW) {
+//                Long productId = productReviewRepository.findProductIdByReviewId(response.getReferenceId());
+//                response.setProductId(productId);
+//            }
+//        }
+//        return responses;
+//    }
 
     @Override
     public void sendNotification(NotificationRequest request) {

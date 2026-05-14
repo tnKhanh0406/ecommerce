@@ -11,13 +11,18 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-@Table(name = "vouchers")
+@Table(
+        name = "vouchers",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"shop_id", "code"})
+        }
+)
 public class VoucherEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String code;
 
     @Enumerated(EnumType.STRING)

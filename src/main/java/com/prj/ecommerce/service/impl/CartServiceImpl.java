@@ -3,6 +3,7 @@ package com.prj.ecommerce.service.impl;
 import com.prj.ecommerce.dto.request.cart.AddCartItemRequest;
 import com.prj.ecommerce.dto.request.cart.UpdateCartItemRequest;
 import com.prj.ecommerce.dto.response.cart.CartItemResponse;
+import com.prj.ecommerce.dto.response.cart.HeaderCartItemResponse;
 import com.prj.ecommerce.entity.CartEntity;
 import com.prj.ecommerce.entity.CartItemEntity;
 import com.prj.ecommerce.entity.ProductVariantEntity;
@@ -13,6 +14,8 @@ import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.CartService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -48,14 +51,13 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public List<CartItemResponse> getTop5CartItems() {
-        List<CartItemEntity> items = cartItemRepository.findTop5ByCart_User_IdOrderByIdDesc(getCurrentUserId());
-        if (items == null || items.isEmpty()) {
-            return null;
-        }
-        return items.stream()
-                .map(CartItemResponse::fromEntity)
-                .collect(Collectors.toList());
+    public List<HeaderCartItemResponse> getTop5CartItems() {
+        return cartItemRepository.getTop5HeaderCartItems(getCurrentUserId(), PageRequest.of(0, 5));
+    }
+
+    @Override
+    public long getCartItemCount() {
+        return cartItemRepository.countByCartUserId(getCurrentUserId());
     }
 
     @Override

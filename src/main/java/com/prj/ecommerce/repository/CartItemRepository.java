@@ -1,8 +1,11 @@
 package com.prj.ecommerce.repository;
 
+import com.prj.ecommerce.dto.response.cart.HeaderCartItemResponse;
 import com.prj.ecommerce.entity.CartItemEntity;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -18,4 +21,32 @@ public interface CartItemRepository extends JpaRepository<CartItemEntity, Long> 
           AND ci.cart.user.id = :userId
     """)
     boolean existsByIdAndUser(Long cartItemId, Long userId);
+    long countByCartUserId(Long userId);
+    @Query("""
+        SELECT new com.prj.ecommerce.dto.response.cart.HeaderCartItemResponse(
+            ci.id,
+            pv.id,
+            p.name,
+            MIN(img.imageUrl),
+            pv.price,
+            ci.quantity
+        )
+        FROM CartItemEntity ci
+        JOIN ci.productVariant pv
+        JOIN pv.product p
+        LEFT JOIN ProductImageEntity img
+               ON img.variant.id = pv.id
+        WHERE ci.cart.user.id = :userId
+        GROUP BY
+            ci.id,
+            pv.id,
+            p.name,
+            pv.price,
+            ci.quantity
+        ORDER BY ci.id DESC
+    """)
+    List<HeaderCartItemResponse> getTop5HeaderCartItems(
+            @Param("userId") Long userId,
+            Pageable pageable
+    );
 }

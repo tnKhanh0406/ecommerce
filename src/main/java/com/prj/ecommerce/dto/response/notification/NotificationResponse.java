@@ -23,7 +23,6 @@ public class NotificationResponse {
     private String content;
     private LocalDateTime createdAt;
     private Boolean isRead;
-    private Long productId;
 
     public static NotificationResponse fromEntity(NotificationEntity e) {
         return new NotificationResponse(
@@ -34,8 +33,7 @@ public class NotificationResponse {
                 e.getTitle(),
                 e.getContent(),
                 e.getCreatedAt(),
-                e.getIsRead(),
-                null // productId will be populated separately
+                e.getIsRead()
         );
     }
 }

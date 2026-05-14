@@ -25,11 +25,7 @@ public class GlobalModelAdvice {
         }
         model.addAttribute("currentUser", UserResponse.fromEntity(user));
         model.addAttribute("notifications", notificationService.getTop5Notifications());
-        model.addAttribute("cartItems", cartService.getTop5CartItems());
-        int quantity = 0;
-        if (cartService.getCartItems() != null) {
-            quantity = cartService.getCartItems().size();
-        }
-        model.addAttribute("cartQuantity", quantity);
+        model.addAttribute("headerCartItems", cartService.getTop5CartItems());
+        model.addAttribute("cartQuantity", cartService.getCartItemCount());
     }
 }
