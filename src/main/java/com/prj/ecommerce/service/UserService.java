@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface UserService {
     String verifyUser(LoginRequest loginRequest);
+    String getPostLoginRedirectUrl(String username);
     UserResponse registerUser(RegisterRequest registerRequest);
     void changePassword(ChangePasswordRequest changePasswordRequest);
     UserResponse updateUser(UpdateProfileRequest updateProfileRequest);

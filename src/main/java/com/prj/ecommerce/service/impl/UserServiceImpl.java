@@ -141,4 +141,13 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         return UserResponse.fromEntity(user);
     }
+
+    @Override
+    public String getPostLoginRedirectUrl(String username) {
+        UserResponse user = getUserByUsername(username);
+        if (user != null && user.getRole().equals("ADMIN")) {
+            return "redirect:/admin/users";
+        }
+        return "redirect:/";
+    }
 }

@@ -1,13 +1,13 @@
 package com.prj.ecommerce.utils;
 
-import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.model.UserPrincipal;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 public class SecurityUtil {
-    public static UserEntity getCurrentUser() {
+
+    public static UserPrincipal getPrincipal() {
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 
@@ -17,12 +17,16 @@ public class SecurityUtil {
             return null;
         }
 
-        Object principal = authentication.getPrincipal();
+        return (UserPrincipal) authentication.getPrincipal();
+    }
 
-        if (principal instanceof UserPrincipal userPrincipal) {
-            return userPrincipal.getUserEntity();
-        }
+    public static Long getCurrentUserId() {
+        UserPrincipal principal = getPrincipal();
+        return principal != null ? principal.getId() : null;
+    }
 
-        return null;
+    public static String getCurrentUsername() {
+        UserPrincipal principal = getPrincipal();
+        return principal != null ? principal.getUsername() : null;
     }
 }

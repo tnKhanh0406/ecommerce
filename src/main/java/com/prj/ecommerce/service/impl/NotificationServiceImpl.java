@@ -5,13 +5,12 @@ import com.prj.ecommerce.dto.request.notification.NotificationRequest;
 import com.prj.ecommerce.dto.response.notification.NotificationResponse;
 import com.prj.ecommerce.entity.NotificationEntity;
 import com.prj.ecommerce.entity.UserEntity;
-import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.NotificationRepository;
-import com.prj.ecommerce.repository.ProductReviewRepository;
 import com.prj.ecommerce.repository.UserRepository;
 import com.prj.ecommerce.service.NotificationService;
+import com.prj.ecommerce.utils.SecurityUtil;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,13 +21,10 @@ import java.util.stream.Collectors;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final ProductReviewRepository productReviewRepository;
     private final UserRepository userRepository;
 
     private Long getCurrentUserId() {
-        return ((UserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal())
-                .getUserEntity().getId();
+        return SecurityUtil.getCurrentUserId();
     }
 
     @Override
@@ -37,7 +33,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .stream()
                 .map(NotificationResponse::fromEntity)
                 .collect(Collectors.toList());
-        return enrichProductIds(responses);
+        return responses;
     }
 
     @Override
@@ -46,18 +42,18 @@ public class NotificationServiceImpl implements NotificationService {
         List<NotificationResponse> responses = notificationEntities.stream()
                 .map(NotificationResponse::fromEntity)
                 .collect(Collectors.toList());
-        return enrichProductIds(responses);
-    }
-
-    private List<NotificationResponse> enrichProductIds(List<NotificationResponse> responses) {
-        for (NotificationResponse response : responses) {
-            if (response.getReferenceType() == ReferenceType.REVIEW) {
-                Long productId = productReviewRepository.findProductIdByReviewId(response.getReferenceId());
-                response.setProductId(productId);
-            }
-        }
         return responses;
     }
+
+//    private List<NotificationResponse> enrichProductIds(List<NotificationResponse> responses) {
+//        for (NotificationResponse response : responses) {
+//            if (response.getReferenceType() == ReferenceType.REVIEW) {
+//                Long productId = productReviewRepository.findProductIdByReviewId(response.getReferenceId());
+//                response.setProductId(productId);
+//            }
+//        }
+//        return responses;
+//    }
 
     @Override
     public void sendNotification(NotificationRequest request) {

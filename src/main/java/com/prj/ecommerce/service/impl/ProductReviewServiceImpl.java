@@ -13,7 +13,6 @@ import com.prj.ecommerce.dto.response.review.ReviewReplyResponse;
 import com.prj.ecommerce.entity.*;
 import com.prj.ecommerce.exception.BadRequestException;
 import com.prj.ecommerce.exception.ConcurrentUpdateException;
-import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.CloudinaryService;
 import com.prj.ecommerce.service.NotificationService;
@@ -24,10 +23,10 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.prj.ecommerce.utils.SecurityUtil;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -48,16 +47,13 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     private final ReviewPolicyService reviewPolicyService;
     private final CloudinaryService cloudinaryService;
 
-    private UserEntity getCurrentUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    private Long getCurrentUserId() {
+        return SecurityUtil.getCurrentUserId();
     }
 
-    private Long getCurrentUserId() {
-        return ((UserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal())
-                .getUserEntity().getId();
+    private UserEntity getCurrentUser() {
+        return userRepository.findById(getCurrentUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
     @Override

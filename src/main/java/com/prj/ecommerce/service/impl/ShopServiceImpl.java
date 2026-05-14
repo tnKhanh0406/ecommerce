@@ -8,7 +8,6 @@ import com.prj.ecommerce.dto.response.shop.ShopResponse;
 import com.prj.ecommerce.entity.ShopEntity;
 import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.exception.UserAlreadyHasShopException;
-import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.ShopRepository;
 import com.prj.ecommerce.repository.UserRepository;
 import com.prj.ecommerce.service.CloudinaryService;
@@ -16,10 +15,11 @@ import com.prj.ecommerce.service.ShopService;
 import com.prj.ecommerce.utils.SecurityUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,9 +32,12 @@ public class ShopServiceImpl implements ShopService {
     private final CloudinaryService cloudinaryService;
 
     private Long getCurrentUserId() {
-        return ((UserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal())
-                .getUserEntity().getId();
+        return SecurityUtil.getCurrentUserId();
+    }
+
+    private UserEntity getCurrentUser() {
+        return userRepository.findById(getCurrentUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
     @Override
@@ -46,7 +49,7 @@ public class ShopServiceImpl implements ShopService {
 
     @Override
     public ShopResponse getCurrentUserShop() {
-        UserEntity user = SecurityUtil.getCurrentUser();
+        UserEntity user = getCurrentUser();
         if (user == null || user.getRole() != UserRole.SELLER) {
             throw new AccessDeniedException("Current user is not seller");
         }
@@ -58,7 +61,7 @@ public class ShopServiceImpl implements ShopService {
 
     @Override
     public ShopResponse createShop(CreateShopRequest createShopRequest, MultipartFile image) {
-        UserEntity user = SecurityUtil.getCurrentUser();
+        UserEntity user = getCurrentUser();
         if (user == null) {
             throw new AccessDeniedException("User must be authenticated to create a shop");
         }

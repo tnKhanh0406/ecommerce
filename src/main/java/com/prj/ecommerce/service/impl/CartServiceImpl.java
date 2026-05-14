@@ -3,20 +3,20 @@ package com.prj.ecommerce.service.impl;
 import com.prj.ecommerce.dto.request.cart.AddCartItemRequest;
 import com.prj.ecommerce.dto.request.cart.UpdateCartItemRequest;
 import com.prj.ecommerce.dto.response.cart.CartItemResponse;
+import com.prj.ecommerce.dto.response.cart.HeaderCartItemResponse;
 import com.prj.ecommerce.entity.CartEntity;
 import com.prj.ecommerce.entity.CartItemEntity;
 import com.prj.ecommerce.entity.ProductVariantEntity;
 import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.exception.BadRequestException;
-import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.CartService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.prj.ecommerce.utils.SecurityUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,16 +31,13 @@ public class CartServiceImpl implements CartService {
     private final ProductVariantRepository productVariantRepository;
     private final ProductVariantAttributeValueRepository productVariantAttributeValueRepository;
 
-    private UserEntity getCurrentUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    private Long getCurrentUserId() {
+        return SecurityUtil.getCurrentUserId();
     }
 
-    private Long getCurrentUserId() {
-        return ((UserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal())
-                .getUserEntity().getId();
+    private UserEntity getCurrentUser() {
+        return userRepository.findById(getCurrentUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
     private boolean checkUserOwnsCartItem(Long cartItemId) {
@@ -48,14 +45,13 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public List<CartItemResponse> getTop5CartItems() {
-        List<CartItemEntity> items = cartItemRepository.findTop5ByCart_User_IdOrderByIdDesc(getCurrentUserId());
-        if (items == null || items.isEmpty()) {
-            return null;
-        }
-        return items.stream()
-                .map(CartItemResponse::fromEntity)
-                .collect(Collectors.toList());
+    public List<HeaderCartItemResponse> getTop5CartItems() {
+        return cartItemRepository.getTop5HeaderCartItems(getCurrentUserId());
+    }
+
+    @Override
+    public long getCartItemCount() {
+        return cartItemRepository.countByCartUserId(getCurrentUserId());
     }
 
     @Override

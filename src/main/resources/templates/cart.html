@@ -69,10 +69,10 @@
                                             <label class="custom-control-label"
                                                    th:for="'item-' + ${item.id}"></label>
                                         </div>
-                                        <img th:if="${item.product.images != null and !item.product.images.isEmpty()}"
-                                             th:src="${item.product.images[0].imageUrl}"
+                                        <img th:src="${item.product.images != null and !item.product.images.isEmpty() and item.product.images[0].imageUrl != null ? item.product.images[0].imageUrl : '/images/default-product.png'}"
                                              alt="Product"
-                                             class="cart-item-image mr-3">
+                                             class="cart-item-image mr-3"
+                                             onerror="this.src='/images/default-product.png'">
                                         <div>
                                             <p class="mb-1 font-weight-bold" th:text="${item.product.productName}">Product Name</p>
                                             <p class="mb-0 text-muted small">

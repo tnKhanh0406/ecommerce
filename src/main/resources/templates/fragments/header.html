@@ -130,43 +130,50 @@
                                         <span th:text="${cartQuantity}"></span>
                                     </span>
                             </a>
-                            <div class="dropdown-menu dropdown-menu-right cart-dropdown"
-                                 aria-labelledby="cartDropdown">
+                            <div class="dropdown-menu dropdown-menu-right cart-dropdown" aria-labelledby="cartDropdown">
                                 <h6 class="dropdown-header">Sản Phẩm Mới Thêm</h6>
                                 <div class="cart-list">
-                                    <th:block th:if="${cartItems != null && cartItems.size() > 0}">
-                                        <th:block th:each="item : ${cartItems}">
+                                    <th:block th:if="${top5CartItems != null && !#lists.isEmpty(top5CartItems)}">
+                                        <th:block th:each="item : ${top5CartItems}">
                                             <div class="dropdown-item cart-item">
                                                 <div class="d-flex">
-                                                    <img th:src="${!#lists.isEmpty(item.product.images)
-                                                        ? item.product.images.get(0).imageUrl
-                                                        : '/images/default-product.png'}"
+                                                    <img th:src="${item.imageUrl != null && item.imageUrl != '' ? item.imageUrl : '/images/default-product.png'}"
                                                          alt="Product"
                                                          class="cart-item-img mr-2"
-                                                         style="width: 65px"/>
+                                                         style="width: 65px"
+                                                         onerror="this.src='/images/default-product.png'"/>
                                                     <div class="flex-grow-1">
-                                                        <p class="mb-1 small" th:text="${item.product.productName}"></p>
-                                                        <p class="mb-0 text-danger small font-weight-bold">
-                                                            <span class="price-symbol">₫</span>
-                                                            <span th:text="${item.product.price}"></span>
+                                                        <p class="mb-1 small"
+                                                           th:text="${item.productName}">
                                                         </p>
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <p class="mb-0 text-danger small font-weight-bold">
+                                                                <span class="price-symbol">₫</span>
+                                                                <span th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')}"></span>
+                                                            </p>
+                                                            <small class="text-muted">
+                                                                x<span th:text="${item.quantity}"></span>
+                                                            </small>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        <div class="dropdown-divider"></div>
+                                            <div class="dropdown-divider"></div>
+                                        </th:block>
                                     </th:block>
-                                    </th:block>
-                                        <th:block th:if="${cartItems == null || cartItems.size() == 0}">
-                                            <div class="text-center py-4">
-                                                <p class="text-muted small mb-0">Chưa có sản phẩm</p>
-                                            </div>
+                                    <th:block th:if="${top5CartItems == null || #lists.isEmpty(top5CartItems)}">
+                                        <div class="text-center py-4">
+                                            <p class="text-muted small mb-0">
+                                                Chưa có sản phẩm
+                                            </p>
+                                        </div>
                                     </th:block>
                                 </div>
-                                <a th:href="@{/cart}" class="dropdown-item text-center bg-danger text-white">
+                                <a th:href="@{/cart}"
+                                   class="dropdown-item text-center bg-danger text-white">
                                     Xem Giỏ Hàng
                                 </a>
                             </div>
-                        </div>
 
                         <!-- User Account -->
                         <div class="dropdown ml-3">

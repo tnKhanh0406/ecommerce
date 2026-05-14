@@ -4,16 +4,15 @@ import com.prj.ecommerce.dto.request.user.AddressRequest;
 import com.prj.ecommerce.dto.response.user.AddressResponse;
 import com.prj.ecommerce.entity.UserAddressEntity;
 import com.prj.ecommerce.entity.UserEntity;
-import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.UserAddressRepository;
 import com.prj.ecommerce.repository.UserRepository;
 import com.prj.ecommerce.service.UserAddressService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.prj.ecommerce.utils.SecurityUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,15 +25,12 @@ public class UserAddressServiceImpl implements UserAddressService {
     private final UserRepository userRepository;
 
     private UserEntity getCurrentUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByUsername(username)
+        return userRepository.findById(getCurrentUserId())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
     private Long getCurrentUserId() {
-        return ((UserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal())
-                .getUserEntity().getId();
+        return SecurityUtil.getCurrentUserId();
     }
 
     @Override
@@ -101,12 +97,16 @@ public class UserAddressServiceImpl implements UserAddressService {
         if (!userId.equals(newDefault.getUser().getId())) {
             throw new AccessDeniedException("You do not have permission");
         }
-        // 1 Bỏ default cũ
+        // 1. Bỏ default cũ
         userAddressRepository
                 .findByUser_IdAndIsDefault(userId, 1)
-                .ifPresent(old -> old.setIsDefault(0));
+                .ifPresent(old -> {
+                    old.setIsDefault(0);
+                    userAddressRepository.save(old);
+                });
 
         // 2. Set default mới
         newDefault.setIsDefault(1);
+        userAddressRepository.save(newDefault);
     }
 }

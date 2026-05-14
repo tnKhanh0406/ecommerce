@@ -4,15 +4,14 @@ import com.prj.ecommerce.dto.request.voucher.VoucherRequest;
 import com.prj.ecommerce.dto.response.voucher.VoucherResponse;
 import com.prj.ecommerce.entity.ShopEntity;
 import com.prj.ecommerce.entity.VoucherEntity;
-import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.ShopRepository;
 import com.prj.ecommerce.repository.VoucherRepository;
 import com.prj.ecommerce.service.VoucherService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import com.prj.ecommerce.utils.SecurityUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +24,7 @@ public class VoucherServiceImpl implements VoucherService {
     private final ShopRepository shopRepository;
 
     private Long getCurrentUserId() {
-        return ((UserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal())
-                .getUserEntity().getId();
+        return SecurityUtil.getCurrentUserId();
     }
 
     private boolean checkShopOwnership(Long voucherId) {

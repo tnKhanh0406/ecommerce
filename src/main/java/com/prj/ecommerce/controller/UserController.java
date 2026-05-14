@@ -68,13 +68,7 @@ public class UserController {
             cookie.setMaxAge(24 * 60 * 60);
             response.addCookie(cookie);
 
-            // Check if user is ADMIN and redirect to admin dashboard
-            UserResponse user = userService.getUserByUsername(username);
-            if (user != null && user.getRole().equals("ADMIN")) {
-                return "redirect:/admin/users";
-            }
-
-            return "redirect:/";
+            return userService.getPostLoginRedirectUrl(username);
         } catch (AuthenticationException e) {
             redirectAttributes.addFlashAttribute("error", "Sai tên đăng nhập hoặc mật khẩu");
             return "redirect:/login";
@@ -101,11 +95,11 @@ public class UserController {
 
     @GetMapping("/user/account/profile")
     public String userProfile(Model model) {
-        UserEntity user = SecurityUtil.getCurrentUser();
+        UserResponse user = userService.getUserByUsername(SecurityUtil.getCurrentUsername());
         if (user == null) {
             return "redirect:/login";
         }
-        model.addAttribute("profile", UserResponse.fromEntity(user));
+        model.addAttribute("profile", user);
         return "userProfile";
     }
 

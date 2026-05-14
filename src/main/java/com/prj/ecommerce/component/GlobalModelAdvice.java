@@ -1,9 +1,9 @@
 package com.prj.ecommerce.component;
 
 import com.prj.ecommerce.dto.response.user.UserResponse;
-import com.prj.ecommerce.entity.UserEntity;
 import com.prj.ecommerce.service.CartService;
 import com.prj.ecommerce.service.NotificationService;
+import com.prj.ecommerce.service.UserService;
 import com.prj.ecommerce.utils.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ui.Model;
@@ -16,20 +16,18 @@ public class GlobalModelAdvice {
 
     private final NotificationService notificationService;
     private final CartService cartService;
+    private final UserService userService;
 
     @ModelAttribute()
     public void currentUser(Model model) {
-        UserEntity user = SecurityUtil.getCurrentUser();
+        Long currentUserId = SecurityUtil.getCurrentUserId();
+        UserResponse user = userService.getUserById(currentUserId);
         if (user == null) {
             return;
         }
-        model.addAttribute("currentUser", UserResponse.fromEntity(user));
+        model.addAttribute("currentUser", user);
         model.addAttribute("notifications", notificationService.getTop5Notifications());
-        model.addAttribute("cartItems", cartService.getTop5CartItems());
-        int quantity = 0;
-        if (cartService.getCartItems() != null) {
-            quantity = cartService.getCartItems().size();
-        }
-        model.addAttribute("cartQuantity", quantity);
+        model.addAttribute("top5CartItems", cartService.getTop5CartItems());
+        model.addAttribute("cartQuantity", cartService.getCartItemCount());
     }
 }

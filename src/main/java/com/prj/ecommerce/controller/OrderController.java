@@ -42,7 +42,7 @@ public class OrderController {
             // Get current user
             UserPrincipal principal = (UserPrincipal) SecurityContextHolder.getContext()
                     .getAuthentication().getPrincipal();
-            Long userId = principal.getUserEntity().getId();
+            Long userId = principal.getId();
 
             // Lấy chi tiết cart items từ IDs
             List<CartItemEntity> cartItems = itemIds.stream()
