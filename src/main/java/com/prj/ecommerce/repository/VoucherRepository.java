@@ -15,7 +15,7 @@ public interface VoucherRepository extends JpaRepository<VoucherEntity, Long> {
     Optional<VoucherEntity> findByIdForUpdate(Long id);
     List<VoucherEntity> findAllByShopId(Long shopId);
     @Query("""
-        SELECT COUNT(v)
+        SELECT CASE WHEN COUNT(v) > 0 THEN true ELSE false END
         FROM VoucherEntity v
         WHERE v.id = :voucherId
           AND v.shop.user.id = :userId
