@@ -3,6 +3,7 @@ package com.prj.ecommerce.service.impl;
 import com.prj.ecommerce.dto.request.cart.AddCartItemRequest;
 import com.prj.ecommerce.dto.request.cart.UpdateCartItemRequest;
 import com.prj.ecommerce.dto.response.cart.CartItemResponse;
+import com.prj.ecommerce.dto.response.cart.CartItemSummaryResponse;
 import com.prj.ecommerce.dto.response.cart.HeaderCartItemResponse;
 import com.prj.ecommerce.entity.CartEntity;
 import com.prj.ecommerce.entity.CartItemEntity;
@@ -12,16 +13,18 @@ import com.prj.ecommerce.exception.BadRequestException;
 import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.CartService;
+import com.prj.ecommerce.utils.SecurityUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,36 +43,61 @@ public class CartServiceImpl implements CartService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
-    private Long getCurrentUserId() {
-        return ((UserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal())
-                .getUserEntity().getId();
-    }
-
     private boolean checkUserOwnsCartItem(Long cartItemId) {
-        return !cartItemRepository.existsByIdAndUser(cartItemId, getCurrentUserId());
+        return !cartItemRepository.existsByIdAndUser(cartItemId, SecurityUtil.getCurrentUserId());
     }
 
     @Override
     public List<HeaderCartItemResponse> getTop5CartItems() {
-        return cartItemRepository.getTop5HeaderCartItems(getCurrentUserId(), PageRequest.of(0, 5));
+        return cartItemRepository.getTop5HeaderCartItems(SecurityUtil.getCurrentUserId(), PageRequest.of(0, 5));
     }
 
     @Override
     public long getCartItemCount() {
-        return cartItemRepository.countByCartUserId(getCurrentUserId());
+        return cartItemRepository.countByCartUserId(SecurityUtil.getCurrentUserId());
     }
 
     @Override
-    public List<CartItemResponse> getCartItems() {
-        Long userId = getCurrentUserId();
-        List<CartItemEntity> items = cartItemRepository.findAllByCart_User_Id(userId);
-        if (items == null || items.isEmpty()) {
-            return null;
+    public List<CartItemSummaryResponse> getCartItems() {
+
+        Long userId = SecurityUtil.getCurrentUserId();
+
+        List<CartItemSummaryResponse> items =
+                cartItemRepository.findCartItemSummaries(userId);
+
+        if (items.isEmpty()) {
+            return Collections.emptyList();
         }
-        return items.stream()
-                .map(CartItemResponse::fromEntity)
-                .collect(Collectors.toList());
+
+        // lấy variant ids
+        List<Long> variantIds = items.stream()
+                .map(CartItemSummaryResponse::getVariantId)
+                .toList();
+
+        // query attributes 1 lần
+        List<Object[]> rows = productVariantAttributeValueRepository.findVariantAttributes(variantIds);
+
+        // group attributes theo variantId
+        Map<Long, List<String>> attrMap = rows.stream()
+                .collect(Collectors.groupingBy(
+                        row -> (Long) row[0],
+                        Collectors.mapping(
+                                row -> row[1] + ": " + row[2],
+                                Collectors.toList()
+                        )
+                ));
+
+        // set attributes
+        items.forEach(item -> {
+            item.setAttributes(
+                    attrMap.getOrDefault(
+                            item.getVariantId(),
+                            Collections.emptyList()
+                    )
+            );
+        });
+
+        return items;
     }
 
 

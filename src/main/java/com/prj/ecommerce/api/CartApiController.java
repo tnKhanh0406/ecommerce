@@ -3,6 +3,7 @@ package com.prj.ecommerce.api;
 import com.prj.ecommerce.dto.request.cart.AddCartItemRequest;
 import com.prj.ecommerce.dto.request.cart.UpdateCartItemRequest;
 import com.prj.ecommerce.dto.response.cart.CartItemResponse;
+import com.prj.ecommerce.dto.response.cart.CartItemSummaryResponse;
 import com.prj.ecommerce.service.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ public class CartApiController {
     private final CartService cartService;
 
     @GetMapping
-    public List<CartItemResponse> findAll() {
+    public List<CartItemSummaryResponse> findAll() {
         return cartService.getCartItems();
     }
 

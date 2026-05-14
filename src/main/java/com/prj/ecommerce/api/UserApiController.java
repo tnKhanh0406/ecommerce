@@ -1,7 +1,6 @@
 package com.prj.ecommerce.api;
 
 import com.prj.ecommerce.dto.request.user.ChangePasswordRequest;
-import com.prj.ecommerce.dto.request.user.LoginRequest;
 import com.prj.ecommerce.dto.request.user.RegisterRequest;
 import com.prj.ecommerce.dto.request.user.UpdateProfileRequest;
 import com.prj.ecommerce.dto.response.user.UserResponse;
@@ -24,11 +23,6 @@ public class UserApiController {
     @GetMapping("")
     public String index() {
         return "Hello World";
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@Valid @RequestBody LoginRequest loginRequest) {
-        return ResponseEntity.ok(userService.verifyUser(loginRequest));
     }
 
     @PostMapping("/register")

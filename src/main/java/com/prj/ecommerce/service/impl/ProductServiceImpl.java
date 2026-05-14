@@ -813,6 +813,12 @@ public class ProductServiceImpl implements ProductService {
             }
             imageRepo.save(image);
         }
+        String img = images.get(0).getImageUrl();
+        if (variant != null) {
+            variant.setPrimaryImg(img);
+        } else {
+            product.setThumbnailImg(img);
+        }
     }
 
     private List<ProductImageRequest> uploadImages(List<MultipartFile> files) {

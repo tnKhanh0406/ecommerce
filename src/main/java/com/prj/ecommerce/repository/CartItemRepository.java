@@ -1,5 +1,6 @@
 package com.prj.ecommerce.repository;
 
+import com.prj.ecommerce.dto.response.cart.CartItemSummaryResponse;
 import com.prj.ecommerce.dto.response.cart.HeaderCartItemResponse;
 import com.prj.ecommerce.entity.CartItemEntity;
 import org.springframework.data.domain.Pageable;
@@ -10,7 +11,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface CartItemRepository extends JpaRepository<CartItemEntity, Long> {
-    List<CartItemEntity> findTop5ByCart_User_IdOrderByIdDesc(Long userId);
     List<CartItemEntity> findAllByCart_User_Id(Long userId);
     List<CartItemEntity> findAllByIdInAndCart_User_Id(List<Long> ids, Long userId);
     CartItemEntity findByCart_IdAndProductVariant_Id(Long cartId, Long productVariantId);
@@ -48,5 +48,26 @@ public interface CartItemRepository extends JpaRepository<CartItemEntity, Long> 
     List<HeaderCartItemResponse> getTop5HeaderCartItems(
             @Param("userId") Long userId,
             Pageable pageable
+    );
+    @Query("""
+        SELECT new com.prj.ecommerce.dto.response.cart.CartItemSummaryResponse(
+            ci.id,
+            pv.id,
+            p.name,
+            pv.primaryImg,
+            pv.price,
+            ci.quantity,
+            pv.stock,
+            s.id,
+            s.shopName
+        )
+        FROM CartItemEntity ci
+        JOIN ci.productVariant pv
+        JOIN pv.product p
+        JOIN p.shop s
+        WHERE ci.cart.user.id = :userId
+    """)
+    List<CartItemSummaryResponse> findCartItemSummaries(
+            @Param("userId") Long userId
     );
 }

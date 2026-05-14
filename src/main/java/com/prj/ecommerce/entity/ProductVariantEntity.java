@@ -25,6 +25,8 @@ public class ProductVariantEntity {
     @Column(nullable = false)
     private String sku;
 
+    private String primaryImg;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private ProductEntity product;

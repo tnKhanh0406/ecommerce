@@ -34,7 +34,7 @@ public class UserAddressServiceImpl implements UserAddressService {
     private Long getCurrentUserId() {
         return ((UserPrincipal) SecurityContextHolder.getContext()
                 .getAuthentication().getPrincipal())
-                .getUserEntity().getId();
+                .getId();
     }
 
     @Override

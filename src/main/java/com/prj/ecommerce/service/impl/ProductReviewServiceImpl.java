@@ -57,7 +57,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     private Long getCurrentUserId() {
         return ((UserPrincipal) SecurityContextHolder.getContext()
                 .getAuthentication().getPrincipal())
-                .getUserEntity().getId();
+                .getId();
     }
 
     @Override

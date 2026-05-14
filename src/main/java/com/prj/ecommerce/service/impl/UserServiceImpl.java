@@ -2,7 +2,6 @@ package com.prj.ecommerce.service.impl;
 
 import com.prj.ecommerce.common.Status;
 import com.prj.ecommerce.dto.request.user.ChangePasswordRequest;
-import com.prj.ecommerce.dto.request.user.LoginRequest;
 import com.prj.ecommerce.dto.request.user.RegisterRequest;
 import com.prj.ecommerce.dto.request.user.UpdateProfileRequest;
 import com.prj.ecommerce.dto.response.user.UserResponse;
@@ -11,17 +10,12 @@ import com.prj.ecommerce.exception.BadRequestException;
 import com.prj.ecommerce.exception.ResourceAlreadyExistsException;
 import com.prj.ecommerce.exception.UpdateResourceExistException;
 import com.prj.ecommerce.repository.UserRepository;
-import com.prj.ecommerce.service.JWTService;
 import com.prj.ecommerce.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -29,8 +23,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private final JWTService jwtService;
-    private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -38,21 +30,6 @@ public class UserServiceImpl implements UserService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-    }
-
-    @Override
-    public String verifyUser(LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername(),
-                        loginRequest.getPassword()
-                )
-        );
-
-        UserDetails userDetails =
-                (UserDetails) authentication.getPrincipal();
-
-        return jwtService.generateToken(userDetails);
     }
 
     @Override
