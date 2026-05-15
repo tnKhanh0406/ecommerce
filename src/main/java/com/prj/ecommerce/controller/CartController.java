@@ -1,7 +1,7 @@
 package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.dto.request.cart.AddCartItemRequest;
-import com.prj.ecommerce.dto.response.cart.CartItemResponse;
+import com.prj.ecommerce.dto.request.cart.UpdateCartItemRequest;
 import com.prj.ecommerce.dto.response.cart.CartItemSummaryResponse;
 import com.prj.ecommerce.service.CartService;
 import jakarta.validation.Valid;
@@ -50,8 +50,21 @@ public class CartController {
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/products/" + request.getVariantId();
+            return "redirect:/cart";
         }
+    }
+
+    @PostMapping("/update")
+    public String updateCartItem(@Valid @ModelAttribute UpdateCartItemRequest request,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            cartService.updateCartItem(request);
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật số lượng thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/cart";
     }
 
     @PostMapping("/delete")

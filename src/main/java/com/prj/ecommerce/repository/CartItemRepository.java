@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
 import java.util.List;
 
 public interface CartItemRepository extends JpaRepository<CartItemEntity, Long> {
@@ -69,5 +70,26 @@ public interface CartItemRepository extends JpaRepository<CartItemEntity, Long> 
     """)
     List<CartItemSummaryResponse> findCartItemSummaries(
             @Param("userId") Long userId
+    );
+    @Query("""
+        SELECT new com.prj.ecommerce.dto.response.cart.CartItemSummaryResponse(
+            ci.id,
+            pv.id,
+            p.name,
+            pv.primaryImg,
+            pv.price,
+            ci.quantity,
+            pv.stock,
+            s.id,
+            s.shopName
+        )
+        FROM CartItemEntity ci
+        JOIN ci.productVariant pv
+        JOIN pv.product p
+        JOIN p.shop s
+        WHERE ci.id = :cartItemId
+    """)
+    Optional<CartItemSummaryResponse> findCartItemSummaryById(
+            @Param("cartItemId") Long cartItemId
     );
 }

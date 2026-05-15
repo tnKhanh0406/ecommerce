@@ -50,4 +50,17 @@ public interface ProductVariantAttributeValueRepository extends JpaRepository<Pr
     List<Object[]> findVariantAttributes(
             @Param("variantIds") List<Long> variantIds
     );
+
+    @Query("""
+        SELECT
+            pa.name,
+            av.value
+        FROM ProductVariantAttributeValueEntity pav
+        JOIN pav.attributeValue av
+        JOIN av.productAttribute pa
+        WHERE pav.variant.id = :variantId
+    """)
+    List<Object[]> findVariantAttributesByVariantId(
+            @Param("variantId") Long variantId
+    );
 }
