@@ -11,12 +11,9 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.function.Function;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -45,10 +42,37 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryTreeResponse> getCategoriesTree() {
-        return categoryRepository.findByParentIsNull()
-                .stream()
-                .map(CategoryTreeResponse::fromEntity)
-                .toList();
+        List<CategoryResponse> categories = categoryRepository.findAllCategoryResponse();
+        Map<Long, CategoryTreeResponse> map = new HashMap<>();
+
+        // tạo node
+        for (CategoryResponse category : categories) {
+            map.put(
+                    category.getId(),
+                    new CategoryTreeResponse(
+                            category.getId(),
+                            category.getName(),
+                            category.getSlug(),
+                            new ArrayList<>()
+                    )
+            );
+        }
+        List<CategoryTreeResponse> roots = new ArrayList<>();
+        // build tree
+        for (CategoryResponse category : categories) {
+            CategoryTreeResponse node = map.get(category.getId());
+
+            if (category.getParentId() == null) {
+                roots.add(node);
+            } else {
+                CategoryTreeResponse parent = map.get(category.getParentId());
+                if (parent != null) {
+                    parent.getChildren().add(node);
+                }
+            }
+        }
+
+        return roots;
     }
 
     @Override
@@ -96,15 +120,23 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<Long> getAllCategoryIds(Long rootCategoryId) {
-        List<Long> result = new ArrayList<>();
-        dfs(rootCategoryId, result);
-        return result;
-    }
+        List<CategoryEntity> categories = categoryRepository.findAll();
+        Map<Long, List<Long>> childrenMap = new HashMap<>();
 
-    @Override
-    public CategoryEntity findById(Long categoryId) {
-        return categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+        for (CategoryEntity category : categories) {
+            Long parentId = category.getParent() != null
+                    ? category.getParent().getId()
+                    : null;
+            if (parentId != null) {
+                childrenMap
+                        .computeIfAbsent(parentId, k -> new ArrayList<>())
+                        .add(category.getId());
+            }
+        }
+
+        List<Long> result = new ArrayList<>();
+        dfs(rootCategoryId, childrenMap, result);
+        return result;
     }
 
     @Override
@@ -125,13 +157,17 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryRepository.findBySlug(slug);
     }
 
-    private void dfs(Long categoryId, List<Long> result) {
+    private void dfs(Long categoryId,
+            Map<Long, List<Long>> childrenMap,
+            List<Long> result) {
         result.add(categoryId);
-
-        List<CategoryEntity> children = categoryRepository.findByParentId(categoryId);
-
-        for (CategoryEntity child : children) {
-            dfs(child.getId(), result);
+        List<Long> children =
+                childrenMap.getOrDefault(
+                        categoryId,
+                        Collections.emptyList()
+                );
+        for (Long childId : children) {
+            dfs(childId, childrenMap, result);
         }
     }
 }

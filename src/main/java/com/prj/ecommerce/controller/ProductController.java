@@ -1,6 +1,7 @@
 package com.prj.ecommerce.controller;
 
 import com.prj.ecommerce.dto.request.product.ProductFilterRequest;
+import com.prj.ecommerce.dto.response.category.CategoryResponse;
 import com.prj.ecommerce.dto.response.category.CategorySidebarItemResponse;
 import com.prj.ecommerce.dto.response.category.CategoryTreeResponse;
 import com.prj.ecommerce.dto.response.product.CreateProductResponse;
@@ -40,13 +41,13 @@ public class ProductController {
     public String filterProducts(Model model,
                                  @ModelAttribute @Valid ProductFilterRequest request) {
         Page<CreateProductResponse> responses = productService.getProducts(request);
-        CategoryEntity selectedCategory = request.getCategoryId() != null
-            ? categoryService.findById(request.getCategoryId())
+        CategoryResponse selectedCategory = request.getCategoryId() != null
+            ? categoryService.getCategoryById(request.getCategoryId())
             : null;
         CategoryEntity rootCategory = selectedCategory != null
             ? categoryService.findRootCategory(selectedCategory.getId())
             : null;
-        populateProductListModel(model, request, responses, selectedCategory, rootCategory);
+        populateProductListModel(model, request, responses, rootCategory);
 
         if (request.getShopId() != null) {
             ShopResponse shop = shopService.getShopById(request.getShopId());
@@ -68,9 +69,9 @@ public class ProductController {
         request.setCategoryId(category.getId());
 
         Page<CreateProductResponse> responses = productService.getProducts(request);
-        CategoryEntity selectedCategory = categoryService.findById(category.getId());
+        CategoryResponse selectedCategory = categoryService.getCategoryById(category.getId());
         CategoryEntity rootCategory = categoryService.findRootCategory(selectedCategory.getId());
-        populateProductListModel(model, request, responses, selectedCategory, rootCategory);
+        populateProductListModel(model, request, responses, rootCategory);
         model.addAttribute("currentCategoryName", category.getName());
 
         return "products";
@@ -79,7 +80,6 @@ public class ProductController {
     private void populateProductListModel(Model model,
                                           ProductFilterRequest request,
                                           Page<CreateProductResponse> responses,
-                                          CategoryEntity selectedCategory,
                                           CategoryEntity rootCategory) {
         boolean showCategorySidebar = request.getCategoryId() != null || request.getShopId() != null;
         List<CategorySidebarItemResponse> sidebarCategories = buildSidebarCategories(request, rootCategory, showCategorySidebar);
@@ -96,11 +96,10 @@ public class ProductController {
         model.addAttribute("pageSize", request.getSize());
         model.addAttribute("showCategorySidebar", showCategorySidebar && !sidebarCategories.isEmpty());
         model.addAttribute("sidebarCategories", sidebarCategories);
-        model.addAttribute("sidebarTitle", resolveSidebarTitle(request, selectedCategory, rootCategory));
+        model.addAttribute("sidebarTitle", resolveSidebarTitle(request, rootCategory));
     }
 
     private String resolveSidebarTitle(ProductFilterRequest request,
-                                       CategoryEntity selectedCategory,
                                        CategoryEntity rootCategory) {
         if (request.getShopId() != null) {
             return "Danh mục của shop";

@@ -223,6 +223,7 @@ public class AdminController {
                                      @RequestParam(required = false) Long parentId,
                                      Model model) {
         List<CategoryResponse> categories = categoryService.getAllCategories();
+        List<CategoryResponse> parentCategories = categories;
 
         if (parentId != null) {
             if (parentId == -1L) {
@@ -245,7 +246,7 @@ public class AdminController {
         }
 
         model.addAttribute("categories", categories);
-        model.addAttribute("parentCategories", categoryService.getAllCategories());
+        model.addAttribute("parentCategories", parentCategories);
         model.addAttribute("search", search != null ? search : "");
         model.addAttribute("selectedParentId", parentId);
 
