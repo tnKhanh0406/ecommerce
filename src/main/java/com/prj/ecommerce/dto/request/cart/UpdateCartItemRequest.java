@@ -1,16 +1,15 @@
 package com.prj.ecommerce.dto.request.cart;
 
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-
-import java.util.List;
 
 @Data
 public class UpdateCartItemRequest {
+    @NotNull(message = "Cart Item ID không được để trống")
     private Long cartItemId;
 
-    @Min(1)
+    @NotNull(message = "Số lượng không được để trống")
+    @Min(value = 1, message = "Số lượng phải >= 1")
     private Integer quantity;
-
-    private List<Long> attributeValueIds;
 }

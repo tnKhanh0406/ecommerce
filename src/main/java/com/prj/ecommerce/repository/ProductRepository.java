@@ -28,14 +28,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long>, J
     """)
     List<Long> getCategoryIdsByProductId(@Param("productId") Long productId);
 
-    @Query("""
-        SELECT DISTINCT pc.category.id
-        FROM ProductCategoryEntity pc
-        WHERE pc.product.shop.id = :shopId
-        ORDER BY pc.category.id ASC
-    """)
-    List<Long> getCategoryIdsByShopId(@Param("shopId") Long shopId);
-
     long countByShop_Id(Long shopId);
     Page<ProductEntity> findByShop_Id(Long shopId, Pageable pageable);
 }

@@ -62,7 +62,7 @@ public class OrderServiceImpl implements OrderService {
     private Long getCurrentUserId() {
         return ((UserPrincipal) SecurityContextHolder.getContext()
                 .getAuthentication().getPrincipal())
-                .getUserEntity().getId();
+                .getId();
     }
 
     // @Override

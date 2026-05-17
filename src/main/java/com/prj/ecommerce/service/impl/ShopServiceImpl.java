@@ -19,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,12 +30,6 @@ public class ShopServiceImpl implements ShopService {
     private final UserRepository userRepository;
     private final CloudinaryService cloudinaryService;
 
-    private Long getCurrentUserId() {
-        return ((UserPrincipal) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal())
-                .getUserEntity().getId();
-    }
-
     @Override
     public ShopResponse getShopById(Long shopId) {
         ShopEntity shop = shopRepository.findById(shopId)
@@ -46,7 +39,7 @@ public class ShopServiceImpl implements ShopService {
 
     @Override
     public ShopResponse getCurrentUserShop() {
-        UserEntity user = SecurityUtil.getCurrentUser();
+        UserPrincipal user = SecurityUtil.getPrincipal();
         if (user == null || user.getRole() != UserRole.SELLER) {
             throw new AccessDeniedException("Current user is not seller");
         }
@@ -58,10 +51,12 @@ public class ShopServiceImpl implements ShopService {
 
     @Override
     public ShopResponse createShop(CreateShopRequest createShopRequest, MultipartFile image) {
-        UserEntity user = SecurityUtil.getCurrentUser();
-        if (user == null) {
-            throw new AccessDeniedException("User must be authenticated to create a shop");
+        Long userId = SecurityUtil.getCurrentUserId();
+        if (userId == null) {
+            throw new EntityNotFoundException("User not found");
         }
+        UserEntity user = userRepository.findById(SecurityUtil.getCurrentUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         if (shopRepository.findByUser_Id(user.getId()).isPresent()) {
             throw new UserAlreadyHasShopException("User already owns a shop");
         }
@@ -84,7 +79,7 @@ public class ShopServiceImpl implements ShopService {
         ShopEntity shop = shopRepository.findById(shopId)
                 .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
 
-        if (!shopRepository.existsByIdAndUser_Id(shopId, getCurrentUserId())) {
+        if (!shopRepository.existsByIdAndUser_Id(shopId, SecurityUtil.getCurrentUserId())) {
             throw new AccessDeniedException("You are not allowed to update this shop");
         }
 
@@ -104,7 +99,7 @@ public class ShopServiceImpl implements ShopService {
 
     @Override
     public void deleteShop(Long shopId) {
-        if (!shopRepository.existsByIdAndUser_Id(shopId, getCurrentUserId())) {
+        if (!shopRepository.existsByIdAndUser_Id(shopId, SecurityUtil.getCurrentUserId())) {
             throw new AccessDeniedException("You are not allowed to update this shop");
         }
         shopRepository.deleteById(shopId);

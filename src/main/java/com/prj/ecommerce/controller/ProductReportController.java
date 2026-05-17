@@ -30,7 +30,7 @@ public class ProductReportController {
             ProductReportRequest request,
             MultipartHttpServletRequest multipartRequest) {
         try {
-            Long userId = SecurityUtil.getCurrentUser().getId();
+            Long userId = SecurityUtil.getCurrentUserId();
             
             log.info("User {} creating report for product {}", userId, request.getProductId());
             
@@ -54,7 +54,7 @@ public class ProductReportController {
     public ResponseEntity<?> checkUserReport(
             @RequestParam Long productId) {
         try {
-            Long userId = SecurityUtil.getCurrentUser().getId();
+            Long userId = SecurityUtil.getCurrentUserId();
             Boolean hasReported = productReportService.hasUserReportedProduct(userId, productId);
             
             return ResponseEntity.ok(new ApiResponse(true, 

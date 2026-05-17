@@ -1,10 +1,10 @@
 package com.prj.ecommerce.component;
 
-import com.prj.ecommerce.dto.response.user.UserResponse;
-import com.prj.ecommerce.entity.UserEntity;
+import com.prj.ecommerce.model.UserPrincipal;
 import com.prj.ecommerce.service.CartService;
 import com.prj.ecommerce.service.NotificationService;
 import com.prj.ecommerce.utils.SecurityUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -17,19 +17,20 @@ public class GlobalModelAdvice {
     private final NotificationService notificationService;
     private final CartService cartService;
 
-    @ModelAttribute()
-    public void currentUser(Model model) {
-        UserEntity user = SecurityUtil.getCurrentUser();
-        if (user == null) {
+    @ModelAttribute
+    public void currentUser(Model model, HttpServletRequest request) {
+        // prevent duplicate execution
+        if (request.getAttribute("HEADER_LOADED") != null) {
             return;
         }
-        model.addAttribute("currentUser", UserResponse.fromEntity(user));
-        model.addAttribute("notifications", notificationService.getTop5Notifications());
-        model.addAttribute("cartItems", cartService.getTop5CartItems());
-        int quantity = 0;
-        if (cartService.getCartItems() != null) {
-            quantity = cartService.getCartItems().size();
+        request.setAttribute("HEADER_LOADED", true);
+        UserPrincipal principal = SecurityUtil.getPrincipal();
+        if (principal == null) {
+            return;
         }
-        model.addAttribute("cartQuantity", quantity);
+        model.addAttribute("currentUser", principal);
+        model.addAttribute("notifications", notificationService.getTop5Notifications());
+        model.addAttribute("headerCartItems", cartService.getTop5CartItems());
+        model.addAttribute("cartQuantity", cartService.getCartItemCount());
     }
 }

@@ -27,7 +27,7 @@ public class VoucherServiceImpl implements VoucherService {
     private Long getCurrentUserId() {
         return ((UserPrincipal) SecurityContextHolder.getContext()
                 .getAuthentication().getPrincipal())
-                .getUserEntity().getId();
+                .getId();
     }
 
     private boolean checkShopOwnership(Long voucherId) {
