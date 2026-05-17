@@ -43,7 +43,6 @@ public interface ProductService {
     Page<CreateProductResponse> getProductsByShopId(Long shopId, int page, int size);
     ProductDetailResponse getProductForEdit(Long productId);
     List<Long> getProductCategoryIds(Long productId);
-    List<Long> getCategoryIdsByShopId(Long shopId);
 
     // Admin methods
     Page<AdminProductResponse> getProductsForAdmin(String search, Status status, Pageable pageable);

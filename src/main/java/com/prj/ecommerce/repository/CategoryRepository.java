@@ -4,6 +4,7 @@ import com.prj.ecommerce.dto.response.category.CategoryResponse;
 import com.prj.ecommerce.entity.CategoryEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -28,4 +29,11 @@ public interface CategoryRepository extends JpaRepository<CategoryEntity, Long> 
     WHERE c.id =:categoryId
     """)
     CategoryResponse findCategoryResponseById(Long categoryId);
+    @Query("""
+        SELECT DISTINCT pc.category.id
+        FROM ProductCategoryEntity pc
+        WHERE pc.product.shop.id = :shopId
+        ORDER BY pc.category.id ASC
+    """)
+    List<Long> getCategoryIdsByShopId(@Param("shopId") Long shopId);
 }

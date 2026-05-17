@@ -434,11 +434,6 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<Long> getCategoryIdsByShopId(Long shopId) {
-        return productRepo.getCategoryIdsByShopId(shopId);
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public Page<AdminProductResponse> getProductsForAdmin(String search, Status status, Pageable pageable) {
         Specification<ProductEntity> specification = (root, query, cb) -> {

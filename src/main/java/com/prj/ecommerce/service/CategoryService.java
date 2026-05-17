@@ -2,6 +2,7 @@ package com.prj.ecommerce.service;
 
 import com.prj.ecommerce.dto.request.category.CategoryRequest;
 import com.prj.ecommerce.dto.response.category.CategoryResponse;
+import com.prj.ecommerce.dto.response.category.CategorySidebarItemResponse;
 import com.prj.ecommerce.dto.response.category.CategoryTreeResponse;
 import com.prj.ecommerce.entity.CategoryEntity;
 
@@ -16,6 +17,9 @@ public interface CategoryService {
     CategoryResponse updateCategory(Long categoryId, CategoryRequest request);
     void deleteCategory(Long categoryId);
     List<Long> getAllCategoryIds(Long rootCategoryId);
-    CategoryEntity findRootCategory(Long categoryId);
     CategoryEntity findBySlug(String slug);
+//    CategoryTreeResponse getCategoryTreeByRoot(Long rootCategoryId);
+    List<CategorySidebarItemResponse> buildSidebarCategories(Long shopId, Long categoryId);
+    CategoryResponse getRootCategoryResponse(Long categoryId);
+
 }
