@@ -47,5 +47,5 @@ public interface ProductReportService {
     /**
      * Check if user already reported this product (to prevent spam)
      */
-    Boolean hasUserReportedProduct(Long userId, Long productId);
+    Boolean hasUserReportedProduct(Long productId);
 }

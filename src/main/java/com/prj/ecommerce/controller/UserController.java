@@ -31,13 +31,13 @@ public class UserController {
 
     @GetMapping("/login")
     public String loginPage() {
-        return "login";
+        return "user/login";
     }
 
     @GetMapping("/register")
     public String registerPage(Model model) {
         model.addAttribute("registerRequest", new RegisterRequest());
-        return "register";
+        return "user/register";
     }
 
     @PostMapping("/register")
@@ -52,7 +52,7 @@ public class UserController {
                     .collect(Collectors.joining(", "));
 
             model.addAttribute("error", errorMessage);
-            return "register";
+            return "user/register";
         }
         userService.registerUser(registerRequest);
         return "redirect:/login";
@@ -67,7 +67,7 @@ public class UserController {
             return "redirect:/login";
         }
         model.addAttribute("profile", user);
-        return "userProfile";
+        return "user/userProfile";
     }
 
     @PostMapping("/user/account/profile/update")
@@ -75,7 +75,7 @@ public class UserController {
                                 BindingResult bindingResult,
                                 RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            return "userProfile";
+            return "user/userProfile";
         }
         try {
             userService.updateUser(profile);
@@ -87,7 +87,7 @@ public class UserController {
                 bindingResult.rejectValue("phoneNumber", "duplicate", ex.getMessage());
             }
 
-            return "userProfile";
+            return "user/userProfile";
         }
         redirectAttributes.addFlashAttribute("success", "Cập nhật thành công");
         return "redirect:/user/account/profile";
@@ -98,7 +98,7 @@ public class UserController {
         if (!model.containsAttribute("password")) {
             model.addAttribute("password", new ChangePasswordRequest());
         }
-        return "changePassword";
+        return "user/changePassword";
     }
 
 
@@ -108,7 +108,7 @@ public class UserController {
                                  RedirectAttributes redirectAttributes,
                                  Model model) {
         if (bindingResult.hasErrors()) {
-            return "changePassword";
+            return "user/changePassword";
         }
 
         try {
@@ -121,7 +121,7 @@ public class UserController {
                 bindingResult.rejectValue("newPassword", "invalid", ex.getMessage());
             }
 
-            return "changePassword";
+            return "user/changePassword";
         }
         redirectAttributes.addFlashAttribute("success", "Đổi mật khẩu thành công");
         return "redirect:/user/account/password";

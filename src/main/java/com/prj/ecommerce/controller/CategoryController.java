@@ -23,6 +23,6 @@ public class CategoryController {
         model.addAttribute("products", productService.getRecommendProducts());
         model.addAttribute("currentCategoryId", null);
         model.addAttribute("currentShopId", null);
-        return "home";
+        return "user/home";
     }
 }

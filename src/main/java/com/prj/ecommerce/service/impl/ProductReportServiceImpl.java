@@ -11,6 +11,7 @@ import com.prj.ecommerce.exception.BadRequestException;
 import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.ProductReportService;
 
+import com.prj.ecommerce.utils.SecurityUtil;
 import jakarta.persistence.EntityNotFoundException;
 
 import com.prj.ecommerce.service.NotificationService;
@@ -49,14 +50,13 @@ public class ProductReportServiceImpl implements ProductReportService {
         log.info("Creating product report for userId: {}, productId: {}", userId, request.getProductId());
 
         // Validate user exists
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        UserEntity user = userRepository.findById(userId).
+                orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         // Validate product exists
         ProductEntity product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
-        // Check if user already reported this product (prevent spam)
         if (productReportRepository.existsByUserIdAndProductId(userId, request.getProductId())) {
             throw new BadRequestException("Bạn đã báo cáo sản phẩm này rồi. Không thể báo cáo lại.");
         }
@@ -75,19 +75,14 @@ public class ProductReportServiceImpl implements ProductReportService {
             report.setOrder(order);
         }
 
-        // Save report
         ProductReportEntity savedReport = productReportRepository.save(report);
-        log.info("Product report created with id: {}", savedReport.getId());
 
         // Handle image uploads (up to 3 images)
         uploadReportImages(multipartRequest, savedReport);
-
-        log.info("Product report completed with {} images", savedReport.getReportImages().size());
     }
 
     @Override
     public Page<AdminProductReportListItemResponse> getReportedProductsForAdmin(Pageable pageable) {
-        log.info("Fetching reported products for admin, page: {}", pageable.getPageNumber());
         return productReportRepository.findReportedProductsSummary(pageable);
     }
 
@@ -105,11 +100,11 @@ public class ProductReportServiceImpl implements ProductReportService {
             ReportReason reasonFilter) {
         log.info("Fetching product report details for productId: {}", productId);
 
-        // Get product info (avoid N+1 by using JOIN FETCH if needed)
+        // Get product info
         ProductEntity product = productRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
-        // Get all reports for this product (uses custom query to avoid N+1)
+        // Get all reports for this product
         List<ProductReportEntity> reports = productReportRepository.findAllReportsByProductId(productId);
 
         // Apply filters
@@ -127,25 +122,7 @@ public class ProductReportServiceImpl implements ProductReportService {
                 .map(this::mapToProductReportResponse)
                 .collect(Collectors.toList());
 
-        // Get product thumbnail
-        String thumbnailUrl = product.getImages().stream()
-                .filter(img -> img.getImageType() == ImageType.THUMBNAIL)
-                .map(ProductImageEntity::getImageUrl)
-                .findFirst()
-                .orElseGet(() -> product.getImages().stream()
-                        .map(ProductImageEntity::getImageUrl)
-                        .findFirst()
-                        .orElse(""));
-
-        // Build variants info
-        List<AdminProductReportDetailResponse.VariantInfo> variants = product.getVariants().stream()
-                .map(v -> AdminProductReportDetailResponse.VariantInfo.builder()
-                        .variantId(v.getId())
-                .variantName(v.getSku())
-                        .price(v.getPrice())
-                        .stock(v.getStock())
-                        .build())
-                .collect(Collectors.toList());
+        String thumbnailUrl = product.getThumbnailImg();
 
         return AdminProductReportDetailResponse.builder()
                 .productId(product.getId())
@@ -155,7 +132,6 @@ public class ProductReportServiceImpl implements ProductReportService {
                 .shopName(product.getShop().getShopName())
                 .shopId(String.valueOf(product.getShop().getId()))
                 .totalReportCount((long) reportResponses.size())
-                .variants(variants)
                 .reports(reportResponses)
                 .build();
     }
@@ -221,18 +197,15 @@ public class ProductReportServiceImpl implements ProductReportService {
     }
 
     @Override
-    public Boolean hasUserReportedProduct(Long userId, Long productId) {
-        return productReportRepository.existsByUserIdAndProductId(userId, productId);
+    public Boolean hasUserReportedProduct(Long productId) {
+        return productReportRepository.existsByUserIdAndProductId(SecurityUtil.getCurrentUserId(), productId);
     }
-
-    // ==================== Private Helper Methods ====================
 
     private void uploadReportImages(MultipartHttpServletRequest multipartRequest, ProductReportEntity report) {
         try {
             List<MultipartFile> reportImages = multipartRequest.getFiles("reportImages");
 
             if (reportImages == null || reportImages.isEmpty()) {
-                log.warn("No report images uploaded for report id: {}", report.getId());
                 return;
             }
 
@@ -240,14 +213,12 @@ public class ProductReportServiceImpl implements ProductReportService {
             for (MultipartFile file : reportImages) {
                 if (file.isEmpty()) continue;
                 if (uploadCount >= MAX_REPORT_IMAGES) {
-                    log.warn("Maximum report images ({}) exceeded", MAX_REPORT_IMAGES);
                     break;
                 }
 
                 // Upload to Cloudinary
                 String imageUrl = cloudinaryService.uploadImage(file);
 
-                // Create and save ProductImageEntity
                 ProductImageEntity image = new ProductImageEntity();
                 image.setImageUrl(imageUrl);
                 image.setImageType(ImageType.REPORT);
@@ -255,7 +226,6 @@ public class ProductReportServiceImpl implements ProductReportService {
                 productImageRepository.save(image);
 
                 uploadCount++;
-                log.info("Uploaded report image {}/{} for report id: {}", uploadCount, MAX_REPORT_IMAGES, report.getId());
             }
         } catch (Exception e) {
             log.error("Error uploading report images", e);
@@ -295,7 +265,6 @@ public class ProductReportServiceImpl implements ProductReportService {
     }
 
     private void sendReportResolvedNotification(ProductReportEntity report, boolean isBlocked) {
-        String title = SYSTEM_NOTIFICATION_TITLE;
         String content = isBlocked ?
                 "Khiếu nại của bạn về sản phẩm \"" + report.getProduct().getName() + 
                 "\" đã được xác nhận. Sản phẩm này đã bị khóa do vi phạm nguyên tắc cộng đồng." :
@@ -304,7 +273,7 @@ public class ProductReportServiceImpl implements ProductReportService {
 
         NotificationRequest notificationRequest = new NotificationRequest();
         notificationRequest.setUserId(report.getUser().getId());
-        notificationRequest.setTitle(title);
+        notificationRequest.setTitle(SYSTEM_NOTIFICATION_TITLE);
         notificationRequest.setContent(content);
         notificationRequest.setType(NotificationType.SYSTEM);
         notificationRequest.setReferenceType(ReferenceType.PRODUCT_REPORT);
@@ -314,14 +283,13 @@ public class ProductReportServiceImpl implements ProductReportService {
     }
 
     private void sendSellerBlockedNotification(ProductEntity product) {
-        String title = SYSTEM_NOTIFICATION_TITLE;
-        String content = "Sản phẩm \"" + product.getName() + 
+        String content = "Sản phẩm \"" + product.getName() +
                 "\" của bạn đã bị khóa do nhân viên hỗ trợ xác nhận vi phạm nguyên tắc cộng đồng. " +
                 "Vui lòng liên hệ với bộ phận hỗ trợ khách hàng để biết chi tiết.";
 
         NotificationRequest notificationRequest = new NotificationRequest();
         notificationRequest.setUserId(product.getShop().getUser().getId());
-        notificationRequest.setTitle(title);
+        notificationRequest.setTitle(SYSTEM_NOTIFICATION_TITLE);
         notificationRequest.setContent(content);
         notificationRequest.setType(NotificationType.SYSTEM);
 

@@ -108,15 +108,6 @@
             background-color: #e0a800;
             color: black;
         }
-        .variant-badge {
-            display: inline-block;
-            background-color: #e7f3ff;
-            padding: 5px 10px;
-            border-radius: 0.25rem;
-            margin-right: 5px;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
-        }
     </style>
 </head>
 <body>
@@ -161,16 +152,6 @@
                         <div class="col-md-6">
                             <p class="mb-1"><strong>Mô tả:</strong></p>
                             <p class="text-muted" th:text="${#strings.abbreviate(reportDetail.productDescription, 100)}">Description</p>
-                        </div>
-                    </div>
-
-                    <!-- Product Variants -->
-                    <div th:if="${not reportDetail.variants.isEmpty()}">
-                        <p><strong>Các phiên bản:</strong></p>
-                        <div th:each="variant : ${reportDetail.variants}" class="variant-badge">
-                            <span th:text="${variant.variantName}">Variant</span>
-                            - <span th:text="${#numbers.formatDecimal(variant.price, 0, 'COMMA', 0, 'POINT')}">0</span> đ
-                            (Stock: <span th:text="${variant.stock}">0</span>)
                         </div>
                     </div>
                 </div>

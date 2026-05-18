@@ -55,7 +55,7 @@ public class ShopController {
     public String shopRegisterPage(Model model) {
         try {
             model.addAttribute("createShopRequest", new CreateShopRequest());
-            return "shopRegistration";
+            return "shop/shopRegistration";
 
         } catch (Exception e) {
             return "redirect:/";
@@ -78,7 +78,7 @@ public class ShopController {
                     .orElse("Có lỗi xảy ra");
 
             model.addAttribute("errorMessage", errorMessage);
-            return "shopRegistration";
+            return "shop/shopRegistration";
         }
         try {
             shopService.createShop(request, image);
@@ -87,7 +87,7 @@ public class ShopController {
 
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi: " + e.getMessage());
-            return "shopRegistration";
+            return "shop/shopRegistration";
         }
     }
 
@@ -95,7 +95,7 @@ public class ShopController {
     public String shopDashboard(Model model) {
         try {
             model.addAttribute("shop", shopService.getCurrentUserShop());
-            return "shopDashboard";
+            return "shop/shopDashboard";
 
         } catch (Exception e) {
             return "redirect:/shop/register";
@@ -109,7 +109,7 @@ public class ShopController {
             UpdateShopRequest shopRequest = new UpdateShopRequest(shop.getShopName(), shop.getDescription(), shop.getLogoUrl());
             model.addAttribute("updateShopRequest", shopRequest);
             model.addAttribute("shopId", shopId);
-            return "shopEdit";
+            return "shop/shopEdit";
 
         } catch (Exception e) {
             return "redirect:/shop/dashboard";
@@ -134,7 +134,7 @@ public class ShopController {
 
             model.addAttribute("errorMessage", errorMessage);
             model.addAttribute("shopId", shopId);
-            return "shopEdit";
+            return "shop/shopEdit";
         }
 
         try {
@@ -145,7 +145,7 @@ public class ShopController {
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Lỗi: " + e.getMessage());
             model.addAttribute("shopId", shopId);
-            return "shopEdit";
+            return "shop/shopEdit";
         }
     }
 
@@ -162,7 +162,7 @@ public class ShopController {
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", products.getTotalPages());
 
-            return "shopProducts";
+            return "shop/shopProducts";
 
         } catch (Exception e) {
             return "redirect:/shop/dashboard";
@@ -181,7 +181,7 @@ public class ShopController {
             model.addAttribute("shop", shopService.getShopById(shopId));
             model.addAttribute("categoryOptions", categoryOptions);
 
-            return "ShopProductCreate";
+            return "shop/shopProductCreate";
 
         } catch (Exception e) {
             return "redirect:/shop/dashboard";
@@ -196,7 +196,7 @@ public class ShopController {
             model.addAttribute("shop", shopService.getShopById(shopId));
             model.addAttribute("orders", orderService.getOrdersByShopId(shopId, status));
             model.addAttribute("currentStatus", status);
-            return "shopOrders";
+            return "shop/shopOrders";
         } catch (Exception e) {
             return "redirect:/shop/dashboard";
         }
@@ -217,7 +217,7 @@ public class ShopController {
             model.addAttribute("analytics", orderService.getShopSalesAnalytics(shopId, resolvedStartDate, resolvedEndDate));
             model.addAttribute("startDate", resolvedStartDate);
             model.addAttribute("endDate", resolvedEndDate);
-            return "shopAnalytics";
+            return "shop/shopAnalytics";
         } catch (Exception e) {
             return "redirect:/shop/dashboard";
         }
@@ -229,7 +229,7 @@ public class ShopController {
         try {
             model.addAttribute("shop", shopService.getShopById(shopId));
             model.addAttribute("reviews", productReviewService.getReviewsByShopId(shopId));
-            return "shopReviews";
+            return "shop/shopReviews";
         } catch (Exception e) {
             return "redirect:/shop/dashboard";
         }
@@ -302,7 +302,7 @@ public class ShopController {
             model.addAttribute("categoryOptions", categoryOptions);
             model.addAttribute("selectedCategoryIds", productService.getProductCategoryIds(productId));
 
-            return "productEdit";
+            return "shop/productEdit";
 
         } catch (Exception e) {
             return "redirect:/shop/dashboard";

@@ -4,6 +4,7 @@ import com.prj.ecommerce.common.ReportReason;
 import com.prj.ecommerce.dto.response.report.AdminProductReportDetailResponse;
 import com.prj.ecommerce.dto.response.report.AdminProductReportListItemResponse;
 import com.prj.ecommerce.service.ProductReportService;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,10 +25,6 @@ public class AdminProductReportController {
 
     private final ProductReportService productReportService;
 
-    /**
-     * Admin dashboard - list of reported products
-     * GET /admin/reports
-     */
     @GetMapping
     public String listReportedProducts(
             @RequestParam(defaultValue = "0") int page,
@@ -46,18 +43,14 @@ public class AdminProductReportController {
             model.addAttribute("totalElements", reportedProducts.getTotalElements());
             model.addAttribute("pageSize", size);
 
-            return "admin/reported_products";
+            return "admin/reportedProducts";
         } catch (Exception e) {
             log.error("Error fetching reported products", e);
             model.addAttribute("errorMessage", "Lỗi khi tải danh sách báo cáo: " + e.getMessage());
-            return "admin/reported_products";
+            return "admin/reportedProducts";
         }
     }
 
-    /**
-     * Admin view product report details
-     * GET /admin/reports/{productId}
-     */
     @GetMapping("/{productId}")
     public String viewReportDetail(
             @PathVariable Long productId,
@@ -76,18 +69,14 @@ public class AdminProductReportController {
             model.addAttribute("purchasedFilter", purchased);
             model.addAttribute("reasonFilter", reason);
 
-            return "admin/product_report_detail";
+            return "admin/productReportDetail";
         } catch (Exception e) {
             log.error("Error fetching report detail", e);
             model.addAttribute("errorMessage", "Lỗi: " + e.getMessage());
-            return "admin/product_report_detail";
+            return "admin/productReportDetail";
         }
     }
 
-    /**
-     * Admin blocks product and resolves reports
-     * POST /admin/reports/{productId}/block
-     */
     @PostMapping("/{productId}/block")
     @ResponseBody
     public ResponseEntity<?> blockProductAndResolveReports(
@@ -96,11 +85,7 @@ public class AdminProductReportController {
         try {
             log.info("Admin blocking product: {} with note: {}", productId, adminNote);
             
-            String note = adminNote != null && !adminNote.trim().isEmpty() ? 
-                    adminNote : 
-                    "Đã xử lý khiếu nại của bạn. Sản phẩm đã bị khóa do vi phạm nguyên tắc cộng đồng.";
-            
-            productReportService.blockProductAndResolveReports(productId, note);
+            productReportService.blockProductAndResolveReports(productId, adminNote);
             
             return ResponseEntity.ok(new ApiResponse(true, "Sản phẩm đã bị khóa và tất cả báo cáo đã được xử lý."));
         } catch (Exception e) {
@@ -110,10 +95,6 @@ public class AdminProductReportController {
         }
     }
 
-    /**
-     * Admin rejects reports for a product
-     * POST /admin/reports/{productId}/reject
-     */
     @PostMapping("/{productId}/reject")
     @ResponseBody
     public ResponseEntity<?> rejectReportsForProduct(
@@ -122,11 +103,7 @@ public class AdminProductReportController {
         try {
             log.info("Admin rejecting reports for product: {} with note: {}", productId, adminNote);
             
-            String note = adminNote != null && !adminNote.trim().isEmpty() ? 
-                    adminNote : 
-                    "Đã xử lý khiếu nại của bạn. Tuy nhiên chúng tôi chưa phát hiện được sai phạm.";
-            
-            productReportService.rejectReportsForProduct(productId, note);
+            productReportService.rejectReportsForProduct(productId, adminNote);
             
             return ResponseEntity.ok(new ApiResponse(true, 
                     "Các báo cáo đã bị từ chối. Thông báo đã được gửi đến những người báo cáo."));
@@ -137,9 +114,7 @@ public class AdminProductReportController {
         }
     }
 
-    /**
-     * Simple API response wrapper
-     */
+    @Getter
     public static class ApiResponse {
         public boolean success;
         public String message;
@@ -149,12 +124,5 @@ public class AdminProductReportController {
             this.message = message;
         }
 
-        public boolean isSuccess() {
-            return success;
-        }
-
-        public String getMessage() {
-            return message;
-        }
     }
 }

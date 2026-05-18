@@ -3,11 +3,11 @@ package com.prj.ecommerce.controller;
 import com.prj.ecommerce.dto.request.report.ProductReportRequest;
 import com.prj.ecommerce.service.ProductReportService;
 import com.prj.ecommerce.utils.SecurityUtil;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
@@ -25,7 +25,6 @@ public class ProductReportController {
      * FormData: productId, reasonCode, description, reportImages (MultipartFile array, max 3)
      */
     @PostMapping
-    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<?> createReport(
             ProductReportRequest request,
             MultipartHttpServletRequest multipartRequest) {
@@ -50,12 +49,10 @@ public class ProductReportController {
      * GET /api/reports/check?productId={id}
      */
     @GetMapping("/check")
-    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<?> checkUserReport(
             @RequestParam Long productId) {
         try {
-            Long userId = SecurityUtil.getCurrentUserId();
-            Boolean hasReported = productReportService.hasUserReportedProduct(userId, productId);
+            Boolean hasReported = productReportService.hasUserReportedProduct(productId);
             
             return ResponseEntity.ok(new ApiResponse(true, 
                     hasReported ? "Bạn đã báo cáo sản phẩm này rồi" : "Chưa báo cáo"));
@@ -69,6 +66,7 @@ public class ProductReportController {
     /**
      * Simple API response wrapper
      */
+    @Getter
     public static class ApiResponse {
         public boolean success;
         public String message;
@@ -78,12 +76,5 @@ public class ProductReportController {
             this.message = message;
         }
 
-        public boolean isSuccess() {
-            return success;
-        }
-
-        public String getMessage() {
-            return message;
-        }
     }
 }

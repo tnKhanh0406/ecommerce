@@ -83,7 +83,7 @@ public class OrderController {
             model.addAttribute("addresses", userAddresses);
             model.addAttribute("cartItems", selectedItems);
 
-            return "checkout";
+            return "user/checkout";
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -109,14 +109,14 @@ public class OrderController {
                             @RequestParam(required = false) String keyword,
                             @RequestParam(required = false) OrderStatus status) {
         model.addAttribute("orders", orderService.getOrders(keyword, status).getOrders());
-        return "order";
+        return "user/order";
     }
 
     @GetMapping("/user/order/orderDetail/{orderId}")
     public String orderDetailPage(Model model,
                                   @PathVariable Long orderId) {
         model.addAttribute("orderDetail", orderService.getOrderItems(orderId));
-        return "orderDetail";
+        return "user/orderDetail";
     }
 
     @PostMapping("/user/order/orderDetail/{orderId}/cancel")

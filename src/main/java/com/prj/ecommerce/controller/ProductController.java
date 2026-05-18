@@ -3,7 +3,6 @@ package com.prj.ecommerce.controller;
 import com.prj.ecommerce.dto.request.product.ProductFilterRequest;
 import com.prj.ecommerce.dto.response.category.CategoryResponse;
 import com.prj.ecommerce.dto.response.category.CategorySidebarItemResponse;
-import com.prj.ecommerce.dto.response.category.CategoryTreeResponse;
 import com.prj.ecommerce.dto.response.product.CreateProductResponse;
 import com.prj.ecommerce.dto.response.shop.ShopResponse;
 import com.prj.ecommerce.entity.CategoryEntity;
@@ -19,10 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 @Controller
 @RequiredArgsConstructor
@@ -34,7 +30,7 @@ public class ProductController {
     @GetMapping("/products/{productId}")
     public String recommendProducts(Model model, @PathVariable Long productId) {
         model.addAttribute("productDetail", productService.getProductDetail(productId));
-        return "productDetails";
+        return "user/productDetails";
     }
 
     @GetMapping("/products")
@@ -62,7 +58,7 @@ public class ProductController {
             model.addAttribute("shop", shop);
         }
 
-        return "products";
+        return "user/products";
     }
 
     @GetMapping("/c/{slug}")
@@ -86,7 +82,7 @@ public class ProductController {
                 category.getName()
         );
 
-        return "products";
+        return "user/products";
     }
 
     private void populateProductListModel(Model model,

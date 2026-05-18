@@ -13,7 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class AdminProductReportDetailResponse {
-    // Product info
     private Long productId;
     private String productName;
     private String productDescription;
@@ -22,20 +21,5 @@ public class AdminProductReportDetailResponse {
     private String shopId;
     private Long totalReportCount;
 
-    // Product variants (simplified)
-    private List<VariantInfo> variants;
-
-    // Report details
     private List<ProductReportResponse> reports;
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class VariantInfo {
-        private Long variantId;
-        private String variantName;
-        private BigDecimal price;
-        private Integer stock;
-    }
 }

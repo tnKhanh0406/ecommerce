@@ -19,7 +19,7 @@ public class UserAddressController {
     public String userAddress(Model model) {
         model.addAttribute("addresses", userAddressService.getAllAddresses());
         model.addAttribute("addressForm", new AddressRequest());
-        return "address";
+        return "user/address";
     }
 
     @PostMapping("/user/account/address/create")

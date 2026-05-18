@@ -30,7 +30,7 @@ public class VoucherController {
             model.addAttribute("shop", shop);
             model.addAttribute("vouchers", voucherService.getVoucherByShopId(shopId));
             model.addAttribute("discountTypes", DiscountType.values());
-            return "shopVouchers";
+            return "shop/shopVouchers";
         } catch (Exception e) {
             return "redirect:/shop/dashboard";
         }
