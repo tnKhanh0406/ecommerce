@@ -1,5 +1,6 @@
 package com.prj.ecommerce.controller;
 
+import com.prj.ecommerce.common.Status;
 import com.prj.ecommerce.dto.request.user.ChangePasswordRequest;
 import com.prj.ecommerce.dto.request.user.RegisterRequest;
 import com.prj.ecommerce.dto.request.user.UpdateProfileRequest;
@@ -10,14 +11,16 @@ import com.prj.ecommerce.service.UserService;
 import com.prj.ecommerce.utils.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.stream.Collectors;
@@ -125,6 +128,47 @@ public class UserController {
         }
         redirectAttributes.addFlashAttribute("success", "Đổi mật khẩu thành công");
         return "redirect:/user/account/password";
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/users")
+    public String usersListPage(@RequestParam(defaultValue = "0") int page,
+                                @RequestParam(defaultValue = "10") int size,
+                                @RequestParam(required = false) String search,
+                                Model model) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserResponse> users = userService.getAllUsers(search, pageable);
+
+        model.addAttribute("users", users.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", users.getTotalPages());
+        model.addAttribute("search", search != null ? search : "");
+        model.addAttribute("pageSize", size);
+
+        return "admin/users";
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/users/{userId}")
+    public String userDetailPage(@PathVariable Long userId, Model model) {
+        UserResponse user = userService.getUserById(userId);
+        model.addAttribute("user", user);
+        model.addAttribute("statuses", Status.values());
+        return "admin/userDetail";
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin/users/{userId}/status")
+    public String updateUserStatus(@PathVariable Long userId,
+                                   @RequestParam Status status,
+                                   RedirectAttributes redirectAttributes) {
+        try {
+            userService.updateUserStatus(userId, status);
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật trạng thái người dùng thành công");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
+        }
+        return "redirect:/admin/users/" + userId;
     }
 
 }

@@ -17,6 +17,7 @@ import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.NotificationService;
 import com.prj.ecommerce.service.OrderService;
 import com.prj.ecommerce.service.ReviewPolicyService;
+import com.prj.ecommerce.utils.SecurityUtil;
 import com.prj.ecommerce.utils.VariantUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -65,31 +66,10 @@ public class OrderServiceImpl implements OrderService {
                 .getId();
     }
 
-    // @Override
-    // public CreateOrderListResponse getOrders(String keyword, OrderStatus status) {
-    //     List<OrderEntity> orderEntities;
-    //     boolean hasKeyword = keyword != null && !keyword.isBlank();
-    //     boolean hasStatus = status != null;
-    //     if (hasKeyword && !hasStatus) {
-    //         orderEntities = orderRepository.searchOrders(keyword, getCurrentUserId());
-    //     } else if (!hasKeyword && hasStatus) {
-    //         orderEntities = orderRepository.findAllByUser_IdAndOrderStatusOrderByCreatedAtDesc(getCurrentUserId(), status);
-    //     } else {
-    //         orderEntities = orderRepository.findAllByUser_IdOrderByCreatedAtDesc(getCurrentUserId());
-    //     }
-    //     List<CreateOrderResponse> responses = orderEntities.stream()
-    //             .map(order -> {
-    //                 CreateOrderResponse response = CreateOrderResponse.fromEntity(order);
-    //                 enrichOrderItemsWithReviewStatus(response, order);
-    //                 return response;
-    //             }).toList();
-    //     return new CreateOrderListResponse(responses);
-    // }
-
     @Override
     public OrderListResponse getOrders(String keyword, OrderStatus status) {
 
-        Long userId = getCurrentUserId();
+        Long userId = SecurityUtil.getCurrentUserId();
 
         // 1. Load orders
         List<OrderEntity> orders = getOrdersByCondition(keyword, status, userId);
