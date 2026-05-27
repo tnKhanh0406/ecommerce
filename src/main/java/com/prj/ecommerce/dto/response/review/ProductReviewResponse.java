@@ -1,6 +1,7 @@
 package com.prj.ecommerce.dto.response.review;
 
 import com.prj.ecommerce.dto.response.image.ProductImageResponse;
+import com.prj.ecommerce.entity.ProductImageEntity;
 import com.prj.ecommerce.entity.ProductReviewEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,7 +17,6 @@ import java.util.List;
 @AllArgsConstructor
 public class ProductReviewResponse {
     private Long productReviewId;
-    private String fullName;
     private Integer rating;
     private String comment;
     private LocalDateTime createdAt;
@@ -30,15 +30,34 @@ public class ProductReviewResponse {
     public static ProductReviewResponse fromEntity(ProductReviewEntity entity) {
         return new ProductReviewResponse(
                 entity.getId(),
-                entity.getUser().getFullName(),
                 entity.getRating(),
                 entity.getComment(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
                 entity.getVariantSnapshot(),
                 entity.getProduct().getName(),
-                entity.getProduct().getImages().get(0).getImageUrl(),
+                entity.getProduct().getThumbnailImg(),
                 entity.getImages().stream().map(ProductImageResponse::fromEntity).toList(),
+                ReviewReplyResponse.fromEntity(entity.getReply())
+        );
+    }
+
+    public static ProductReviewResponse fromEntity(
+            ProductReviewEntity entity,
+            List<ProductImageEntity> images
+    ) {
+        return new ProductReviewResponse(
+                entity.getId(),
+                entity.getRating(),
+                entity.getComment(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt(),
+                entity.getVariantSnapshot(),
+                entity.getProduct().getName(),
+                null,
+                images.stream()
+                        .map(ProductImageResponse::fromEntity)
+                        .toList(),
                 ReviewReplyResponse.fromEntity(entity.getReply())
         );
     }

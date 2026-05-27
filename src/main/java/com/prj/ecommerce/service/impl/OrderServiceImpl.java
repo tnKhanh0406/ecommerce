@@ -3,10 +3,7 @@ package com.prj.ecommerce.service.impl;
 import com.prj.ecommerce.common.*;
 import com.prj.ecommerce.dto.request.order.CreateOrderRequest;
 import com.prj.ecommerce.dto.request.notification.NotificationRequest;
-import com.prj.ecommerce.dto.response.order.OrderItemResponse;
-import com.prj.ecommerce.dto.response.order.OrderListResponse;
-import com.prj.ecommerce.dto.response.order.OrderResponse;
-import com.prj.ecommerce.dto.response.order.OrderHistoryResponse;
+import com.prj.ecommerce.dto.response.order.*;
 import com.prj.ecommerce.dto.response.review.ProductReviewResponse;
 import com.prj.ecommerce.dto.response.shop.ShopSalesAnalyticsResponse;
 import com.prj.ecommerce.dto.response.shop.ShopTopProductResponse;
@@ -17,6 +14,7 @@ import com.prj.ecommerce.repository.*;
 import com.prj.ecommerce.service.NotificationService;
 import com.prj.ecommerce.service.OrderService;
 import com.prj.ecommerce.service.ReviewPolicyService;
+import com.prj.ecommerce.specification.OrderSpecification;
 import com.prj.ecommerce.utils.SecurityUtil;
 import com.prj.ecommerce.utils.VariantUtil;
 import jakarta.persistence.EntityNotFoundException;
@@ -67,141 +65,99 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderListResponse getOrders(String keyword, OrderStatus status) {
-
+    public List<OrderSummaryResponse> getOrders(String keyword, OrderStatus status) {
         Long userId = SecurityUtil.getCurrentUserId();
-
-        // 1. Load orders
         List<OrderEntity> orders = getOrdersByCondition(keyword, status, userId);
 
         if (orders.isEmpty()) {
-            return new OrderListResponse(List.of());
+            return List.of();
         }
-
-        List<Long> orderIds = orders.stream()
-                .map(OrderEntity::getId)
-                .toList();
-
-        // 2. Batch load related data
+        List<Long> orderIds = orders.stream().map(OrderEntity::getId).toList();
         List<OrderItemEntity> items = orderItemRepository.findByOrderIds(orderIds);
         List<OrderStatusHistoryEntity> histories = orderStatusHistoryRepository.findByOrderIds(orderIds);
-        
-        // Query 1: Load reviews với product, user, shop, reply
         List<ProductReviewEntity> reviews = productReviewRepository.findByOrderIds(orderIds);
-        
-        // Query 2: Extract review IDs và load images riêng
-        List<Long> reviewIds = reviews.stream()
-                .map(ProductReviewEntity::getId)
-                .toList();
-        List<ProductImageEntity> reviewImages = productImageRepository.findByReviewIds(reviewIds);
+        List<Long> reviewIds = reviews.stream().map(ProductReviewEntity::getId).toList();
 
-        // 3. Map dữ liệu
-        Map<Long, List<OrderItemEntity>> itemMap =
-                items.stream().collect(Collectors.groupingBy(i -> i.getOrder().getId()));
+        List<ProductImageEntity> reviewImages = reviewIds.isEmpty()
+                        ? List.of()
+                        : productImageRepository.findByReviewIds(reviewIds);
 
-        Map<Long, List<OrderStatusHistoryEntity>> historyMap =
-                histories.stream().collect(Collectors.groupingBy(h -> h.getOrder().getId()));
+        Map<Long, List<OrderItemEntity>> itemMap = items.stream()
+                        .collect(Collectors.groupingBy(
+                                i -> i.getOrder().getId()
+                        ));
 
-        Map<Long, ProductReviewEntity> reviewMap =
-                reviews.stream().collect(Collectors.toMap(
-                        r -> r.getOrderItem().getId(),
-                        Function.identity()
-                ));
-        
-        // Map images theo review ID
-        Map<Long, List<ProductImageEntity>> reviewImageMap =
-                reviewImages.stream()
-                        .collect(Collectors.groupingBy(img -> img.getReview().getId()));
+        Map<Long, List<OrderStatusHistoryEntity>> historyMap = histories.stream()
+                        .collect(Collectors.groupingBy(
+                                h -> h.getOrder().getId()
+                        ));
 
-        // 4. Build response
-        List<OrderResponse> responses = orders.stream().map(order -> {
+        Map<Long, ProductReviewEntity> reviewMap = reviews.stream()
+                        .collect(Collectors.toMap(
+                                r -> r.getOrderItem().getId(),
+                                Function.identity()
+                        ));
 
-            OrderResponse res = OrderResponse.fromEntity(order);
+        Map<Long, List<ProductImageEntity>> reviewImageMap = reviewImages.stream()
+                        .collect(Collectors.groupingBy(
+                                img -> img.getReview().getId()
+                        ));
+        return orders.stream().map(order -> {
+            boolean canReviewOrder = reviewPolicyService.canReview(historyMap.getOrDefault(order.getId(), List.of()), 10);
 
-            List<OrderItemEntity> orderItems = itemMap.getOrDefault(order.getId(), List.of());
+            List<OrderItemSummaryResponse> itemResponses = itemMap.getOrDefault(order.getId(), List.of())
+                    .stream()
+                    .map(item -> {
+                        ProductReviewEntity review = reviewMap.get(item.getId());
+                        boolean reviewed = review != null;
+                        boolean canReview = !reviewed && canReviewOrder;
+                        boolean canUpdate = reviewed && reviewPolicyService.canUpdate(review, 5);
+                        return OrderItemSummaryResponse.fromEntity(
+                                item,
+                                review,
+                                reviewed,
+                                canReview,
+                                canUpdate,
+                                reviewImageMap.getOrDefault(
+                                        review != null ? review.getId() : -1,
+                                        List.of()));
+                    })
+                    .toList();
 
-            boolean canReviewOrder = reviewPolicyService.canReview(order, 10);
-
-            List<OrderItemResponse> itemResponses = orderItems.stream().map(item -> {
-
-                ProductReviewEntity review = reviewMap.get(item.getId());
-
-                boolean reviewed = review != null;
-                boolean canReview = !reviewed && canReviewOrder;
-
-                boolean canUpdate = false;
-                if (review != null) {
-                    canUpdate = reviewPolicyService.canUpdate(review, 5);
-                }
-
-                // Set images cho review từ map
-                if (review != null) {
-                    List<ProductImageEntity> images = reviewImageMap.getOrDefault(review.getId(), List.of());
-                    review.setImages(images);
-                }
-
-                return OrderItemResponse.builder()
-                        .orderItemId(item.getId())
-                        .productId(item.getProductId())
-                        .imageUrl(item.getImageUrl())
-                        .price(item.getPrice())
-                        .quantity(item.getQuantity())
-                        .productName(item.getProductName())
-                        .productVariantName(item.getProductVariantName())
-                        .totalPrice(item.getTotalPrice())
-                        .reviewed(reviewed)
-                        .canReview(canReview)
-                        .canUpdate(canUpdate)
-                        .reviewResponse(
-                                review != null ? ProductReviewResponse.fromEntity(review) : null
-                        )
-                        .build();
-
-            }).toList();
-
-            List<OrderHistoryResponse> historyResponses =
-                    historyMap.getOrDefault(order.getId(), List.of())
-                            .stream()
-                            .map(OrderHistoryResponse::fromEntity)
-                            .toList();
-
-            res.setItems(itemResponses);
-            res.setHistories(historyResponses);
-
-            return res;
-
+            return OrderSummaryResponse.builder()
+                    .id(order.getId())
+                    .createdAt(order.getCreatedAt())
+                    .orderStatus(
+                            order.getOrderStatus().name()
+                    )
+                    .shopId(order.getShopId())
+                    .shopName(order.getShopName())
+                    .totalPrice(order.getTotal())
+                    .items(itemResponses)
+                    .build();
         }).toList();
-
-        return new OrderListResponse(responses);
     }
 
     @Override
-    public OrderListResponse getOrdersForAdmin(String keyword, OrderStatus status) {
-        List<OrderEntity> orderEntities;
-        boolean hasKeyword = keyword != null && !keyword.isBlank();
-        boolean hasStatus = status != null;
-
-        if (hasKeyword && !hasStatus) {
-            orderEntities = orderRepository.searchOrdersForAdmin(keyword.trim());
-        } else if (!hasKeyword && hasStatus) {
-            orderEntities = orderRepository.findAllByOrderStatusOrderByCreatedAtDesc(status);
-        } else if (hasKeyword) {
-            orderEntities = orderRepository.searchOrdersForAdmin(keyword.trim()).stream()
-                    .filter(order -> order.getOrderStatus() == status)
-                    .toList();
-        } else {
-            orderEntities = orderRepository.findAllByOrderByCreatedAtDesc();
-        }
-
-        List<OrderResponse> responses = orderEntities.stream()
+    public List<OrderForAdminResponse> getOrdersForAdmin(String keyword, OrderStatus status) {
+        List<OrderEntity> orderEntities =
+                orderRepository.findAll(
+                        OrderSpecification.filterAdminOrders(keyword, status)
+                );
+        return orderEntities.stream()
                 .map(order -> {
-                    OrderResponse response = OrderResponse.fromEntity(order);
-                    enrichOrderItemsWithReviewStatus(response, order);
-                    return response;
-                })
-                .toList();
-
-        return new OrderListResponse(responses);
+                    OrderForAdminResponse res = new OrderForAdminResponse();
+                    res.setId(order.getId());
+                    res.setCreatedAt(order.getCreatedAt());
+                    res.setOrderStatus(order.getOrderStatus().name());
+                    res.setPaymentStatus(order.getPaymentStatus().name());
+                    res.setReceiverPhone(order.getReceiverPhone());
+                    res.setReceiverName(order.getReceiverName());
+                    res.setShopId(order.getShopId());
+                    res.setShopName(order.getShopName());
+                    res.setTotalPrice(order.getTotal());
+                    return res;
+                }).toList();
     }
 
     @Override
@@ -228,6 +184,50 @@ public class OrderServiceImpl implements OrderService {
                     return response;
                 })
                 .toList();
+    }
+
+    @Override
+    public List<OrderForShopResponse> getOrdersForShop(Long shopId, OrderStatus status) {
+        List<OrderForShopFlatResponse> rows = orderRepository.findOrdersForShop(shopId, status);
+
+        Map<Long, OrderForShopResponse> map = new LinkedHashMap<>();
+
+        for (OrderForShopFlatResponse row : rows) {
+            OrderForShopResponse order =
+                    map.computeIfAbsent(row.getOrderId(), id -> {
+
+                        OrderForShopResponse res =
+                                new OrderForShopResponse();
+
+                        res.setId(row.getOrderId());
+                        res.setCreatedAt(row.getCreatedAt());
+                        res.setNote(row.getNote());
+                        res.setOrderStatus(
+                                row.getOrderStatus().toString()
+                        );
+                        res.setPaymentStatus(
+                                row.getPaymentStatus().toString()
+                        );
+                        res.setReceiverName(row.getReceiverName());
+                        res.setTotalPrice(row.getTotalPrice());
+
+                        return res;
+                    });
+
+            order.getItems().add(
+                    new OrderItemSummaryForShopResponse(
+                            row.getOrderItemId(),
+                            row.getProductId(),
+                            row.getImageUrl(),
+                            row.getPrice(),
+                            row.getQuantity(),
+                            row.getProductName(),
+                            row.getProductVariantName(),
+                            row.getItemTotalPrice()
+                    )
+            );
+        }
+        return new ArrayList<>(map.values());
     }
 
     @Override

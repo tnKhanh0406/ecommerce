@@ -10,12 +10,29 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class ReviewPolicyService {
 
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
+
+    public boolean canReview(List<OrderStatusHistoryEntity> histories, int days) {
+        Optional<OrderStatusHistoryEntity> completedHistory = histories.stream()
+                        .filter(h -> h.getToStatus() == OrderStatus.COMPLETED)
+                        .findFirst();
+
+        if (completedHistory.isEmpty()) {
+            return false;
+        }
+
+        return Duration.between(
+                completedHistory.get().getCreatedAt(),
+                LocalDateTime.now()
+        ).toDays() <= days;
+    }
 
     public boolean canReview(OrderEntity order, int days) {
         OrderStatusHistoryEntity history = orderStatusHistoryRepository

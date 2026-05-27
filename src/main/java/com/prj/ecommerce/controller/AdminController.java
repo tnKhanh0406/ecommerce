@@ -141,7 +141,7 @@ public class AdminController {
     public String ordersListPage(@RequestParam(required = false) String search,
                                  @RequestParam(required = false) OrderStatus status,
                                  Model model) {
-        model.addAttribute("orders", orderService.getOrdersForAdmin(search, status).getOrders());
+        model.addAttribute("orders", orderService.getOrdersForAdmin(search, status));
         model.addAttribute("search", search != null ? search : "");
         model.addAttribute("currentStatus", status);
         model.addAttribute("statuses", OrderStatus.values());

@@ -108,7 +108,7 @@ public class OrderController {
     public String orderPage(Model model,
                             @RequestParam(required = false) String keyword,
                             @RequestParam(required = false) OrderStatus status) {
-        model.addAttribute("orders", orderService.getOrders(keyword, status).getOrders());
+        model.addAttribute("orders", orderService.getOrders(keyword, status));
         return "user/order";
     }
 

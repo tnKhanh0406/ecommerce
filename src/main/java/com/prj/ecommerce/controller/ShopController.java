@@ -194,10 +194,11 @@ public class ShopController {
                                  @RequestParam(required = false) OrderStatus status) {
         try {
             model.addAttribute("shop", shopService.getShopById(shopId));
-            model.addAttribute("orders", orderService.getOrdersByShopId(shopId, status));
+            model.addAttribute("orders", orderService.getOrdersForShop(shopId, status));
             model.addAttribute("currentStatus", status);
             return "shop/shopOrders";
         } catch (Exception e) {
+            System.out.println("Error fetching orders: " + e.getMessage());
             return "redirect:/shop/dashboard";
         }
     }
