@@ -21,24 +21,20 @@ public interface ProductService {
     Page<CreateProductResponse> getProducts(ProductFilterRequest request);
     List<CreateProductResponse> getRecommendProducts();
     ProductDetailResponse getProductDetail(Long id);
-    CreateProductResponse createProduct(CreateProductRequest request);
-    CreateProductResponse createProductWithImages(CreateProductRequest request,
-                                                  List<MultipartFile> productImages,
-                                                  Map<String, List<MultipartFile>> variantImageMap);
-    CreateProductResponse updateBasicProduct(Long productId, UpdateBasicProductRequest request);
-    CreateProductResponse updateBasicProductWithImages(Long productId,
-                                                       UpdateBasicProductRequest request,
-                                                       List<MultipartFile> productImages,
-                                                       List<String> existingProductImageUrls);
-    ProductVariantListResponse updateBasicProductVariant(Long productId, ProductVariantListRequest request);
-    ProductVariantListResponse updateBasicProductVariantWithImages(Long productId,
-                                                                    ProductVariantListRequest request,
-                                                                    Map<String, List<MultipartFile>> variantImageMap,
-                                                                    Map<Integer, List<String>> existingVariantImageUrls);
-    CreateProductResponse updateAttribute(Long productId, UpdateAttributeRequest updateAttributeRequest);
-    CreateProductResponse updateAttributeWithImages(Long productId,
-                                                     UpdateAttributeRequest updateAttributeRequest,
-                                                     Map<String, List<MultipartFile>> variantImageMap);
+    void createProduct(CreateProductRequest request,
+                                        List<MultipartFile> productImages,
+                                        Map<String, List<MultipartFile>> variantImageMap);
+    void updateBasicProduct(Long productId,
+                            UpdateBasicProductRequest request,
+                            List<MultipartFile> productImages,
+                            List<String> existingProductImageUrls);
+    void updateBasicProductVariant(Long productId,
+                                   ProductVariantListRequest request,
+                                   Map<String, List<MultipartFile>> variantImageMap,
+                                   Map<Integer, List<String>> existingVariantImageUrls);
+    void updateAttribute(Long productId,
+                         UpdateAttributeRequest updateAttributeRequest,
+                         Map<String, List<MultipartFile>> variantImageMap);
     void deleteProduct(Long productId);
     Page<CreateProductResponse> getProductsByShopId(Long shopId, int page, int size);
     ProductDetailResponse getProductForEdit(Long productId);

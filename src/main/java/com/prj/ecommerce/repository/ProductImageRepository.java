@@ -22,6 +22,7 @@ public interface ProductImageRepository extends JpaRepository<ProductImageEntity
     @Query("""
         SELECT i
         FROM ProductImageEntity i
+        JOIN FETCH i.review
         WHERE i.review.id IN :reviewIds
     """)
     List<ProductImageEntity> findByReviewIds(List<Long> reviewIds);

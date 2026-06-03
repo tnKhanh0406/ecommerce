@@ -2,28 +2,17 @@ package com.prj.ecommerce.service.impl;
 
 import com.prj.ecommerce.common.Status;
 import com.prj.ecommerce.common.ImageType;
-import com.prj.ecommerce.dto.request.attribute.ProductAttributeRequest;
-import com.prj.ecommerce.dto.request.attribute.ProductAttributeValueRequest;
-import com.prj.ecommerce.dto.request.attribute.UpdateAttributeRequest;
+import com.prj.ecommerce.dto.request.attribute.*;
 import com.prj.ecommerce.dto.request.image.ProductImageRequest;
-import com.prj.ecommerce.dto.request.product.CreateProductRequest;
-import com.prj.ecommerce.dto.request.product.ProductFilterRequest;
-import com.prj.ecommerce.dto.request.product.UpdateBasicProductRequest;
-import com.prj.ecommerce.dto.request.variant.ProductVariantAttributeValueRequest;
-import com.prj.ecommerce.dto.request.variant.ProductVariantListRequest;
-import com.prj.ecommerce.dto.request.variant.ProductVariantRequest;
-import com.prj.ecommerce.dto.request.variant.UpdateProductVariantRequest;
+import com.prj.ecommerce.dto.request.product.*;
+import com.prj.ecommerce.dto.request.variant.*;
 import com.prj.ecommerce.dto.response.attribute.ProductAttributeResponse;
 import com.prj.ecommerce.dto.response.attribute.ProductAttributeValueResponse;
 import com.prj.ecommerce.dto.response.category.CategoryResponse;
 import com.prj.ecommerce.dto.response.image.ProductImageResponse;
-import com.prj.ecommerce.dto.response.product.AdminProductResponse;
-import com.prj.ecommerce.dto.response.product.CreateProductResponse;
-import com.prj.ecommerce.dto.response.product.ProductDetailResponse;
-import com.prj.ecommerce.dto.response.product.ProductPriceRangeResponse;
+import com.prj.ecommerce.dto.response.product.*;
 import com.prj.ecommerce.dto.response.review.ProductReviewResponse;
 import com.prj.ecommerce.dto.response.shop.ShopResponse;
-import com.prj.ecommerce.dto.response.variant.ProductVariantListResponse;
 import com.prj.ecommerce.dto.response.variant.ProductVariantResponse;
 import com.prj.ecommerce.entity.*;
 import com.prj.ecommerce.repository.*;
@@ -48,7 +37,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import jakarta.persistence.criteria.Predicate;
-//product khong co attribute -> product image type dang la variant, dung ra phai la thumbnail
+
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
@@ -165,11 +154,21 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public CreateProductResponse createProduct(CreateProductRequest request) {
+    public void createProduct(CreateProductRequest request,
+                              List<MultipartFile> productImages,
+                              Map<String, List<MultipartFile>> variantImageMap) {
+        // upload product images
+        attachProductImages(request, productImages);
+
+        // upload variant images
+        attachVariantImages(request.getVariants(), variantImageMap);
+
         //1. validate shop belong to seller
         ShopEntity shop = shopRepository.findById(request.getShopId())
                 .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
+
         UserEntity user = getCurrentUser();
+
         if (!shop.getUser().getId().equals(user.getId())) {
             throw new AccessDeniedException("Shop does not belong to seller");
         }
@@ -179,46 +178,36 @@ public class ProductServiceImpl implements ProductService {
         product.setName(request.getName());
         product.setDescription(request.getDescription());
         product.setShop(shop);
+
         productRepo.save(product);
 
-        //3. set category
+        //3. category
         if (request.getCategoryIds() != null) {
-           createProductCategories(product, request.getCategoryIds());
+            createProductCategories(product, request.getCategoryIds());
         }
 
-        // 4. process attributes: create attribute if missing + values
-        // Map attributeName -> attributeEntity
+        //4. attributes
         Map<String, ProductAttributeEntity> attrMap = processProductAttributes(request.getAttributes(), user);
 
-        // 5. create images at product level
+        //5. product images
         if (request.getImages() != null && !request.getImages().isEmpty()) {
             createProductImages(product, null, request.getImages());
         }
 
-        // 6. create variants
+        //6. variants
         if (request.getVariants() != null) {
             createProductVariants(product, request.getVariants(), attrMap);
         }
-        return CreateProductResponse.fromEntity(product);
     }
 
-    @Override
-    @Transactional
-    public CreateProductResponse createProductWithImages(CreateProductRequest request,
-                                                         List<MultipartFile> productImages,
-                                                         Map<String, List<MultipartFile>> variantImageMap) {
-        attachProductImages(request, productImages);
-        attachVariantImages(request.getVariants(), variantImageMap);
-        return createProduct(request);
-    }
 
     @Override
     @Transactional
     @CacheEvict(value = "product", key = "#productId")
-    public CreateProductResponse updateBasicProductWithImages(Long productId,
-                                                              UpdateBasicProductRequest request,
-                                                              List<MultipartFile> productImages,
-                                                              List<String> existingProductImageUrls) {
+    public void updateBasicProduct(Long productId,
+                                   UpdateBasicProductRequest request,
+                                   List<MultipartFile> productImages,
+                                   List<String> existingProductImageUrls) {
         List<ProductImageRequest> mergedImages = new ArrayList<>();
 
         if (existingProductImageUrls != null) {
@@ -231,35 +220,6 @@ public class ProductServiceImpl implements ProductService {
 
         mergedImages.addAll(uploadImages(productImages));
         request.setImages(mergedImages);
-
-        return updateBasicProduct(productId, request);
-    }
-
-    @Override
-    @Transactional
-    @CacheEvict(value = "product", key = "#productId")
-    public ProductVariantListResponse updateBasicProductVariantWithImages(Long productId,
-                                                                          ProductVariantListRequest request,
-                                                                          Map<String, List<MultipartFile>> variantImageMap,
-                                                                          Map<Integer, List<String>> existingVariantImageUrls) {
-        attachVariantUpdateImages(request.getProductVariants(), variantImageMap, existingVariantImageUrls);
-        return updateBasicProductVariant(productId, request);
-    }
-
-    @Override
-    @Transactional
-    @CacheEvict(value = "product", key = "#productId")
-    public CreateProductResponse updateAttributeWithImages(Long productId,
-                                                           UpdateAttributeRequest updateAttributeRequest,
-                                                           Map<String, List<MultipartFile>> variantImageMap) {
-        attachVariantCreateImages(updateAttributeRequest.getVariants(), variantImageMap);
-        return updateAttribute(productId, updateAttributeRequest);
-    }
-
-    @Override
-    @Transactional
-    @CacheEvict(value = "product", key = "#productId")
-    public CreateProductResponse updateBasicProduct(Long productId, UpdateBasicProductRequest request) {
         ProductEntity product = productRepo.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
         if (!product.getShop().getUser().getId().equals(getCurrentUser().getId())) {
@@ -274,13 +234,16 @@ public class ProductServiceImpl implements ProductService {
         if (request.getImages() != null) {
             updateProductImages(product, null, request.getImages());
         }
-        return CreateProductResponse.fromEntity(product);
     }
 
     @Override
     @Transactional
     @CacheEvict(value = "product", key = "#productId")
-    public ProductVariantListResponse updateBasicProductVariant(Long productId, ProductVariantListRequest request) {
+    public void updateBasicProductVariant(Long productId,
+                                          ProductVariantListRequest request,
+                                          Map<String, List<MultipartFile>> variantImageMap,
+                                          Map<Integer, List<String>> existingVariantImageUrls) {
+        attachVariantUpdateImages(request.getProductVariants(), variantImageMap, existingVariantImageUrls);
         ProductEntity product = productRepo.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
         if (!product.getShop().getUser().getId().equals(getCurrentUser().getId())) {
@@ -304,13 +267,15 @@ public class ProductServiceImpl implements ProductService {
 
             productVariantRepository.save(variant);
         }
-        return ProductVariantListResponse.fromEntity(entities);
     }
 
     @Override
     @Transactional
     @CacheEvict(value = "product", key = "#productId")
-    public CreateProductResponse updateAttribute(Long productId, UpdateAttributeRequest updateAttributeRequest) {
+    public void updateAttribute(Long productId,
+                                UpdateAttributeRequest updateAttributeRequest,
+                                Map<String, List<MultipartFile>> variantImageMap) {
+        attachVariantCreateImages(updateAttributeRequest.getVariants(), variantImageMap);
         ProductEntity product = productRepo.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found"));
         if (!product.getShop().getUser().getId().equals(getCurrentUser().getId())) {
@@ -368,7 +333,6 @@ public class ProductServiceImpl implements ProductService {
             }
         }
 
-        return CreateProductResponse.fromEntity(product);
     }
 
     @Override
@@ -390,7 +354,7 @@ public class ProductServiceImpl implements ProductService {
         ShopEntity shop = shopRepository.findById(shopId)
                 .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
 
-        // ✅ Verify ownership
+        // Verify ownership
         if (!shop.getUser().getId().equals(user.getId())) {
             throw new AccessDeniedException("This shop does not belong to you");
         }

@@ -17,6 +17,6 @@ public class NotificationController {
     public String notifications(Model model,
                                 @RequestParam(required = false) ReferenceType referenceType) {
         model.addAttribute("notifications", notificationService.getAllNotifications(referenceType));
-        return "notifications";
+        return "user/notifications";
     }
 }

@@ -21,11 +21,12 @@ public interface OrderItemRepository extends JpaRepository<OrderItemEntity, Long
     List<OrderEntity> findOrdersByUserAndProductId(
             @Param("userId") Long userId,
             @Param("productId") Long productId);
-    
+
     @Query("""
         SELECT oi
         FROM OrderItemEntity oi
+        JOIN FETCH oi.order
         WHERE oi.order.id IN :orderIds
-        """)
-    List<OrderItemEntity> findByOrderIds(List<Long> orderIds);                
+    """)
+    List<OrderItemEntity> findByOrderIds(@Param("orderIds") List<Long> orderIds);
 }

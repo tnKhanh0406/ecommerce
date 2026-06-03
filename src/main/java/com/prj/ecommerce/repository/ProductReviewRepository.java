@@ -31,26 +31,10 @@ public interface ProductReviewRepository extends JpaRepository<ProductReviewEnti
     List<Long> findReviewedOrderItemIds(@Param("orderId") Long orderId);
 
     @Query("""
-        select r.product.id
-        from ProductReviewEntity r
-        where r.id = :reviewId
-    """)
-    Long findProductIdByReviewId(@Param("reviewId") Long reviewId);
-
-    // @Query("""
-    //     SELECT r
-    //     FROM ProductReviewEntity r
-    //     WHERE r.orderItem.order.id IN :orderIds
-    // """)
-    // List<ProductReviewEntity> findByOrderIds(List<Long> orderIds);
-
-    @Query("""
         SELECT r
         FROM ProductReviewEntity r
-        LEFT JOIN FETCH r.product
-        LEFT JOIN FETCH r.user
-        LEFT JOIN FETCH r.shop
         LEFT JOIN FETCH r.reply
+        LEFT JOIN FETCH r.orderItem
         WHERE r.orderItem.order.id IN :orderIds
     """)
     List<ProductReviewEntity> findByOrderIds(List<Long> orderIds);

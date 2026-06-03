@@ -12,6 +12,7 @@ public interface OrderStatusHistoryRepository extends JpaRepository<OrderStatusH
     @Query("""
         SELECT h
         FROM OrderStatusHistoryEntity h
+        JOIN FETCH h.order
         WHERE h.order.id IN :orderIds
     """)
     List<OrderStatusHistoryEntity> findByOrderIds(List<Long> orderIds);
