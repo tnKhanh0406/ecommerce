@@ -325,7 +325,7 @@ public class ShopController {
                 List<String> existingProductImageUrls = parseExistingProductImageUrls(multipartRequest.getParameterMap());
                 List<MultipartFile> newProductImages = multipartRequest.getFiles("productImages");
 
-            productService.updateBasicProductWithImages(
+            productService.updateBasicProduct(
                 productId,
                 request,
                 newProductImages,
@@ -348,7 +348,7 @@ public class ShopController {
         try {
             Map<Integer, List<String>> existingVariantImageUrls = parseExistingVariantImageUrls(variantParams);
             ProductVariantListRequest request = parseVariantList(variantParams, existingVariantImageUrls);
-            productService.updateBasicProductVariantWithImages(
+            productService.updateBasicProductVariant(
                 productId,
                 request,
                 multipartRequest.getMultiFileMap(),
@@ -374,7 +374,7 @@ public class ShopController {
             request.setAttributes(parseAttributes(variantParams));
             request.setVariants(parseVariants(variantParams, existingVariantImageUrls));
 
-            productService.updateAttributeWithImages(productId, request, multipartRequest.getMultiFileMap());
+            productService.updateAttribute(productId, request, multipartRequest.getMultiFileMap());
 
             redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thêm/xóa variant thành công!");
             return String.format("redirect:/shop/products/%d/edit", productId);
@@ -407,7 +407,7 @@ public class ShopController {
             request.setAttributes(attributes);
             request.setVariants(variants);
 
-            productService.createProductWithImages(request, productImages, multipartRequest.getMultiFileMap());
+            productService.createProduct(request, productImages, multipartRequest.getMultiFileMap());
 
             redirectAttributes.addFlashAttribute("successMessage", "Thêm sản phẩm thành công!");
             return String.format("redirect:/shop/%d/products", shopId);

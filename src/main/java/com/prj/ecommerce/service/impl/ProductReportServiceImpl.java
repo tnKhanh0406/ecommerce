@@ -88,12 +88,6 @@ public class ProductReportServiceImpl implements ProductReportService {
 
     @Override
     @Transactional(readOnly = true)
-    public AdminProductReportDetailResponse getProductReportDetail(Long productId) {
-        return getProductReportDetail(productId, null, null);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public AdminProductReportDetailResponse getProductReportDetail(
             Long productId,
             Boolean purchasedFilter,

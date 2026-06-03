@@ -4,7 +4,6 @@ import com.prj.ecommerce.common.*;
 import com.prj.ecommerce.dto.request.order.CreateOrderRequest;
 import com.prj.ecommerce.dto.request.notification.NotificationRequest;
 import com.prj.ecommerce.dto.response.order.*;
-import com.prj.ecommerce.dto.response.review.ProductReviewResponse;
 import com.prj.ecommerce.dto.response.shop.ShopSalesAnalyticsResponse;
 import com.prj.ecommerce.dto.response.shop.ShopTopProductResponse;
 import com.prj.ecommerce.entity.*;
@@ -161,32 +160,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<OrderResponse> getOrdersByShopId(Long shopId, OrderStatus status) {
-        UserEntity currentUser = getCurrentUser();
-        ShopEntity shop = shopRepository.findById(shopId)
-                .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
-
-        if (!shop.getUser().getId().equals(currentUser.getId())) {
-            throw new AccessDeniedException("This shop does not belong to you");
-        }
-
-        List<OrderEntity> orderEntities;
-        if (status == null) {
-            orderEntities = orderRepository.findAllByShopIdOrderByCreatedAtDesc(shopId);
-        } else {
-            orderEntities = orderRepository.findAllByShopIdAndOrderStatusOrderByCreatedAtDesc(shopId, status);
-        }
-
-        return orderEntities.stream()
-                .map(order -> {
-                    OrderResponse response = OrderResponse.fromEntity(order);
-                    enrichOrderItemsWithReviewStatus(response, order);
-                    return response;
-                })
-                .toList();
-    }
-
-    @Override
     public List<OrderForShopResponse> getOrdersForShop(Long shopId, OrderStatus status) {
         List<OrderForShopFlatResponse> rows = orderRepository.findOrdersForShop(shopId, status);
 
@@ -196,8 +169,7 @@ public class OrderServiceImpl implements OrderService {
             OrderForShopResponse order =
                     map.computeIfAbsent(row.getOrderId(), id -> {
 
-                        OrderForShopResponse res =
-                                new OrderForShopResponse();
+                        OrderForShopResponse res = new OrderForShopResponse();
 
                         res.setId(row.getOrderId());
                         res.setCreatedAt(row.getCreatedAt());
@@ -269,7 +241,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderListResponse createOrder(CreateOrderRequest request) {
+    public void createOrder(CreateOrderRequest request) {
 
         Long userId = getCurrentUserId();
         // 1. Lấy cart items
@@ -293,14 +265,11 @@ public class OrderServiceImpl implements OrderService {
 
         // 5. Xóa cart items sau khi đã xử lý
         cartItemRepository.deleteAll(cartItems);
-
-        // 6. Trả response tổng
-        return new OrderListResponse(orderResponses);
     }
 
     @Override
     @Transactional
-    public OrderResponse cancelOrder(Long orderId) {
+    public void cancelOrder(Long orderId) {
         OrderEntity order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found"));
         Long currentUserId = getCurrentUserId();
@@ -370,8 +339,6 @@ public class OrderServiceImpl implements OrderService {
         );
 
         notificationService.sendNotification(notificationRequest);
-
-        return OrderResponse.fromEntity(order);
     }
 
     @Override
@@ -838,11 +805,11 @@ public class OrderServiceImpl implements OrderService {
         };
     }
 
-    private OrderStatusHistoryEntity addInitialStatusHistory(OrderEntity order,
-                                                             OrderStatus from,
-                                                             OrderStatus to,
-                                                             UserRole userRole,
-                                                             Long currentUserId) {
+    private void addInitialStatusHistory(OrderEntity order,
+                                         OrderStatus from,
+                                         OrderStatus to,
+                                         UserRole userRole,
+                                         Long currentUserId) {
         OrderStatusHistoryEntity orderStatusHistory = new OrderStatusHistoryEntity();
         orderStatusHistory.setFromStatus(from);
         orderStatusHistory.setToStatus(to);
@@ -851,7 +818,6 @@ public class OrderServiceImpl implements OrderService {
         orderStatusHistory.setOrder(order);
 
         order.getStatusHistories().add(orderStatusHistory);
-        return orderStatusHistory;
     }
 
     private void addVoucherUsageHistory(OrderEntity order, VoucherEntity voucher) {

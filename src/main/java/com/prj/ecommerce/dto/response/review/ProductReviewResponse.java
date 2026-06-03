@@ -17,6 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ProductReviewResponse {
     private Long productReviewId;
+    private String fullName;
     private Integer rating;
     private String comment;
     private LocalDateTime createdAt;
@@ -30,6 +31,7 @@ public class ProductReviewResponse {
     public static ProductReviewResponse fromEntity(ProductReviewEntity entity) {
         return new ProductReviewResponse(
                 entity.getId(),
+                entity.getUser().getFullName(),
                 entity.getRating(),
                 entity.getComment(),
                 entity.getCreatedAt(),
@@ -48,6 +50,7 @@ public class ProductReviewResponse {
     ) {
         return new ProductReviewResponse(
                 entity.getId(),
+                entity.getUser().getFullName(),
                 entity.getRating(),
                 entity.getComment(),
                 entity.getCreatedAt(),
